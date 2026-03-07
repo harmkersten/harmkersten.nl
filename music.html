@@ -385,7 +385,13 @@
         });
       }
 
-      window.carouselMove = (dir) => goTo(current + dir);
+      window.carouselMove = (dir) => {
+        clearInterval(autoPlay);
+        goTo(current + dir);
+        autoPlay = setInterval(() => goTo(current + 1), 3000);
+      };
+
+      let autoPlay = setInterval(() => goTo(current + 1), 3000);
     }
 
     function setLang(lang) {
