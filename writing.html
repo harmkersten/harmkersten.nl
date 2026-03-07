@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing — Harm Kersten</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Karla:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --white: #faf9f7;
+      --ink:   #1a1916;
+      --mid:   #7a7670;
+      --light: #b8b4ae;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--ink);
+      font-family: 'Karla', sans-serif;
+      font-weight: 300;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 32px 48px;
+      border-bottom: 1px solid #e0dbd4;
+    }
+
+    .nav-back {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--mid);
+      text-decoration: none;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-back:hover { color: var(--ink); }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .lang-toggle {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .lang-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Karla', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--light);
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .lang-btn.active { color: var(--ink); font-weight: 500; }
+    .lang-btn:hover { color: var(--mid); }
+
+    /* ── HEADER ── */
+    .page-header {
+      padding: 80px 48px 64px;
+      border-bottom: 1px solid #e0dbd4;
+    }
+
+    .page-eyebrow {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--light);
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(48px, 8vw, 96px);
+      font-weight: 300;
+      line-height: 0.95;
+      letter-spacing: -1px;
+      color: var(--ink);
+      margin-bottom: 24px;
+    }
+
+    .page-title em { font-style: italic; }
+
+    .page-subtitle {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--mid);
+      letter-spacing: 0.3px;
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      padding: 80px 48px;
+      min-height: 40vh;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 30vh;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      opacity: 0.2;
+    }
+
+    .empty-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--light);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 24px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #e0dbd4;
+    }
+    footer span {
+      font-size: 11px;
+      color: var(--light);
+      letter-spacing: 1px;
+    }
+
+    /* ── LANG ── */
+    [data-lang="en"] { display: none; }
+    body.lang-en [data-lang="nl"] { display: none; }
+    body.lang-en [data-lang="en"] { display: block; }
+    body.lang-en span[data-lang="en"] { display: inline; }
+    body.lang-en span[data-lang="nl"] { display: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav, .page-header, .content, footer { padding-left: 24px; padding-right: 24px; }
+      .page-header { padding-top: 48px; padding-bottom: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="nav-back">← <span data-lang="nl">Terug</span><span data-lang="en">Back</span></a>
+    <a href="/" class="nav-logo">HK</a>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-nl" onclick="setLang('nl')">NL</button>
+      <span style="color:#d0ccc6">/</span>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <p class="page-eyebrow">Harm Kersten</p>
+    <h1 class="page-title">Writing</h1>
+    <p class="page-subtitle">
+      <span data-lang="nl">Teksten & essays</span>
+      <span data-lang="en">Texts & essays</span>
+    </p>
+  </header>
+
+  <main class="content">
+    <div class="empty-state">
+      <span class="empty-icon">◇</span>
+      <p class="empty-text">
+        <span data-lang="nl">Projecten komen binnenkort</span>
+        <span data-lang="en">Projects coming soon</span>
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 Harm Kersten</span>
+    <span>harmkersten.nl</span>
+  </footer>
+
+  <script>
+    function setLang(lang) {
+      document.body.className = 'lang-' + lang;
+      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+  </script>
+
+</body>
+</html>
