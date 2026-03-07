@@ -260,28 +260,6 @@
       border-top: 1px solid #e0dbd4;
     }
 
-    .contact-heading {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(28px, 4vw, 52px);
-      font-weight: 300;
-      line-height: 1.1;
-    }
-    .contact-heading em { font-style: italic; }
-
-    .contact-email {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(14px, 2vw, 20px);
-      font-weight: 300;
-      color: var(--mid);
-      text-decoration: none;
-      border-bottom: 1px solid var(--light);
-      padding-bottom: 2px;
-      transition: color 0.2s, border-color 0.2s;
-    }
-    .contact-email:hover { color: var(--ink); border-color: var(--ink); }
-
-
-    /* ── CONTACT LINKS ── */
     .contact-links {
       display: flex;
       flex-direction: column;
@@ -289,6 +267,7 @@
       gap: 12px;
     }
 
+    .contact-email,
     .contact-social {
       font-family: 'Cormorant Garamond', serif;
       font-size: clamp(14px, 2vw, 20px);
@@ -299,6 +278,7 @@
       padding-bottom: 2px;
       transition: color 0.2s, border-color 0.2s;
     }
+    .contact-email:hover,
     .contact-social:hover { color: var(--ink); border-color: var(--ink); }
 
     /* ── FOOTER ── */
@@ -330,6 +310,7 @@
       .discipline { border-right: none !important; border-bottom: 1px solid #e0dbd4; padding: 28px 0 !important; }
       .about { grid-template-columns: 1fr; gap: 32px; padding: 60px 24px; }
       .contact { flex-direction: column; align-items: flex-start; gap: 24px; }
+      .contact-links { align-items: flex-start; }
     }
 
     .page-wrap {
@@ -439,11 +420,12 @@
 
     <!-- CONTACT -->
     <section class="contact" id="contact">
-      <h2 class="contact-heading">
-        <span data-lang="nl">Laten we<br><em>samenwerken</em></span>
-        <span data-lang="en">Let's<br><em>work together</em></span>
-      </h2>
-      <a href="/cdn-cgi/l/email-protection#89e1e8fbe4a7e2ecfbfafdece7c9f9e4a7e4ec" class="contact-email"><span class="__cf_email__" data-cfemail="7a121b081754111f08090e1f143a0a1754171f">[email&#160;protected]</span></a>
+      <p class="section-label">Contact</p>
+      <div class="contact-links">
+        <a href="mailto:harm.kersten@pm.me" class="contact-email">harm.kersten@pm.me</a>
+        <a href="https://www.instagram.com/harm_kersten/" class="contact-social" target="_blank">Instagram</a>
+        <a href="https://www.linkedin.com/in/harm-kersten-867067b5/" class="contact-social" target="_blank">LinkedIn</a>
+      </div>
     </section>
 
     <!-- FOOTER -->
@@ -454,6 +436,13 @@
 
   </div>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     function setLang(lang) {
-      d
+      document.body.className = 'lang-' + lang;
+      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+  </script>
+
+</body>
+</html>
