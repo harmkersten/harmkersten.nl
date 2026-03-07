@@ -8,15 +8,12 @@
   <style>
     :root {
       --white: #faf9f7;
-      --off:   #f0ede8;
       --ink:   #1a1916;
       --mid:   #7a7670;
       --light: #b8b4ae;
-      --accent:#1a1916;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
 
     body {
@@ -25,89 +22,6 @@
       font-family: 'Karla', sans-serif;
       font-weight: 300;
       overflow-x: hidden;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 0 48px 64px;
-      overflow: hidden;
-    }
-
-    /* Subtle photo placeholder — replace src with real photo */
-    .hero-bg {
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(to bottom,
-          rgba(250,249,247,0.15) 0%,
-          rgba(250,249,247,0.55) 50%,
-          rgba(250,249,247,0.92) 100%
-        ),
-        url('photo.jpg') center 20% / cover no-repeat;
-      /* Fallback grain texture when no photo */
-      background-color: #e8e4dc;
-    }
-
-    /* Grain overlay */
-    .hero-bg::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 900px;
-    }
-
-    .hero-eyebrow {
-      font-family: 'Karla', sans-serif;
-      font-size: 11px;
-      font-weight: 400;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--mid);
-      margin-bottom: 16px;
-      opacity: 0;
-      animation: fadeUp 0.8s ease 0.2s forwards;
-    }
-
-    .hero-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(52px, 10vw, 112px);
-      font-weight: 300;
-      line-height: 0.95;
-      letter-spacing: -1px;
-      color: var(--ink);
-      margin-bottom: 28px;
-      opacity: 0;
-      animation: fadeUp 0.9s ease 0.35s forwards;
-    }
-
-    .hero-name em {
-      font-style: italic;
-      font-weight: 300;
-    }
-
-    .hero-tagline {
-      font-family: 'Karla', sans-serif;
-      font-size: clamp(13px, 1.8vw, 16px);
-      font-weight: 300;
-      color: var(--mid);
-      letter-spacing: 0.5px;
-      line-height: 1.6;
-      max-width: 420px;
-      opacity: 0;
-      animation: fadeUp 0.9s ease 0.5s forwards;
     }
 
     /* ── NAV ── */
@@ -119,7 +33,6 @@
       justify-content: space-between;
       align-items: center;
       padding: 24px 48px;
-      mix-blend-mode: multiply;
     }
 
     .nav-logo {
@@ -146,15 +59,12 @@
       text-decoration: none;
       transition: color 0.2s;
     }
-
     .nav-links a:hover { color: var(--ink); }
 
-    /* Lang toggle */
     .lang-toggle {
       display: flex;
-      gap: 8px;
-      font-size: 11px;
-      letter-spacing: 1.5px;
+      gap: 6px;
+      align-items: center;
     }
 
     .lang-btn {
@@ -170,6 +80,79 @@
     }
     .lang-btn.active { color: var(--ink); font-weight: 500; }
     .lang-btn:hover { color: var(--mid); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 48px 64px;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-color: #e2ddd6;
+      /* To add your photo, add this line inside background-image:
+         url('photo.jpg') center 20% / cover no-repeat, */
+      background-image:
+        linear-gradient(to bottom,
+          rgba(250,249,247,0.1) 0%,
+          rgba(250,249,247,0.5) 55%,
+          rgba(250,249,247,0.95) 100%
+        );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.2s forwards;
+    }
+
+    .hero-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(52px, 10vw, 112px);
+      font-weight: 300;
+      line-height: 0.95;
+      letter-spacing: -1px;
+      color: var(--ink);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.35s forwards;
+    }
+    .hero-name em { font-style: italic; }
+
+    .hero-tagline {
+      font-size: clamp(13px, 1.8vw, 16px);
+      font-weight: 300;
+      color: var(--mid);
+      letter-spacing: 0.5px;
+      line-height: 1.6;
+      max-width: 420px;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.5s forwards;
+    }
+
+    /* ── LANGUAGE SWITCHING ── */
+    [data-lang="en"] { display: none; }
+    body.lang-en [data-lang="nl"] { display: none; }
+    body.lang-en [data-lang="en"] { display: block; }
+    body.lang-en span[data-lang="en"] { display: inline; }
+    body.lang-en span[data-lang="nl"] { display: none; }
 
     /* ── DISCIPLINES ── */
     .section {
@@ -187,24 +170,16 @@
 
     .disciplines {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 0;
+      grid-template-columns: repeat(4, 1fr);
       border-top: 1px solid #e0dbd4;
     }
 
     .discipline {
-      padding: 40px 0 40px;
+      padding: 40px 32px 40px 0;
       border-right: 1px solid #e0dbd4;
-      padding-right: 32px;
-      padding-left: 0;
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
     }
-
-    .discipline:last-child { border-right: none; padding-right: 0; }
     .discipline:not(:first-child) { padding-left: 32px; }
-    .discipline.visible { opacity: 1; transform: translateY(0); }
+    .discipline:last-child { border-right: none; padding-right: 0; }
 
     .discipline-num {
       font-family: 'Cormorant Garamond', serif;
@@ -215,34 +190,26 @@
     }
 
     .discipline-icon {
-      font-size: 22px;
+      font-size: 20px;
       margin-bottom: 16px;
       display: block;
     }
 
     .discipline-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 400;
       color: var(--ink);
-      letter-spacing: 0.3px;
       margin-bottom: 10px;
       line-height: 1.2;
     }
-
-    .discipline-title-nl { display: block; }
-    .discipline-title-en { display: none; }
 
     .discipline-desc {
       font-size: 12px;
       font-weight: 300;
       color: var(--mid);
       line-height: 1.7;
-      letter-spacing: 0.2px;
     }
-
-    .desc-nl { display: block; }
-    .desc-en { display: none; }
 
     /* ── ABOUT ── */
     .about {
@@ -257,12 +224,11 @@
 
     .about-heading {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(36px, 5vw, 64px);
+      font-size: clamp(36px, 5vw, 60px);
       font-weight: 300;
       line-height: 1.1;
       letter-spacing: -0.5px;
     }
-
     .about-heading em { font-style: italic; }
 
     .about-body {
@@ -270,9 +236,7 @@
       font-weight: 300;
       color: rgba(250,249,247,0.65);
       line-height: 1.9;
-      letter-spacing: 0.2px;
     }
-
     .about-body p + p { margin-top: 18px; }
 
     /* ── CONTACT ── */
@@ -289,9 +253,7 @@
       font-size: clamp(28px, 4vw, 52px);
       font-weight: 300;
       line-height: 1.1;
-      letter-spacing: -0.3px;
     }
-
     .contact-heading em { font-style: italic; }
 
     .contact-email {
@@ -300,12 +262,10 @@
       font-weight: 300;
       color: var(--mid);
       text-decoration: none;
-      letter-spacing: 0.5px;
       border-bottom: 1px solid var(--light);
       padding-bottom: 2px;
       transition: color 0.2s, border-color 0.2s;
     }
-
     .contact-email:hover { color: var(--ink); border-color: var(--ink); }
 
     /* ── FOOTER ── */
@@ -316,21 +276,11 @@
       align-items: center;
       border-top: 1px solid #e0dbd4;
     }
-
     footer span {
       font-size: 11px;
       color: var(--light);
       letter-spacing: 1px;
     }
-
-    footer a {
-      font-size: 11px;
-      color: var(--light);
-      text-decoration: none;
-      letter-spacing: 1px;
-      transition: color 0.2s;
-    }
-    footer a:hover { color: var(--mid); }
 
     /* ── ANIMATIONS ── */
     @keyframes fadeUp {
@@ -343,9 +293,8 @@
       .hero, .section, .contact, footer { padding-left: 24px; padding-right: 24px; }
       nav { padding: 20px 24px; }
       .nav-links { display: none; }
-      .disciplines { grid-template-columns: 1fr 1fr; gap: 0; }
-      .discipline { border-right: none; padding: 28px 0; border-bottom: 1px solid #e0dbd4; }
-      .discipline:not(:first-child) { padding-left: 0; }
+      .disciplines { grid-template-columns: 1fr 1fr; }
+      .discipline { border-right: none !important; border-bottom: 1px solid #e0dbd4; padding: 28px 0 !important; }
       .about { grid-template-columns: 1fr; gap: 32px; padding: 60px 24px; }
       .contact { flex-direction: column; align-items: flex-start; gap: 24px; }
     }
@@ -357,14 +306,14 @@
   <nav>
     <a href="/" class="nav-logo">HK</a>
     <ul class="nav-links">
-      <li><a href="#work" class="i18n" data-nl="Werk" data-en="Work">Werk</a></li>
-      <li><a href="#about" class="i18n" data-nl="Over" data-en="About">Over</a></li>
-      <li><a href="#contact" class="i18n" data-nl="Contact" data-en="Contact">Contact</a></li>
+      <li><a href="#work"><span data-lang="nl">Werk</span><span data-lang="en">Work</span></a></li>
+      <li><a href="#about"><span data-lang="nl">Over</span><span data-lang="en">About</span></a></li>
+      <li><a href="#contact">Contact</a></li>
     </ul>
     <div class="lang-toggle">
-      <button class="lang-btn active" onclick="setLang('nl')">NL</button>
+      <button class="lang-btn active" id="btn-nl" onclick="setLang('nl')">NL</button>
       <span style="color:#d0ccc6">/</span>
-      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
     </div>
   </nav>
 
@@ -372,70 +321,60 @@
   <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-content">
-      <p class="hero-eyebrow i18n" data-nl="Utrecht, Nederland" data-en="Utrecht, Netherlands">Utrecht, Nederland</p>
+      <p class="hero-eyebrow">
+        <span data-lang="nl">Utrecht, Nederland</span>
+        <span data-lang="en">Utrecht, Netherlands</span>
+      </p>
       <h1 class="hero-name">Harm<br><em>Kersten</em></h1>
-      <p class="hero-tagline i18n"
-         data-nl="All round creative."
-         data-en="All round creative.">
-        All round creative.
+      <p class="hero-tagline">
+        <span data-lang="nl">All round creative. Actief op het snijvlak van design, verhaal, data en geluid.</span>
+        <span data-lang="en">All round creative. Working at the intersection of design, story, data and sound.</span>
       </p>
     </div>
   </section>
 
   <!-- DISCIPLINES -->
   <section class="section" id="work">
-    <p class="section-label i18n" data-nl="Disciplines" data-en="Disciplines">Disciplines</p>
-    <div class="disciplines" style="grid-template-columns: repeat(4, 1fr);">
+    <p class="section-label">Disciplines</p>
+    <div class="disciplines">
 
       <div class="discipline">
         <p class="discipline-num">01</p>
         <span class="discipline-icon">✦</span>
-        <h3 class="discipline-title">
-          <span class="discipline-title-nl">Work</span>
-          <span class="discipline-title-en">Work</span>
-        </h3>
+        <h3 class="discipline-title">Work</h3>
         <p class="discipline-desc">
-          <span class="desc-nl">Projecten, design en samenwerking.</span>
-          <span class="desc-en">Projects, design and collaboration.</span>
+          <span data-lang="nl">Projecten, design en samenwerking. Wat ik maak voor anderen.</span>
+          <span data-lang="en">Projects, design and collaboration. What I make for others.</span>
         </p>
       </div>
 
       <div class="discipline">
         <p class="discipline-num">02</p>
         <span class="discipline-icon">◈</span>
-        <h3 class="discipline-title">
-          <span class="discipline-title-nl">Art</span>
-          <span class="discipline-title-en">Art</span>
-        </h3>
+        <h3 class="discipline-title">Art</h3>
         <p class="discipline-desc">
-          <span class="desc-nl">Vrij werk. Beeld, film en alles daartussenin.</span>
-          <span class="desc-en">Personal work. Image, film and everything in between.</span>
+          <span data-lang="nl">Vrij werk. Beeld, film en alles daartussenin.</span>
+          <span data-lang="en">Personal work. Image, film and everything in between.</span>
         </p>
       </div>
 
       <div class="discipline">
         <p class="discipline-num">03</p>
         <span class="discipline-icon">♩</span>
-        <h3 class="discipline-title">
-          <span class="discipline-title-nl">Music</span>
-          <span class="discipline-title-en">Music</span>
-        </h3>
+        <h3 class="discipline-title">Music</h3>
         <p class="discipline-desc">
-          <span class="desc-nl">Compositie, productie en de ruimte daartussen.</span>
-          <span class="desc-en">Composition, production and the space between.</span>
+          <span data-lang="nl">Geluid als taal. Compositie, productie en de ruimte daartussen.</span>
+          <span data-lang="en">Sound as language. Composition, production and the space between.</span>
         </p>
       </div>
 
       <div class="discipline">
         <p class="discipline-num">04</p>
         <span class="discipline-icon">◇</span>
-        <h3 class="discipline-title">
-          <span class="discipline-title-nl">Writing</span>
-          <span class="discipline-title-en">Writing</span>
-        </h3>
+        <h3 class="discipline-title">Writing</h3>
         <p class="discipline-desc">
-          <span class="desc-nl">Bevindingen</span>
-          <span class="desc-en">Contemplations</span>
+          <span data-lang="nl">Woorden die werken. Helder, precies en met karakter.</span>
+          <span data-lang="en">Words that work. Clear, precise and with character.</span>
         </p>
       </div>
 
@@ -445,78 +384,45 @@
   <!-- ABOUT -->
   <section class="about" id="about">
     <div>
-      <h2 class="about-heading i18n"
-          data-nl="Creatief denker,<br><em>veelzijdig maker</em>"
-          data-en="Creative thinker,<br><em>versatile maker</em>">
-        Creatief denker,<br><em>veelzijdig maker</em>
+      <h2 class="about-heading">
+        <span data-lang="nl">Creatief denker,<br><em>veelzijdig maker</em></span>
+        <span data-lang="en">Creative thinker,<br><em>versatile maker</em></span>
       </h2>
     </div>
     <div class="about-body">
-      <p class="i18n"
-         data-nl="Ik werk op het snijvlak van disciplines. Niet omdat ik niet kan kiezen, maar omdat de interessantste dingen ontstaan waar verschillende werelden elkaar raken."
-         data-en="I work at the intersection of disciplines. Not because I can't choose, but because the most interesting things emerge where different worlds meet.">
-        Ik werk op het snijvlak van disciplines. Niet omdat ik niet kan kiezen, maar omdat de interessantste dingen ontstaan waar verschillende werelden elkaar raken.
+      <p>
+        <span data-lang="nl">Ik werk op het snijvlak van disciplines. Niet omdat ik niet kan kiezen, maar omdat de interessantste dingen ontstaan waar verschillende werelden elkaar raken.</span>
+        <span data-lang="en">I work at the intersection of disciplines. Not because I can't choose, but because the most interesting things emerge where different worlds meet.</span>
       </p>
-      <p class="i18n"
-         data-nl="Van Utrecht uit werk ik aan projecten die iets zeggen — in beeld, geluid, data of tekst."
-         data-en="Based in Utrecht, I work on projects that say something — in image, sound, data or text.">
-        Van Utrecht uit werk ik aan projecten die iets zeggen — in beeld, geluid, data of tekst.
+      <p>
+        <span data-lang="nl">Van Utrecht uit werk ik aan projecten die iets zeggen — in beeld, geluid, data of tekst.</span>
+        <span data-lang="en">Based in Utrecht, I work on projects that say something — in image, sound, data or text.</span>
       </p>
     </div>
   </section>
 
   <!-- CONTACT -->
   <section class="contact" id="contact">
-    <h2 class="contact-heading i18n"
-        data-nl="Laten we<br><em>samenwerken</em>"
-        data-en="Let's<br><em>work together</em>">
-      Laten we<br><em>samenwerken</em>
+    <h2 class="contact-heading">
+      <span data-lang="nl">Laten we<br><em>samenwerken</em></span>
+      <span data-lang="en">Let's<br><em>work together</em></span>
     </h2>
-    <a href="/cdn-cgi/l/email-protection#4921283b2467222c3b3a3d2c2709392467242c" class="contact-email"><span class="__cf_email__" data-cfemail="b8d0d9cad596d3ddcacbccddd6f8c8d596d5dd">[email&#160;protected]</span></a>
+    <a href="mailto:harm.kersten@pm.me" class="contact-email">harm.kersten@pm.me</a>
   </section>
 
   <!-- FOOTER -->
   <footer>
     <span>© 2026 Harm Kersten</span>
-    <span style="color:var(--light);font-size:11px;letter-spacing:1px;">harmkersten.nl</span>
+    <span>harmkersten.nl</span>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    // Language toggle
-    let currentLang = 'nl';
-
+  <script>
     function setLang(lang) {
-      currentLang = lang;
-
-      // Update buttons
-      document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
-      });
-
-      // Simple i18n elements
-      document.querySelectorAll('.i18n').forEach(el => {
-        const val = el.dataset[lang];
-        if (val) el.innerHTML = val;
-      });
-
-      // Discipline titles
-      document.querySelectorAll('.discipline-title-nl').forEach(el => {
-        el.style.display = lang === 'nl' ? 'block' : 'none';
-      });
-      document.querySelectorAll('.discipline-title-en').forEach(el => {
-        el.style.display = lang === 'en' ? 'block' : 'none';
-      });
-
-      // Descriptions
-      document.querySelectorAll('.desc-nl').forEach(el => {
-        el.style.display = lang === 'nl' ? 'block' : 'none';
-      });
-      document.querySelectorAll('.desc-en').forEach(el => {
-        el.style.display = lang === 'en' ? 'block' : 'none';
-      });
+      document.body.className = 'lang-' + lang;
+      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
     }
+  </script>
 
-    // Scroll reveal for disciplines
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry, i) => {
-        if (entry.isIntersecti
+</body>
+</html>
