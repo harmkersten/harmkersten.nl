@@ -83,25 +83,42 @@
 
     /* ── HERO ── */
     .hero {
-      position: relative;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       padding: 0 48px 64px;
-      overflow: hidden;
     }
 
     .hero-bg {
-      position: absolute;
-      inset: 0;
-      background-color: #e2ddd6;
+      display: none;
     }
 
     .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 900px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: 100%;
+      gap: 48px;
+    }
+
+    .hero-text {
+      flex: 1;
+    }
+
+    .hero-portrait {
+      width: 160px;
+      flex-shrink: 0;
+      margin-bottom: 8px;
+    }
+
+    .hero-portrait img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      object-position: center 15%;
+      filter: grayscale(100%);
+      display: block;
     }
 
     .hero-eyebrow {
@@ -291,27 +308,9 @@
       .contact { flex-direction: column; align-items: flex-start; gap: 24px; }
     }
 
-    .hero-photo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 20%;
-      opacity: 0.35;
-    }
+    
 
-    .hero-bg::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom,
-        rgba(250,249,247,0.1) 0%,
-        rgba(250,249,247,0.5) 55%,
-        rgba(250,249,247,0.97) 100%
-      );
-      pointer-events: none;
-    }
+    
   </style>
 </head>
 <body>
@@ -333,10 +332,8 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-bg">
-      <img src="photo.jpeg" alt="" class="hero-photo">
-    </div>
     <div class="hero-content">
+      <div class="hero-text">
       <p class="hero-eyebrow">
         <span data-lang="nl">Utrecht, Nederland</span>
         <span data-lang="en">Utrecht, Netherlands</span>
@@ -346,6 +343,10 @@
         <span data-lang="nl">All round creative. Actief op het snijvlak van design, verhaal, data en geluid.</span>
         <span data-lang="en">All round creative. Working at the intersection of design, story, data and sound.</span>
       </p>
+      </div>
+      <div class="hero-portrait">
+        <img src="photo.jpeg" alt="Harm Kersten">
+      </div>
     </div>
   </section>
 
