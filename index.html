@@ -101,10 +101,6 @@
       padding: 150px 48px 64px;
     }
 
-    .hero-bg {
-      display: none;
-    }
-
     .hero-content {
       display: flex;
       align-items: flex-end;
@@ -113,9 +109,7 @@
       gap: 48px;
     }
 
-    .hero-text {
-      flex: 1;
-    }
+    .hero-text { flex: 1; }
 
     .hero-portrait {
       width: 160px;
@@ -175,9 +169,7 @@
     body.lang-en span[data-lang="nl"] { display: none; }
 
     /* ── DISCIPLINES ── */
-    .section {
-      padding: 80px 48px;
-    }
+    .section { padding: 80px 48px; }
 
     .section-label {
       font-size: 10px;
@@ -319,10 +311,6 @@
       .contact { flex-direction: column; align-items: flex-start; gap: 24px; }
     }
 
-    
-
-    
-
     .page-wrap {
       max-width: 960px;
       margin: 0 auto;
@@ -334,114 +322,124 @@
   <!-- NAV -->
   <nav>
     <div class="nav-inner">
-    <a href="/" class="nav-logo">HK</a>
-    <ul class="nav-links">
-      <li><a href="#work"><span data-lang="nl">Werk</span><span data-lang="en">Work</span></a></li>
-      <li><a href="#about"><span data-lang="nl">Over</span><span data-lang="en">About</span></a></li>
-      <li><a href="#contact">Contact</a></li>
-    </ul>
-    <div class="lang-toggle">
-      <button class="lang-btn active" id="btn-nl" onclick="setLang('nl')">NL</button>
-      <span style="color:#d0ccc6">/</span>
-      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
-    </div>
+      <a href="/" class="nav-logo">HK</a>
+      <ul class="nav-links">
+        <li><a href="#work"><span data-lang="nl">Werk</span><span data-lang="en">Work</span></a></li>
+        <li><a href="#about"><span data-lang="nl">Over</span><span data-lang="en">About</span></a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-nl" onclick="setLang('nl')">NL</button>
+        <span style="color:#d0ccc6">/</span>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+      </div>
     </div>
   </nav>
 
-<div class="page-wrap">
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-content">
-      <div class="hero-text">
-      <p class="hero-eyebrow">
-        <span data-lang="nl">Utrecht, Nederland</span>
-        <span data-lang="en">Utrecht, Netherlands</span>
-      </p>
-      <h1 class="hero-name">Harm<br><em>Kersten</em></h1>
-      <p class="hero-tagline">
-        <span data-lang="nl">All round creative.</span>
-        <span data-lang="en">All round creative.</span>
-      </p>
-      </div>
-      <div class="hero-portrait">
-        <img src="photo.jpeg" alt="Harm Kersten">
-      </div>
-    </div>
-  </section>
+  <div class="page-wrap">
 
-  <!-- DISCIPLINES -->
-  <section class="section" id="work">
-    <p class="section-label">Disciplines</p>
-    <div class="disciplines">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-text">
+          <p class="hero-eyebrow">
+            <span data-lang="nl">Utrecht, Nederland</span>
+            <span data-lang="en">Utrecht, Netherlands</span>
+          </p>
+          <h1 class="hero-name">Harm<br><em>Kersten</em></h1>
+          <p class="hero-tagline">
+            <span data-lang="nl">All round creative.</span>
+            <span data-lang="en">All round creative.</span>
+          </p>
+        </div>
+        <div class="hero-portrait">
+          <img src="photo.jpeg" alt="Harm Kersten">
+        </div>
+      </div>
+    </section>
 
-      <div class="discipline">
-        <p class="discipline-num">01</p>
-        <span class="discipline-icon">✦</span>
-        <h3 class="discipline-title"><a href="/work" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Work</a></h3>
-        <p class="discipline-desc">
-          <span data-lang="nl">Projecten, design en journalistiek</span>
-          <span data-lang="en">Projects, design and journalism</span>
+    <!-- DISCIPLINES -->
+    <section class="section" id="work">
+      <p class="section-label">Disciplines</p>
+      <div class="disciplines">
+
+        <div class="discipline">
+          <p class="discipline-num">01</p>
+          <span class="discipline-icon">&#10022;</span>
+          <h3 class="discipline-title"><a href="/work" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Work</a></h3>
+          <p class="discipline-desc">
+            <span data-lang="nl">Projecten, design en journalistiek</span>
+            <span data-lang="en">Projects, design and journalism</span>
+          </p>
+        </div>
+
+        <div class="discipline">
+          <p class="discipline-num">02</p>
+          <span class="discipline-icon">&#9833;</span>
+          <h3 class="discipline-title"><a href="/music" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Music</a></h3>
+          <p class="discipline-desc">
+            <span data-lang="nl">Compositie, productie en artwork</span>
+            <span data-lang="en">Composing, production and artwork</span>
+          </p>
+        </div>
+
+        <div class="discipline">
+          <p class="discipline-num">03</p>
+          <span class="discipline-icon">&#9671;</span>
+          <h3 class="discipline-title"><a href="/writing" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Thoughts</a></h3>
+          <p class="discipline-desc">
+            <span data-lang="nl">Gedachten, recensies en bevindingen</span>
+            <span data-lang="en">Thoughts, reviews and observations</span>
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about" id="about">
+      <div>
+        <h2 class="about-heading">
+          <span data-lang="nl">Creatief denker,<br><em>veelzijdig maker</em></span>
+          <span data-lang="en">Creative thinker,<br><em>versatile maker</em></span>
+        </h2>
+      </div>
+      <div class="about-body">
+        <p>
+          <span data-lang="nl">Ik ben ontwerper en creatief denker, werkzaam bij de NOS waar ik journalistieke producties vormgeef en sturing geef aan de creatieve richting van journalistieke uitingen zowel op televisie als online. Naast mijn werk als ontwerper ben ik muzikant. Met de band bloc bloc bloc sta ik regelmatig op het podium met eigen werk.</span>
+          <span data-lang="en">I am a designer and creative thinker, working at NOS where I shape journalistic productions and steer the creative direction of journalistic output across television and online. Alongside my work as a designer, I am a musician. With the band bloc bloc bloc I regularly perform my own work on stage.</span>
+        </p>
+        <p>
+          <span data-lang="nl">Brede interesses in film, reizen, sport en kunst voeden een werkwijze waarin disciplines elkaar voortdurend kruisen.</span>
+          <span data-lang="en">Wide-ranging interests in film, travel, sport and art fuel a way of working in which disciplines constantly intersect.</span>
         </p>
       </div>
+    </section>
 
-      <div class="discipline">
-        <p class="discipline-num">02</p>
-        <span class="discipline-icon">♩</span>
-        <h3 class="discipline-title"><a href="/music" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Music</a></h3>
-        <p class="discipline-desc">
-          <span data-lang="nl">Compositie, productie en artwork</span>
-          <span data-lang="en">Composing, production and artwork</span>
-        </p>
-      </div>
-
-      <div class="discipline">
-        <p class="discipline-num">03</p>
-        <span class="discipline-icon">◇</span>
-        <h3 class="discipline-title"><a href="/writing" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Thoughts</a></h3>
-        <p class="discipline-desc">
-          <span data-lang="nl">Gedachten, recensies en bevindingen</span>
-          <span data-lang="en">Thoughts, reviews and observations</span>
-        </p>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ABOUT -->
-  <section class="about" id="about">
-    <div>
-      <h2 class="about-heading">
-        <span data-lang="nl">Creatief denker,<br><em>veelzijdig maker</em></span>
-        <span data-lang="en">Creative thinker,<br><em>versatile maker</em></span>
+    <!-- CONTACT -->
+    <section class="contact" id="contact">
+      <h2 class="contact-heading">
+        <span data-lang="nl">Laten we<br><em>samenwerken</em></span>
+        <span data-lang="en">Let's<br><em>work together</em></span>
       </h2>
-    </div>
-    <div class="about-body">
-      <p>
-        <span data-lang="nl">Ik ben ontwerper en creatief denker, werkzaam bij de NOS waar ik journalistieke producties vormgeef en sturing geef aan de creatieve richting van journalistieke uitingen zowel op televisie als online. Naast mijn werk als ontwerper ben ik muzikant. Met de band bloc bloc bloc sta ik regelmatig op het podium met eigen werk.</span>
-        <span data-lang="en">I am a designer and creative thinker, working at NOS where I shape journalistic productions and steer the creative direction of journalistic output across television and online. Alongside my work as a designer, I am a musician. With the band bloc bloc bloc I regularly perform my own work on stage.</span>
-      </p>
-      <p>
-        <span data-lang="nl">Brede interesses in film, reizen, sport en kunst voeden een werkwijze waarin disciplines elkaar voortdurend kruisen.</span>
-        <span data-lang="en">Wide-ranging interests in film, travel, sport and art fuel a way of working in which disciplines constantly intersect.</span>
-      </p>
-    </div>
-  </section>
+      <a href="mailto:harm.kersten@pm.me" class="contact-email">harm.kersten@pm.me</a>
+    </section>
 
-  <!-- CONTACT -->
-  <section class="contact" id="contact">
-    <h2 class="contact-heading">
-      <span data-lang="nl">Laten we<br><em>samenwerken</em></span>
-      <span data-lang="en">Let's<br><em>work together</em></span>
-    </h2>
-    <a href="/cdn-cgi/l/email-protection#2b434a594605404e59585f4e456b5b4605464e" class="contact-email"><span class="__cf_email__" data-cfemail="c3aba2b1aeeda8a6b1b0b7a6ad83b3aeedaea6">[email&#160;protected]</span></a>
-  </section>
+    <!-- FOOTER -->
+    <footer>
+      <span>&copy; 2026 Harm Kersten</span>
+      <span>harmkersten.nl</span>
+    </footer>
 
-  <!-- FOOTER -->
-  <footer>
-    <span>© 2026 Harm Kersten</span>
-    <span>harmkersten.nl</span>
-  </footer>
+  </div>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     function setLang(lang) {
-      documen
+      document.body.className = 'lang-' + lang;
+      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+  </script>
+
+</body>
+</html>
