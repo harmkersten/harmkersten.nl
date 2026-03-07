@@ -186,7 +186,7 @@
 
     .disciplines {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       border-top: 1px solid #e0dbd4;
     }
 
@@ -382,16 +382,6 @@
 
       <div class="discipline">
         <p class="discipline-num">02</p>
-        <span class="discipline-icon">◈</span>
-        <h3 class="discipline-title"><a href="/art" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Art</a></h3>
-        <p class="discipline-desc">
-          <span data-lang="nl">Vrij werk. Beeld, film en alles daartussenin.</span>
-          <span data-lang="en">Personal work. Image, film and everything in between.</span>
-        </p>
-      </div>
-
-      <div class="discipline">
-        <p class="discipline-num">03</p>
         <span class="discipline-icon">♩</span>
         <h3 class="discipline-title"><a href="/music" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Music</a></h3>
         <p class="discipline-desc">
@@ -401,9 +391,9 @@
       </div>
 
       <div class="discipline">
-        <p class="discipline-num">04</p>
+        <p class="discipline-num">03</p>
         <span class="discipline-icon">◇</span>
-        <h3 class="discipline-title"><a href="/writing" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Writing</a></h3>
+        <h3 class="discipline-title"><a href="/writing" style="color:inherit;text-decoration:none;border-bottom:1px solid #e0dbd4;padding-bottom:2px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#1a1916'" onmouseout="this.style.borderColor='#e0dbd4'">Thoughts</a></h3>
         <p class="discipline-desc">
           <span data-lang="nl">Woorden die werken. Helder, precies en met karakter.</span>
           <span data-lang="en">Words that work. Clear, precise and with character.</span>
@@ -439,7 +429,7 @@
       <span data-lang="nl">Laten we<br><em>samenwerken</em></span>
       <span data-lang="en">Let's<br><em>work together</em></span>
     </h2>
-    <a href="/cdn-cgi/l/email-protection#5e363f2c3370353b2c2d2a3b301e2e3370333b" class="contact-email"><span class="__cf_email__" data-cfemail="432b22312e6d2826313037262d03332e6d2e26">[email&#160;protected]</span></a>
+    <a href="mailto:harm.kersten@pm.me" class="contact-email">harm.kersten@pm.me</a>
   </section>
 
   <!-- FOOTER -->
@@ -448,6 +438,13 @@
     <span>harmkersten.nl</span>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     function setLang(lang) {
-      documen
+      document.body.className = 'lang-' + lang;
+      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+  </script>
+</div>
+</body>
+</html>
