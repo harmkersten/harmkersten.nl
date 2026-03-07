@@ -11,6 +11,7 @@
       --ink:   #1a1916;
       --mid:   #7a7670;
       --light: #b8b4ae;
+      --border: #e0dbd4;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,149 +24,150 @@
       font-weight: 300;
     }
 
-    /* ── NAV ── */
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 32px 48px;
-      border-bottom: 1px solid #e0dbd4;
+      border-bottom: 1px solid var(--border);
     }
 
     .nav-back {
-      font-size: 11px;
-      font-weight: 400;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--mid);
-      text-decoration: none;
-      transition: color 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 11px; font-weight: 400; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--mid);
+      text-decoration: none; transition: color 0.2s;
     }
     .nav-back:hover { color: var(--ink); }
 
     .nav-logo {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 18px;
-      font-weight: 400;
-      color: var(--ink);
-      text-decoration: none;
+      font-size: 18px; font-weight: 400;
+      color: var(--ink); text-decoration: none;
     }
 
-    .lang-toggle {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
+    .lang-toggle { display: flex; gap: 6px; align-items: center; }
     .lang-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: 'Karla', sans-serif;
-      font-size: 11px;
-      letter-spacing: 1.5px;
-      color: var(--light);
-      padding: 0;
+      background: none; border: none; cursor: pointer;
+      font-family: 'Karla', sans-serif; font-size: 11px;
+      letter-spacing: 1.5px; color: var(--light); padding: 0;
       transition: color 0.2s;
     }
     .lang-btn.active { color: var(--ink); font-weight: 500; }
     .lang-btn:hover { color: var(--mid); }
 
-    /* ── HEADER ── */
     .page-header {
       padding: 80px 48px 64px;
-      border-bottom: 1px solid #e0dbd4;
+      border-bottom: 1px solid var(--border);
     }
 
     .page-eyebrow {
-      font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--light);
-      margin-bottom: 20px;
+      font-size: 10px; font-weight: 400; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--light); margin-bottom: 20px;
     }
 
     .page-title {
       font-family: 'Cormorant Garamond', serif;
       font-size: clamp(48px, 8vw, 96px);
-      font-weight: 300;
-      line-height: 0.95;
-      letter-spacing: -1px;
-      color: var(--ink);
-      margin-bottom: 24px;
+      font-weight: 300; line-height: 0.95;
+      letter-spacing: -1px; color: var(--ink); margin-bottom: 24px;
     }
-
-    .page-title em { font-style: italic; }
 
     .page-subtitle {
-      font-size: 14px;
-      font-weight: 300;
-      color: var(--mid);
-      letter-spacing: 0.3px;
+      font-size: 14px; font-weight: 300;
+      color: var(--mid); letter-spacing: 0.3px;
     }
 
-    /* ── CONTENT ── */
-    .content {
-      padding: 80px 48px;
-      min-height: 40vh;
+    .content { padding: 64px 48px 80px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
     }
 
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 30vh;
-      text-align: center;
-      gap: 16px;
+    .tile {
+      background: var(--white);
+      text-decoration: none;
+      display: block;
+      overflow: hidden;
     }
 
-    .empty-icon {
-      font-size: 32px;
-      opacity: 0.2;
+    .tile-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: #e8e4dc;
+      position: relative;
     }
 
-    .empty-text {
+    .tile-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      filter: grayscale(20%);
+      transition: filter 0.4s ease, transform 0.4s ease;
+    }
+
+    .tile:hover .tile-thumb img {
+      filter: grayscale(0%);
+      transform: scale(1.03);
+    }
+
+    /* play icon overlay for video tiles */
+    .tile-thumb.video::after {
+      content: '▶';
+      position: absolute;
+      bottom: 10px; right: 12px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0;
+      pointer-events: none;
+    }
+
+    .tile-body { padding: 20px 24px 24px; }
+
+    .tile-tag {
+      font-size: 9px; font-weight: 400; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--light); margin-bottom: 8px;
+    }
+
+    .tile-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 20px;
-      font-weight: 300;
-      font-style: italic;
-      color: var(--light);
+      font-size: 18px; font-weight: 400; color: var(--ink);
+      line-height: 1.3; margin-bottom: 8px;
+      transition: color 0.2s;
     }
 
-    /* ── FOOTER ── */
-    footer {
-      padding: 24px 48px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top: 1px solid #e0dbd4;
-    }
-    footer span {
-      font-size: 11px;
-      color: var(--light);
-      letter-spacing: 1px;
+    .tile:hover .tile-title { color: var(--mid); }
+
+    .tile-desc {
+      font-size: 11px; font-weight: 300; color: var(--mid);
+      line-height: 1.6; letter-spacing: 0.2px;
     }
 
-    /* ── LANG ── */
     [data-lang="en"] { display: none; }
     body.lang-en [data-lang="nl"] { display: none; }
     body.lang-en [data-lang="en"] { display: block; }
     body.lang-en span[data-lang="en"] { display: inline; }
     body.lang-en span[data-lang="nl"] { display: none; }
 
-    /* ── RESPONSIVE ── */
+    footer {
+      padding: 24px 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    footer span { font-size: 11px; color: var(--light); letter-spacing: 1px; }
+
+    .page-wrap { max-width: 960px; margin: 0 auto; }
+
     @media (max-width: 768px) {
       nav, .page-header, .content, footer { padding-left: 24px; padding-right: 24px; }
       .page-header { padding-top: 48px; padding-bottom: 40px; }
+      .grid { grid-template-columns: 1fr 1fr; }
     }
-
-    .page-wrap {
-      max-width: 960px;
-      margin: 0 auto;
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -186,18 +188,142 @@
     <p class="page-eyebrow">Harm Kersten</p>
     <h1 class="page-title">Work</h1>
     <p class="page-subtitle">
-      <span data-lang="nl">Projecten & samenwerking</span>
-      <span data-lang="en">Projects & collaboration</span>
+      <span data-lang="nl">Een selectie van projecten bij de NOS</span>
+      <span data-lang="en">A selection of projects at NOS</span>
     </p>
   </header>
 
   <main class="content">
-    <div class="empty-state">
-      <span class="empty-icon">✦</span>
-      <p class="empty-text">
-        <span data-lang="nl">Projecten komen binnenkort</span>
-        <span data-lang="en">Projects coming soon</span>
-      </p>
+    <div class="grid">
+
+      <!-- 1: YouTube — 1 jaar oorlog Oekraïne -->
+      <a class="tile" href="https://www.youtube.com/watch?v=TujqAwb0AZ4&t=905s" target="_blank">
+        <div class="tile-thumb video">
+          <img src="https://img.youtube.com/vi/TujqAwb0AZ4/maxresdefault.jpg"
+               onerror="this.src='https://img.youtube.com/vi/TujqAwb0AZ4/hqdefault.jpg'" alt="1 jaar oorlog Oekraïne">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · Video</p>
+          <h2 class="tile-title">1 jaar oorlog in Oekraïne</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">Hoe het begon, hoe het gaat en wat we kunnen verwachten.</span>
+            <span data-lang="en">How it started, how it's going and what to expect.</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- 2: YouTube — TikTok Bachmoet -->
+      <a class="tile" href="https://www.youtube.com/watch?v=xf2WiM4upKM" target="_blank">
+        <div class="tile-thumb video">
+          <img src="https://img.youtube.com/vi/xf2WiM4upKM/maxresdefault.jpg"
+               onerror="this.src='https://img.youtube.com/vi/xf2WiM4upKM/hqdefault.jpg'" alt="TikTok Bachmoet">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · Video</p>
+          <h2 class="tile-title">De slag om Bachmoet op TikTok</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">Hoe Oekraïense militairen via TikTok verslag doen van het front.</span>
+            <span data-lang="en">How Ukrainian soldiers report from the frontline via TikTok.</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- 3: YouTube — Slavernijverleden -->
+      <a class="tile" href="https://www.youtube.com/watch?v=XdpJIAc5vYU" target="_blank">
+        <div class="tile-thumb video">
+          <img src="https://img.youtube.com/vi/XdpJIAc5vYU/maxresdefault.jpg"
+               onerror="this.src='https://img.youtube.com/vi/XdpJIAc5vYU/hqdefault.jpg'" alt="Slavernijverleden">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · Video</p>
+          <h2 class="tile-title">Het slavernijverleden</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">Hoe het Nederlandse slavernijverleden nog altijd doorwerkt in het heden.</span>
+            <span data-lang="en">How the Dutch slavery past continues to shape the present.</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- 4: YouTube — Hitler propaganda -->
+      <a class="tile" href="https://youtu.be/CcSvaEQu7BM" target="_blank">
+        <div class="tile-thumb video">
+          <img src="https://img.youtube.com/vi/CcSvaEQu7BM/maxresdefault.jpg"
+               onerror="this.src='https://img.youtube.com/vi/CcSvaEQu7BM/hqdefault.jpg'" alt="Hitler propaganda">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · Video</p>
+          <h2 class="tile-title">Hitler en de kracht van beeld</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">Hoe Hitler beeld inzette als propagandamiddel.</span>
+            <span data-lang="en">How Hitler weaponised imagery as a propaganda tool.</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- 5: YouTube — Grootste veiligheidsoperatie -->
+      <a class="tile" href="https://youtu.be/z62JW96fkDk" target="_blank">
+        <div class="tile-thumb video">
+          <img src="https://img.youtube.com/vi/z62JW96fkDk/maxresdefault.jpg"
+               onerror="this.src='https://img.youtube.com/vi/z62JW96fkDk/hqdefault.jpg'" alt="Grootste veiligheidsoperatie">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · Video</p>
+          <h2 class="tile-title">De grootste veiligheidsoperatie ooit</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">De grootste veiligheidsoperatie in de Nederlandse geschiedenis.</span>
+            <span data-lang="en">The largest security operation in Dutch history.</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- 6: NOS — De Ooggetuigen -->
+      <a class="tile" href="https://bevrijding.nos.nl/" target="_blank">
+        <div class="tile-thumb">
+          <img src="https://images.nos.nl/s1000/2025/04/68170df5e4b0f2a53db6ef7a.jpg" alt="De Ooggetuigen"
+               onerror="this.parentElement.style.background='#d8d3cb'; this.style.display='none'">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · <span data-lang="nl">Interactief</span><span data-lang="en">Interactive</span></p>
+          <h2 class="tile-title">De Ooggetuigen — 80 jaar bevrijding</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">Volg het laatste oorlogsjaar door de ogen van zeven ooggetuigen.</span>
+            <span data-lang="en">Experience the final year of the war through the eyes of seven witnesses.</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- 7: NOS — Van aanval tot oorlog -->
+      <a class="tile" href="https://app.nos.nl/shorthand/van-aanval-tot-oorlog/index.html" target="_blank">
+        <div class="tile-thumb">
+          <img src="https://app.nos.nl/shorthand/van-aanval-tot-oorlog/assets/8qXZsr1Njd/globe-iran_1-frame-0ms-1920x1080.jpg"
+               alt="Van aanval tot oorlog" onerror="this.parentElement.style.background='#d8d3cb'; this.style.display='none'">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · <span data-lang="nl">Kaarten</span><span data-lang="en">Maps</span></p>
+          <h2 class="tile-title">Van aanval tot oorlog</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">Hoe de regio in 72 uur in een golf van geweld belandde.</span>
+            <span data-lang="en">How the region descended into a wave of violence in 72 hours.</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- 8: NOS — Methaanjagers -->
+      <a class="tile" href="https://app.nos.nl/nieuws/methaan/" target="_blank">
+        <div class="tile-thumb">
+          <img src="https://app.nos.nl/nieuws/methaan/_app/immutable/assets/intro_HDR_groot.B8rzkK5E.webp"
+               alt="Methaanjagers" onerror="this.parentElement.style.background='#d8d3cb'; this.style.display='none'">
+        </div>
+        <div class="tile-body">
+          <p class="tile-tag">NOS · <span data-lang="nl">Data</span><span data-lang="en">Data</span></p>
+          <h2 class="tile-title">Methaanjagers</h2>
+          <p class="tile-desc">
+            <span data-lang="nl">Hoe Nederlandse onderzoekers methaanlekken vanuit de ruimte opsporen.</span>
+            <span data-lang="en">How Dutch researchers detect methane leaks from space.</span>
+          </p>
+        </div>
+      </a>
+
     </div>
   </main>
 
@@ -206,14 +332,15 @@
     <span>harmkersten.nl</span>
   </footer>
 
-  <script>
-    function setLang(lang) {
-      document.body.className = 'lang-' + lang;
-      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
-      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-    }
-  </script>
-
 </div>
+
+<script>
+  function setLang(lang) {
+    document.body.className = 'lang-' + lang;
+    document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  }
+</script>
+
 </body>
 </html>
