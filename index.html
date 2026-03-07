@@ -30,6 +30,13 @@
       top: 0; left: 0; right: 0;
       z-index: 100;
       display: flex;
+      justify-content: center;
+    }
+
+    .nav-inner {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 24px 48px;
@@ -319,10 +326,10 @@
   </style>
 </head>
 <body>
-<div class="page-wrap">
 
   <!-- NAV -->
   <nav>
+    <div class="nav-inner">
     <a href="/" class="nav-logo">HK</a>
     <ul class="nav-links">
       <li><a href="#work"><span data-lang="nl">Werk</span><span data-lang="en">Work</span></a></li>
@@ -334,8 +341,10 @@
       <span style="color:#d0ccc6">/</span>
       <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
     </div>
+    </div>
   </nav>
 
+<div class="page-wrap">
   <!-- HERO -->
   <section class="hero">
     <div class="hero-content">
@@ -430,7 +439,7 @@
       <span data-lang="nl">Laten we<br><em>samenwerken</em></span>
       <span data-lang="en">Let's<br><em>work together</em></span>
     </h2>
-    <a href="/cdn-cgi/l/email-protection#deb6bfacb3f0b5bbacadaabbb09eaeb3f0b3bb" class="contact-email"><span class="__cf_email__" data-cfemail="fb939a8996d5909e89888f9e95bb8b96d5969e">[email&#160;protected]</span></a>
+    <a href="mailto:harm.kersten@pm.me" class="contact-email">harm.kersten@pm.me</a>
   </section>
 
   <!-- FOOTER -->
@@ -441,4 +450,7 @@
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     function setLang(lang) {
-      do
+      document.body.className = 'lang-' + lang;
+      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
