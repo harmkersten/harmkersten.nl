@@ -280,6 +280,27 @@
     }
     .contact-email:hover { color: var(--ink); border-color: var(--ink); }
 
+
+    /* ── CONTACT LINKS ── */
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .contact-social {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(14px, 2vw, 20px);
+      font-weight: 300;
+      color: var(--mid);
+      text-decoration: none;
+      border-bottom: 1px solid var(--light);
+      padding-bottom: 2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .contact-social:hover { color: var(--ink); border-color: var(--ink); }
+
     /* ── FOOTER ── */
     footer {
       padding: 24px 48px;
@@ -422,7 +443,7 @@
         <span data-lang="nl">Laten we<br><em>samenwerken</em></span>
         <span data-lang="en">Let's<br><em>work together</em></span>
       </h2>
-      <a href="mailto:harm.kersten@pm.me" class="contact-email">harm.kersten@pm.me</a>
+      <a href="/cdn-cgi/l/email-protection#89e1e8fbe4a7e2ecfbfafdece7c9f9e4a7e4ec" class="contact-email"><span class="__cf_email__" data-cfemail="7a121b081754111f08090e1f143a0a1754171f">[email&#160;protected]</span></a>
     </section>
 
     <!-- FOOTER -->
@@ -433,13 +454,6 @@
 
   </div>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     function setLang(lang) {
-      document.body.className = 'lang-' + lang;
-      document.getElementById('btn-nl').classList.toggle('active', lang === 'nl');
-      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-    }
-  </script>
-
-</body>
-</html>
+      d
