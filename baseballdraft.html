@@ -284,7 +284,7 @@ function App() {
             <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
               <label style={{fontSize:"8px",color:"#3a5a6a",fontFamily:"monospace",letterSpacing:"1px"}}>TEAMS</label>
               <select value={numTeams} onChange={e => { setNumTeams(parseInt(e.target.value)); setDraftedIds(new Set()); setMyPickIds(new Set()); }} style={{background:"#0f1820",border:"1px solid #1a3040",color:"#a0c8e0",fontFamily:"monospace",fontSize:"12px",padding:"4px 8px",borderRadius:"4px",cursor:"pointer",outline:"none"}}>
-                {[6,8,10,12,14].map(n => <option key={n} value={n}>{n}</option>)}
+                {[6,7,8,9,10,12,14].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:"3px"}}>
