@@ -137,8 +137,6 @@ const SLOTS = [
   {id:"BE1",  label:"BE",    fills:["C","1B","2B","SS","3B","OF","DH","SP","RP"]},
   {id:"BE2",  label:"BE",    fills:["C","1B","2B","SS","3B","OF","DH","SP","RP"]},
   {id:"BE3",  label:"BE",    fills:["C","1B","2B","SS","3B","OF","DH","SP","RP"]},
-  {id:"BE4",  label:"BE",    fills:["C","1B","2B","SS","3B","OF","DH","SP","RP"]},
-  {id:"BE5",  label:"BE",    fills:["C","1B","2B","SS","3B","OF","DH","SP","RP"]},
 ];
 
 function fillRoster(myRoster) {
@@ -156,8 +154,8 @@ function App() {
   const [search,     setSearch]     = useState("");
   const [posFilter,  setPosFilter]  = useState("ALL");
   const [tab,        setTab]        = useState("BOARD");
-  const [numTeams,   setNumTeams]   = useState(8);
-  const [myPick,     setMyPick]     = useState(4);
+  const [numTeams,   setNumTeams]   = useState(7);
+  const [myPick,     setMyPick]     = useState(2);
   const searchRef = useRef(null);
 
   const available = useMemo(() =>
@@ -194,17 +192,19 @@ function App() {
     const tooManyRP = cnt.RP >= 3;
     // Only warn about bench pitchers once roster is 18+ deep (bench slots filling up)
     const rosterSize = myRoster.length;
-    const benchPitchers = rosterSize >= 18
+    const benchPitchers = rosterSize >= 16
       ? filledSlots.filter(s => s.id.startsWith("BE") && s.player && s.player.type === "PIT").length
       : 0;
     const needs = [];
     if (cnt.C < 1)  needs.push({pos:"C",  urg:"high", why:"Geen catcher"});
     if (cnt["2B"] < 2) needs.push({pos:"2B", urg:"med", why:"2B slots open"});
     if (cnt["3B"] < 2) needs.push({pos:"3B", urg:"med", why:"3B slots open"});
-    if (cnt.SP < 4) needs.push({pos:"SP", urg: cnt.SP < 2 ? "high" : "med", why:"Nog " + (4-cnt.SP) + " SP nodig"});
+    if (cnt.SP < 5) needs.push({pos:"SP", urg: cnt.SP < 2 ? "high" : "med", why:"Nog " + (5-cnt.SP) + " SP nodig"});
+    const totalPitchers = cnt.SP + cnt.RP;
+    const pitcherCapped = totalPitchers >= 8;
     if (cnt.RP < 2) needs.push({pos:"RP", urg: cnt.RP < 1 ? "high" : "med", why:"Closers SV=+5, pak " + (2-cnt.RP) + " meer"});
     if (cnt.OF < 4) needs.push({pos:"OF", urg:"low", why:(4-cnt.OF) + " OF slots open"});
-    return { needs, tooManyRP, benchPitchers };
+    return { needs, tooManyRP, benchPitchers, pitcherCapped };
   }, [myRoster, filledSlots]);
 
   // Scarcity: how many quality players remain per position
@@ -231,6 +231,9 @@ function App() {
       if (p.cats.includes("RP") && p.stats.includes("SV")) bonus += 40;
       if (p.cats.includes("C") && nC < 1) bonus += 30;
       if (p.cats.includes("RP") && nRP >= 3) penalty = 200;
+      // max 8 pitchers total
+      const nPIT = nSP + nRP;
+      if ((p.cats.includes("SP") || p.cats.includes("RP")) && nPIT >= 8) penalty = 300;
       if (p.type === "HIT" && benchPitchers >= 3) bonus += 50;
       if (p.cats.includes("SP") && nSP === 0 && round <= 2) penalty = 120;
       if (p.cats.includes("SP") && nSP === 0 && round === 3) penalty = 50;
@@ -277,7 +280,7 @@ function App() {
 
         <div style={{background:"linear-gradient(135deg,#0b1520,#0a1a0d)",borderBottom:"1px solid #1a3040",padding:"12px 20px",display:"flex",alignItems:"center",gap:"16px",flexShrink:"0"}}>
           <div>
-            <div style={{fontSize:"9px",letterSpacing:"3px",color:"#3a7f5a",fontFamily:"monospace"}}>{"LIVE DRAFT · " + numTeams + " TEAMS · PICK " + myPick}</div>
+            <div style={{fontSize:"9px",letterSpacing:"3px",color:"#3a7f5a",fontFamily:"monospace"}}>{"LIVE DRAFT · " + numTeams + " TEAMS · PICK " + myPick + " · MAX 8 PITCHERS · 1100 IP"}</div>
             <div style={{fontSize:"17px",color:"#f5edd8"}}>Aaron Dodgers</div>
           </div>
           <div style={{display:"flex",gap:"12px",alignItems:"center",marginLeft:"16px"}}>
@@ -405,6 +408,15 @@ function App() {
                   <div style={{fontSize:"11px",color:"#7a9a8a"}}>Pak een van de aanbevolen spelers</div>
                 </div>
               )}
+              {rosterNeeds.pitcherCapped && (
+                <div style={{background:"rgba(224,92,92,0.08)",border:"1px solid rgba(224,92,92,0.4)",borderRadius:"8px",padding:"10px 14px",marginBottom:"12px",display:"flex",alignItems:"center",gap:"10px"}}>
+                  <span style={{fontSize:"16px"}}>{"\u26d4"}</span>
+                  <div>
+                    <div style={{fontSize:"11px",color:"#e05c5c",fontFamily:"monospace",fontWeight:"bold"}}>MAX 8 PITCHERS BEREIKT</div>
+                    <div style={{fontSize:"10px",color:"#8a5a5a"}}>Alleen nog hitters — max 8 pitchers per roster</div>
+                  </div>
+                </div>
+              )}
               {rosterNeeds.tooManyRP && (
                 <div style={{background:"rgba(255,193,7,0.08)",border:"1px solid rgba(255,193,7,0.4)",borderRadius:"8px",padding:"10px 14px",marginBottom:"12px",display:"flex",alignItems:"center",gap:"10px"}}>
                   <span style={{fontSize:"16px"}}>{"\u26a0\ufe0f"}</span>
@@ -481,7 +493,7 @@ function App() {
           {tab === "MYROSTER" && (
             <div style={{flex:"1",overflowY:"auto",padding:"14px"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"}}>
-                <div style={{fontSize:"9px",color:"#3a5a6a",fontFamily:"monospace",letterSpacing:"2px"}}>{"MIJN ROSTER — " + myRoster.length + "/25"}</div>
+                <div style={{fontSize:"9px",color:"#3a5a6a",fontFamily:"monospace",letterSpacing:"2px"}}>{"MIJN ROSTER — " + myRoster.length + "/22"}</div>
                 <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
                   <div style={{textAlign:"right"}}>
                     <div style={{fontSize:"8px",color:"#3a5a6a",fontFamily:"monospace"}}>TOTAAL</div>
