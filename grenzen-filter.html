@@ -593,7 +593,7 @@ async function loadDataset(key) {
     updateStats(key);
     document.getElementById('loaderWrap').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
-    map && map.resize();
+    setTimeout(() => { map && map.resize(); }, 50);
     runFilter();
     return;
   }
@@ -633,7 +633,7 @@ async function loadDataset(key) {
     updateStats(key);
     document.getElementById('loaderWrap').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
-    map && map.resize();
+    setTimeout(() => { map && map.resize(); }, 50);
     runFilter();
   } catch(err) {
     document.getElementById('loaderWrap').style.display = 'none';
