@@ -108,7 +108,7 @@ h1 {
 /* Toggle */
 .toggle-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 1px;
   background: var(--border);
   border: 1px solid var(--border);
@@ -167,6 +167,7 @@ h1 {
 .error-box p { font-size: 14px; color: var(--text-muted); }
 
 #ui { display: none; }
+#woiiMap { width: 100%; height: 100%; }
 
 .step {
   background: var(--surface);
@@ -343,6 +344,119 @@ button {
 .btn-secondary:hover:not(:disabled) { border-color: var(--text); }
 .btn-secondary:disabled { opacity: 0.35; cursor: default; }
 
+/* WOII slider */
+.woii-panel { display: none; }
+.woii-panel.active { display: block; }
+.cshapes-panel { display: block; }
+.cshapes-panel.hidden { display: none; }
+
+.slider-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 1px;
+  padding: 1.25rem;
+}
+.slider-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 12px;
+}
+.slider-date-display {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 140px;
+}
+.slider-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.play-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--nos-red);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  font-size: 0;
+  letter-spacing: 0;
+  text-transform: none;
+  transition: background 0.15s;
+}
+.play-btn:hover { background: var(--nos-red-dark); }
+.step-btn {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 0;
+  letter-spacing: 0;
+  text-transform: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.step-btn:hover:not(:disabled) { border-color: var(--text); color: var(--text); }
+.step-btn:disabled { opacity: 0.3; cursor: default; }
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--border-strong);
+  outline: none;
+  border-radius: 2px;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--nos-red);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--nos-red);
+  border: none;
+  cursor: pointer;
+}
+.slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.woii-result-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+.woii-result-meta strong { color: var(--text); font-weight: 700; }
+
+.bezetting-tag {
+  background: #f5e6e6;
+  border-color: #e0b8b8;
+  color: #a30000;
+}
+
 footer {
   margin-top: 3rem;
   padding-top: 1.25rem;
@@ -388,6 +502,10 @@ footer {
       <span class="toggle-label">Europa</span>
       <span class="toggle-sub">CShapes Europe — 1816–2023</span>
     </button>
+    <button class="toggle-btn" id="btnWWII" onclick="switchDataset('woii')">
+      <span class="toggle-label">WO II</span>
+      <span class="toggle-sub">Europa — 1938–1945</span>
+    </button>
   </div>
 
   <div class="loader-wrap" id="loaderWrap">
@@ -400,7 +518,7 @@ footer {
     Controleer of <code>cshapes.geojson</code> en <code>cshapes_europe.geojson</code> in dezelfde map staan als dit bestand.</p>
   </div>
 
-  <div id="ui">
+  <div id="ui" class="cshapes-panel">
     <div class="step">
       <div class="step-header">
         <span class="step-num" aria-hidden="true">1</span>
@@ -467,13 +585,72 @@ footer {
     </div>
   </div>
 
+  <!-- WOII panel -->
+  <div id="woiiPanel" class="woii-panel">
+    <div class="slider-wrap">
+      <div class="slider-top">
+        <div class="slider-date-display" id="woiiDateDisplay">—</div>
+        <div class="slider-controls">
+          <button class="step-btn" id="woiiPrev" onclick="woiiStep(-1)" title="Vorige maand" disabled>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="play-btn" id="woiiPlayBtn" onclick="woiiTogglePlay()" title="Afspelen">
+            <svg id="woiiPlayIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+          <button class="step-btn" id="woiiNext" onclick="woiiStep(1)" title="Volgende maand">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <input type="range" id="woiiSlider" min="0" max="87" value="0" oninput="woiiOnSlider()">
+      <div class="slider-ticks">
+        <span>1938</span><span>1939</span><span>1940</span><span>1941</span><span>1942</span><span>1943</span><span>1944</span><span>1945</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <span class="step-num" aria-hidden="true">1</span>
+        <span class="step-title">Kaartweergave</span>
+      </div>
+      <div class="map-wrap">
+        <div class="map-label" id="woiiMapLabel">—</div>
+        <div id="woiiMap"></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <span class="step-num" aria-hidden="true">2</span>
+        <span class="step-title">Landen &amp; bezettingen</span>
+      </div>
+      <div class="step-body">
+        <p class="woii-result-meta" id="woiiResultMeta">—</p>
+        <div class="tag-cloud" id="woiiTagCloud" aria-label="Landen in selectie"></div>
+        <div class="btn-row">
+          <button class="btn-secondary" id="woiiDlBtn" onclick="woiiDownload()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download GeoJSON
+          </button>
+          <button class="btn-secondary" id="woiiCopyBtn" onclick="woiiCopyNames()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Kopieer namen
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer>
-    <span>CShapes 2.0 — ETH Zürich, CC BY-NC-SA 4.0</span>
+    <span>CShapes 2.0 — ETH Zürich, CC BY-NC-SA 4.0 &nbsp;·&nbsp; WO II — <em>European Borders WWII</em>, ESRI, 2011</span>
   </footer>
 </main>
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
+// ═══════════════════════════════════════════════
+//  CSHAPES — bestaande logica
+// ═══════════════════════════════════════════════
 const DATASETS = {
   world: {
     url: 'cshapes.geojson',
@@ -503,90 +680,53 @@ let filtered = null;
 let map = null;
 let mapReady = false;
 
-// ── Init MapLibre ──
 function initMap() {
   map = new maplibregl.Map({
     container: 'map',
     style: {
       version: 8,
       sources: {},
-      layers: [
-        {
-          id: 'background',
-          type: 'background',
-          paint: { 'background-color': '#aab0a5' }
-        }
-      ]
+      layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#aab0a5' } }]
     },
     center: [15, 20],
     zoom: 1,
     attributionControl: { compact: true }
   });
-
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
-
   map.on('load', () => {
-    map.addSource('grenzen', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] }
-    });
-    map.addLayer({
-      id: 'grenzen-fill',
-      type: 'fill',
-      source: 'grenzen',
-      paint: {
-        'fill-color': '#ffecc9',
-        'fill-opacity': 1
-      }
-    });
-    map.addLayer({
-      id: 'grenzen-line',
-      type: 'line',
-      source: 'grenzen',
-      paint: {
-        'line-color': '#8a7a65',
-        'line-width': 0.6
-      }
-    });
+    map.addSource('grenzen', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'grenzen-fill', type: 'fill', source: 'grenzen', paint: { 'fill-color': '#ffecc9', 'fill-opacity': 1 } });
+    map.addLayer({ id: 'grenzen-line', type: 'line', source: 'grenzen', paint: { 'line-color': '#8a7a65', 'line-width': 0.6 } });
     mapReady = true;
     if (filtered) updateMap();
   });
 }
 
-function updateMap() {
-  if (!map || !filtered) return;
-  if (!mapReady) {
-    map.once('load', updateMap);
-    return;
-  }
-  map.getSource('grenzen').setData(filtered);
-
-  // Fit bounds
-  if (filtered.features.length > 0) {
-    const coords = [];
-    filtered.features.forEach(f => {
-      const geom = f.geometry;
-      if (!geom) return;
-      const flat = geom.type === 'Polygon'
-        ? geom.coordinates.flat()
-        : geom.type === 'MultiPolygon'
-          ? geom.coordinates.flat(2)
-          : [];
-      flat.forEach(c => coords.push(c));
-    });
-    if (coords.length) {
-      const lngs = coords.map(c => c[0]);
-      const lats = coords.map(c => c[1]);
-      const bounds = [
-        [Math.max(-179, Math.min(...lngs)), Math.max(-85, Math.min(...lats))],
-        [Math.min(179,  Math.max(...lngs)), Math.min(85,  Math.max(...lats))]
-      ];
-      map.fitBounds(bounds, { padding: 20, duration: 600 });
-    }
-  }
+function fitBounds(mapInst, features) {
+  const coords = [];
+  features.forEach(f => {
+    const geom = f.geometry;
+    if (!geom) return;
+    const flat = geom.type === 'Polygon' ? geom.coordinates.flat()
+      : geom.type === 'MultiPolygon' ? geom.coordinates.flat(2) : [];
+    flat.forEach(c => coords.push(c));
+  });
+  if (!coords.length) return;
+  const lngs = coords.map(c => c[0]);
+  const lats = coords.map(c => c[1]);
+  mapInst.fitBounds([
+    [Math.max(-179, Math.min(...lngs)), Math.max(-85, Math.min(...lats))],
+    [Math.min(179,  Math.max(...lngs)), Math.min(85,  Math.max(...lats))]
+  ], { padding: 20, duration: 600 });
 }
 
-// ── Data loading ──
+function updateMap() {
+  if (!map || !filtered) return;
+  if (!mapReady) { map.once('load', updateMap); return; }
+  map.getSource('grenzen').setData(filtered);
+  if (filtered.features.length > 0) fitBounds(map, filtered.features);
+}
+
 async function loadDataset(key) {
   if (cache[key]) {
     rawData = cache[key];
@@ -597,22 +737,18 @@ async function loadDataset(key) {
     runFilter();
     return;
   }
-
   document.getElementById('ui').style.display = 'none';
   document.getElementById('errorBox').style.display = 'none';
   document.getElementById('loaderWrap').style.display = 'block';
   document.getElementById('loaderBar').style.width = '0%';
   document.getElementById('loaderText').textContent = 'Dataset laden…';
-
   try {
     const res = await fetch(DATASETS[key].url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
-
     const total = parseInt(res.headers.get('content-length') || '0');
     const reader = res.body.getReader();
     const chunks = [];
     let received = 0;
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -624,12 +760,10 @@ async function loadDataset(key) {
         document.getElementById('loaderText').textContent = 'Laden — ' + pct + '%';
       }
     }
-
     document.getElementById('loaderText').textContent = 'Verwerken…';
     const text = await new Blob(chunks).text();
     cache[key] = JSON.parse(text);
     rawData = cache[key];
-
     updateStats(key);
     document.getElementById('loaderWrap').style.display = 'none';
     document.getElementById('ui').style.display = 'block';
@@ -660,11 +794,23 @@ function switchDataset(key) {
   currentDataset = key;
   document.getElementById('btnWorld').classList.toggle('active', key === 'world');
   document.getElementById('btnEurope').classList.toggle('active', key === 'europe');
-  document.getElementById('dlBtn').disabled = true;
-  document.getElementById('copyBtn').disabled = true;
-  document.getElementById('tagCloud').innerHTML = '';
-  document.getElementById('resultCount').textContent = 'Voer eerst een filter uit.';
-  loadDataset(key);
+  document.getElementById('btnWWII').classList.toggle('active', key === 'woii');
+
+  const isWoii = key === 'woii';
+  document.getElementById('ui').style.display = isWoii ? 'none' : 'block';
+  document.getElementById('woiiPanel').classList.toggle('active', isWoii);
+  document.getElementById('loaderWrap').style.display = 'none';
+
+  if (isWoii) {
+    initWoiiMap();
+    loadWoiiData();
+  } else {
+    document.getElementById('dlBtn').disabled = true;
+    document.getElementById('copyBtn').disabled = true;
+    document.getElementById('tagCloud').innerHTML = '';
+    document.getElementById('resultCount').textContent = 'Voer eerst een filter uit.';
+    loadDataset(key);
+  }
 }
 
 function runFilter() {
@@ -673,7 +819,6 @@ function runFilter() {
   const year  = parseInt(document.getElementById('yearInput').value);
   const month = parseInt(document.getElementById('monthInput').value);
   if (isNaN(year)) return;
-
   filtered = {
     type: 'FeatureCollection',
     features: rawData.features.filter(f => {
@@ -687,24 +832,16 @@ function runFilter() {
       return start <= query && end >= query;
     })
   };
-
-  const names = filtered.features
-    .map(f => ds.getName(f.properties))
-    .sort((a, b) => a.localeCompare(b, 'nl'));
-
+  const names = filtered.features.map(f => ds.getName(f.properties)).sort((a, b) => a.localeCompare(b, 'nl'));
   document.getElementById('tagCloud').innerHTML = names.length
     ? names.map(n => '<span class="tag">' + n + '</span>').join('')
     : '<span style="font-size:13px;color:var(--text-muted)">Geen resultaten.</span>';
-
   document.getElementById('resultCount').innerHTML =
     '<strong>' + filtered.features.length + ' landen</strong> actief op 1\u00a0' + monthNames[month] + '\u00a0' + year;
-
   document.getElementById('mapLabel').textContent =
     filtered.features.length + ' landen — 1\u00a0' + monthNames[month] + '\u00a0' + year;
-
   document.getElementById('dlBtn').disabled = false;
   document.getElementById('copyBtn').disabled = false;
-
   updateMap();
 }
 
@@ -717,19 +854,14 @@ function downloadGeoJSON() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'grenzen' + suffix + '_' + year + '_m' + month + '.geojson';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
 }
 
 function copyNames() {
   if (!filtered) return;
   const ds = DATASETS[currentDataset];
-  const names = filtered.features
-    .map(f => ds.getName(f.properties))
-    .sort((a, b) => a.localeCompare(b, 'nl'))
-    .join('\n');
+  const names = filtered.features.map(f => ds.getName(f.properties)).sort((a, b) => a.localeCompare(b, 'nl')).join('\n');
   navigator.clipboard.writeText(names).then(() => {
     const btn = document.getElementById('copyBtn');
     const orig = btn.innerHTML;
@@ -738,6 +870,213 @@ function copyNames() {
   });
 }
 
+// ═══════════════════════════════════════════════
+//  WOII — slider logica
+// ═══════════════════════════════════════════════
+let woiiData = null;       // { geometries: {hash: geom}, frames: [{d, c}] }
+let woiiFrameIndex = 0;
+let woiiMap = null;
+let woiiMapReady = false;
+let woiiPlaying = false;
+let woiiPlayTimer = null;
+let woiiCurrentGeoJSON = null;
+
+const nlMonthNames = ['','jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+function initWoiiMap() {
+  if (woiiMap) { setTimeout(() => woiiMap.resize(), 50); return; }
+  woiiMap = new maplibregl.Map({
+    container: 'woiiMap',
+    style: {
+      version: 8,
+      sources: {},
+      layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#aab0a5' } }]
+    },
+    center: [18, 52],
+    zoom: 3,
+    attributionControl: { compact: true }
+  });
+  woiiMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+  woiiMap.on('load', () => {
+    woiiMap.addSource('woii-grenzen', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    // Bezet gebied: rode tint
+    woiiMap.addLayer({
+      id: 'woii-fill-bezet',
+      type: 'fill',
+      source: 'woii-grenzen',
+      filter: ['!=', ['get', 'foreign_power'], ''],
+      paint: { 'fill-color': '#f5d5c0', 'fill-opacity': 1 }
+    });
+    // Soevereine landen: historische landkleur
+    woiiMap.addLayer({
+      id: 'woii-fill-soeverein',
+      type: 'fill',
+      source: 'woii-grenzen',
+      filter: ['==', ['get', 'foreign_power'], ''],
+      paint: { 'fill-color': '#ffecc9', 'fill-opacity': 1 }
+    });
+    woiiMap.addLayer({
+      id: 'woii-line',
+      type: 'line',
+      source: 'woii-grenzen',
+      paint: { 'line-color': '#8a7a65', 'line-width': 0.6 }
+    });
+    woiiMapReady = true;
+    if (woiiData) renderWoiiFrame(woiiFrameIndex);
+  });
+}
+
+async function loadWoiiData() {
+  if (woiiData) { renderWoiiFrame(woiiFrameIndex); return; }
+
+  document.getElementById('loaderWrap').style.display = 'block';
+  document.getElementById('loaderBar').style.width = '0%';
+  document.getElementById('loaderText').textContent = 'WO II data laden…';
+
+  try {
+    const res = await fetch('wwii_borders_slider.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const total = parseInt(res.headers.get('content-length') || '0');
+    const reader = res.body.getReader();
+    const chunks = [];
+    let received = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      if (total > 0) {
+        const pct = Math.round(received / total * 100);
+        document.getElementById('loaderBar').style.width = pct + '%';
+        document.getElementById('loaderText').textContent = 'Laden — ' + pct + '%';
+      }
+    }
+    document.getElementById('loaderText').textContent = 'Verwerken…';
+    const text = await new Blob(chunks).text();
+    woiiData = JSON.parse(text);
+    document.getElementById('loaderWrap').style.display = 'none';
+    document.getElementById('woiiSlider').max = woiiData.frames.length - 1;
+    renderWoiiFrame(0);
+  } catch(err) {
+    document.getElementById('loaderWrap').style.display = 'none';
+    document.getElementById('errorBox').style.display = 'block';
+    document.getElementById('errorBox').querySelector('p').innerHTML =
+      '<strong>WO II data kon niet worden geladen.</strong><br>Controleer of <code>wwii_borders_slider.json</code> in dezelfde map staat als dit bestand.';
+    console.error('WOII laden mislukt:', err);
+  }
+}
+
+function woiiFrameToGeoJSON(frameIdx) {
+  const frame = woiiData.frames[frameIdx];
+  const features = frame.c.map(c => ({
+    type: 'Feature',
+    properties: {
+      name: c.n,
+      foreign_power: (c.f && c.f !== '<Null>') ? c.f : ''
+    },
+    geometry: woiiData.geometries[c.g]
+  }));
+  return { type: 'FeatureCollection', features };
+}
+
+function renderWoiiFrame(idx) {
+  if (!woiiData) return;
+  idx = Math.max(0, Math.min(idx, woiiData.frames.length - 1));
+  woiiFrameIndex = idx;
+
+  const frame = woiiData.frames[idx];
+  const [y, m] = frame.d.split('-');
+  const label = nlMonthNames[parseInt(m)] + ' ' + y;
+
+  document.getElementById('woiiDateDisplay').textContent = label;
+  document.getElementById('woiiMapLabel').textContent = label;
+  document.getElementById('woiiSlider').value = idx;
+  document.getElementById('woiiPrev').disabled = idx === 0;
+  document.getElementById('woiiNext').disabled = idx === woiiData.frames.length - 1;
+
+  woiiCurrentGeoJSON = woiiFrameToGeoJSON(idx);
+
+  // Update map
+  if (woiiMapReady) {
+    woiiMap.getSource('woii-grenzen').setData(woiiCurrentGeoJSON);
+  }
+
+  // Update tags
+  const soeverein = [], bezet = [];
+  woiiCurrentGeoJSON.features.forEach(f => {
+    const p = f.properties;
+    if (p.foreign_power) bezet.push({ name: p.name, by: p.foreign_power });
+    else soeverein.push(p.name);
+  });
+  soeverein.sort((a, b) => a.localeCompare(b, 'nl'));
+  bezet.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+
+  const tags = [
+    ...soeverein.map(n => '<span class="tag">' + n + '</span>'),
+    ...bezet.map(b => '<span class="tag bezetting-tag" title="bezet door ' + b.by + '">' + b.name + ' ✕</span>')
+  ];
+  document.getElementById('woiiTagCloud').innerHTML = tags.join('') ||
+    '<span style="font-size:13px;color:var(--text-muted)">Geen data.</span>';
+
+  document.getElementById('woiiResultMeta').innerHTML =
+    '<strong>' + soeverein.length + ' soevereine landen</strong>' +
+    (bezet.length ? ', <strong style="color:#a30000">' + bezet.length + ' bezet</strong>' : '') +
+    ' — ' + label;
+
+  document.getElementById('woiiDlBtn').disabled = false;
+  document.getElementById('woiiCopyBtn').disabled = false;
+}
+
+function woiiOnSlider() {
+  const idx = parseInt(document.getElementById('woiiSlider').value);
+  renderWoiiFrame(idx);
+}
+
+function woiiStep(delta) {
+  renderWoiiFrame(woiiFrameIndex + delta);
+}
+
+function woiiTogglePlay() {
+  woiiPlaying = !woiiPlaying;
+  const icon = document.getElementById('woiiPlayIcon');
+  if (woiiPlaying) {
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    woiiPlayTimer = setInterval(() => {
+      if (woiiFrameIndex >= woiiData.frames.length - 1) {
+        woiiTogglePlay(); // stop aan het einde
+        return;
+      }
+      renderWoiiFrame(woiiFrameIndex + 1);
+    }, 600);
+  } else {
+    icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+    clearInterval(woiiPlayTimer);
+  }
+}
+
+function woiiDownload() {
+  if (!woiiCurrentGeoJSON) return;
+  const frame = woiiData.frames[woiiFrameIndex];
+  const blob = new Blob([JSON.stringify(woiiCurrentGeoJSON)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'grenzen_woii_' + frame.d + '.geojson';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function woiiCopyNames() {
+  if (!woiiCurrentGeoJSON) return;
+  const names = woiiCurrentGeoJSON.features.map(f => f.properties.name).sort((a, b) => a.localeCompare(b, 'nl')).join('\n');
+  navigator.clipboard.writeText(names).then(() => {
+    const btn = document.getElementById('woiiCopyBtn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Gekopieerd';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+
+// ── Boot ──
 initMap();
 loadDataset('world');
 </script>
