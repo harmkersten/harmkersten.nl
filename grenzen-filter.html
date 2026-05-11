@@ -472,7 +472,7 @@ footer {
   </footer>
 </main>
 
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" onload="initMap()"></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 const DATASETS = {
   world: {
@@ -555,8 +555,8 @@ function initMap() {
 
 function updateMap() {
   if (!map || !filtered) return;
-  if (!mapReady || !map.getSource('grenzen')) {
-    map.once('idle', updateMap);
+  if (!mapReady) {
+    map.once('load', updateMap);
     return;
   }
   map.getSource('grenzen').setData(filtered);
@@ -738,6 +738,7 @@ function copyNames() {
   });
 }
 
+initMap();
 loadDataset('world');
 </script>
 </body>
