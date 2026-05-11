@@ -554,7 +554,11 @@ function initMap() {
 }
 
 function updateMap() {
-  if (!mapReady || !map || !filtered) return;
+  if (!map || !filtered) return;
+  if (!mapReady || !map.getSource('grenzen')) {
+    map.once('idle', updateMap);
+    return;
+  }
   map.getSource('grenzen').setData(filtered);
 
   // Fit bounds
