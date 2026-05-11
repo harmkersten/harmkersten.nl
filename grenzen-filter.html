@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Historische grenzen — NOS Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --nos-red: #CC0000;
+  --nos-red-dark: #a30000;
+  --bg: #f2f2f0;
+  --surface: #ffffff;
+  --border: #e0e0de;
+  --border-strong: #c8c8c5;
+  --text: #1a1a1a;
+  --text-muted: #666660;
+  --tag-bg: #f0f0ee;
+  --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.nos-bar { background: var(--nos-red); height: 4px; }
+
+.nos-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+}
+.nos-header-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 56px;
+}
+.nos-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.nos-logo-box {
+  background: var(--nos-red);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 7px;
+  line-height: 1;
+}
+.nos-divider { width: 1px; height: 20px; background: var(--border-strong); }
+.nos-tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--nos-red);
+}
+.kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nos-red);
+  margin-bottom: 6px;
+}
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.intro {
+  font-size: 15px;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.6;
+}
+.intro a { color: var(--nos-red); text-decoration: none; }
+.intro a:hover { text-decoration: underline; }
+
+/* Loading state */
+.loader-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  margin-bottom: 1px;
+}
+.loader-bar-track {
+  width: 100%;
+  max-width: 320px;
+  height: 3px;
+  background: var(--border);
+  margin: 0 auto 1rem;
+  overflow: hidden;
+}
+.loader-bar {
+  height: 100%;
+  background: var(--nos-red);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.loader-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.loader-text strong { color: var(--text); font-weight: 600; }
+
+/* Error state */
+.error-box {
+  background: var(--surface);
+  border: 1px solid #e8c0c0;
+  border-left: 3px solid var(--nos-red);
+  padding: 1.25rem;
+  margin-bottom: 1px;
+  display: none;
+}
+.error-box p { font-size: 14px; color: var(--text-muted); }
+.error-box strong { color: var(--text); }
+
+/* Main UI */
+#ui { display: none; }
+
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 1px;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--nos-red);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.step-body { padding: 1.25rem; }
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+.stat { background: var(--surface); padding: 0.875rem 1rem; text-align: center; }
+.stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nos-red);
+  display: block;
+  margin-bottom: 4px;
+}
+.stat-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+
+/* Controls */
+.controls-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 1.25rem;
+}
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+input[type="number"], select {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  border-radius: 0;
+}
+input[type="number"]:focus, select:focus { border-color: var(--nos-red); }
+input[type="number"]::-webkit-inner-spin-button { display: none; }
+
+/* Result */
+.result-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+.result-meta strong { color: var(--text); font-weight: 700; }
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+.tag-cloud::-webkit-scrollbar { width: 4px; }
+.tag-cloud::-webkit-scrollbar-thumb { background: var(--border-strong); }
+
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: var(--tag-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+/* Buttons */
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+button {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s, border-color 0.15s;
+  border-radius: 0;
+}
+.btn-primary {
+  background: var(--nos-red);
+  color: #fff;
+  border: 2px solid var(--nos-red);
+  width: 100%;
+}
+.btn-primary:hover { background: var(--nos-red-dark); border-color: var(--nos-red-dark); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border-strong);
+}
+.btn-secondary:hover:not(:disabled) { border-color: var(--text); }
+.btn-secondary:disabled { opacity: 0.35; cursor: default; }
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+footer a { color: var(--text-muted); text-decoration: underline; }
+
+@media (max-width: 520px) {
+  .controls-row, .btn-row, .stats-grid { grid-template-columns: 1fr; }
+  h1 { font-size: 1.4rem; }
+  .nos-tool-name, .nos-divider { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="nos-bar"></div>
+<header class="nos-header">
+  <div class="nos-header-inner">
+    <a class="nos-logo" href="https://nos.nl" target="_blank" rel="noopener" aria-label="NOS homepage">
+      <span class="nos-logo-box">NOS</span>
+    </a>
+    <div class="nos-divider"></div>
+    <span class="nos-tool-name">Data &amp; Visualisatie</span>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-header">
+    <p class="kicker">Tool</p>
+    <h1>Historische landsgrenzen</h1>
+    <p class="intro">Filter <a href="https://icr.ethz.ch/data/cshapes/" target="_blank" rel="noopener">CShapes 2.0</a> op jaar en exporteer als GeoJSON voor Mapcreator of QGIS. Dataset beslaat 1886–2019.</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loader-wrap" id="loaderWrap">
+    <div class="loader-bar-track"><div class="loader-bar" id="loaderBar"></div></div>
+    <p class="loader-text" id="loaderText">Dataset laden<strong id="loaderPct"></strong>…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox">
+    <p><strong>Dataset kon niet worden geladen.</strong><br>
+    Controleer of <code>cshapes.geojson</code> in dezelfde map staat als dit HTML-bestand, of pas de <code>DATA_URL</code> aan bovenin het script.</p>
+  </div>
+
+  <!-- Main UI -->
+  <div id="ui">
+    <div class="step">
+      <div class="step-header">
+        <span class="step-num" aria-hidden="true">1</span>
+        <span class="step-title">Kies peildatum</span>
+      </div>
+      <div class="step-body">
+        <div class="stats-grid">
+          <div class="stat"><span class="stat-label">Features</span><span class="stat-value" id="statTotal">—</span></div>
+          <div class="stat"><span class="stat-label">Eerste jaar</span><span class="stat-value" id="statFrom">—</span></div>
+          <div class="stat"><span class="stat-label">Laatste jaar</span><span class="stat-value" id="statTo">—</span></div>
+        </div>
+        <div class="controls-row">
+          <div>
+            <label class="field-label" for="yearInput">Jaar</label>
+            <input type="number" id="yearInput" min="1816" max="2019" value="1945">
+          </div>
+          <div>
+            <label class="field-label" for="monthInput">Peildatum</label>
+            <select id="monthInput">
+              <option value="1">1 januari</option>
+              <option value="6">1 juni</option>
+              <option value="9">1 september</option>
+              <option value="12">31 december</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="runFilter()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filter toepassen
+        </button>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <span class="step-num" aria-hidden="true">2</span>
+        <span class="step-title">Resultaat &amp; download</span>
+      </div>
+      <div class="step-body">
+        <p class="result-meta" id="resultCount">Voer eerst een filter uit.</p>
+        <div class="tag-cloud" id="tagCloud" aria-label="Landen in selectie"></div>
+        <div class="btn-row">
+          <button class="btn-secondary" id="dlBtn" onclick="downloadGeoJSON()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download GeoJSON
+          </button>
+          <button class="btn-secondary" id="copyBtn" onclick="copyNames()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Kopieer namen
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>CShapes 2.0 — ETH Zürich, CC BY-NC-SA 4.0</span>
+    <a href="https://harmkersten.nl" target="_blank" rel="noopener">harmkersten.nl</a>
+  </footer>
+</main>
+
+<script>
+// ── Pas dit pad aan als je het bestand anders noemt of ergens anders zet ──
+const DATA_URL = 'cshapes.geojson';
+
+let rawData = null;
+let filtered = null;
+
+const monthNames = ['','januari','februari','maart','april','mei','juni',
+                    'juli','augustus','september','oktober','november','december'];
+
+async function loadData() {
+  try {
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const total = parseInt(res.headers.get('content-length') || '0');
+    const reader = res.body.getReader();
+    const chunks = [];
+    let received = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      if (total > 0) {
+        const pct = Math.round(received / total * 100);
+        document.getElementById('loaderBar').style.width = pct + '%';
+        document.getElementById('loaderPct').textContent = ' \u2014 ' + pct + '%';
+      }
+    }
+
+    document.getElementById('loaderBar').style.width = '100%';
+    document.getElementById('loaderText').textContent = 'Verwerken…';
+
+    const blob = new Blob(chunks);
+    const text = await blob.text();
+    rawData = JSON.parse(text);
+
+    const features = rawData.features || [];
+    const syears = features.map(f => getProp(f.properties, 'GWSYEAR','gwsyear')).filter(y => y && y > 0);
+    const eyears = features.map(f => getProp(f.properties, 'GWEYEAR','gweyear')).filter(y => y && y > 0);
+
+    document.getElementById('statTotal').textContent = features.length;
+    document.getElementById('statFrom').textContent = Math.min(...syears);
+    document.getElementById('statTo').textContent = Math.max(...eyears);
+
+    document.getElementById('loaderWrap').style.display = 'none';
+    document.getElementById('ui').style.display = 'block';
+
+    runFilter();
+  } catch(err) {
+    document.getElementById('loaderWrap').style.display = 'none';
+    document.getElementById('errorBox').style.display = 'block';
+    console.error('CShapes laden mislukt:', err);
+  }
+}
+
+function getProp(props) {
+  for (let i = 1; i < arguments.length; i++) {
+    if (props[arguments[i]] !== undefined) return props[arguments[i]];
+  }
+  return null;
+}
+
+function runFilter() {
+  if (!rawData) return;
+  const year = parseInt(document.getElementById('yearInput').value);
+  const month = parseInt(document.getElementById('monthInput').value);
+  if (isNaN(year)) return;
+
+  filtered = {
+    type: 'FeatureCollection',
+    features: rawData.features.filter(f => {
+      const p = f.properties;
+      const sy = getProp(p, 'GWSYEAR', 'gwsyear');
+      const sm = getProp(p, 'GWSMONTH', 'gwsmonth') || 1;
+      const ey = getProp(p, 'GWEYEAR', 'gweyear');
+      const em = getProp(p, 'GWEMONTH', 'gwemonth') || 12;
+      if (!sy || sy < 0) return false;
+      const start = sy * 100 + sm;
+      const end = (!ey || ey < 0) ? 999999 : ey * 100 + em;
+      const query = year * 100 + month;
+      return start <= query && end >= query;
+    })
+  };
+
+  const names = filtered.features
+    .map(f => getProp(f.properties, 'CNTRY_NAME','cntry_name','ISONAME','isoname') || '?')
+    .sort((a, b) => a.localeCompare(b, 'nl'));
+
+  document.getElementById('tagCloud').innerHTML = names.length
+    ? names.map(n => '<span class="tag">' + n + '</span>').join('')
+    : '<span style="font-size:13px;color:var(--text-muted)">Geen resultaten.</span>';
+
+  document.getElementById('resultCount').innerHTML =
+    '<strong>' + filtered.features.length + ' landen</strong> actief op 1\u00a0' + monthNames[month] + '\u00a0' + year;
+
+  document.getElementById('dlBtn').disabled = false;
+  document.getElementById('copyBtn').disabled = false;
+}
+
+function downloadGeoJSON() {
+  if (!filtered) return;
+  const year = document.getElementById('yearInput').value;
+  const month = document.getElementById('monthInput').value;
+  const blob = new Blob([JSON.stringify(filtered)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'grenzen_' + year + '_m' + month + '.geojson';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function copyNames() {
+  if (!filtered) return;
+  const names = filtered.features
+    .map(f => getProp(f.properties, 'CNTRY_NAME','cntry_name','ISONAME','isoname') || '?')
+    .sort((a, b) => a.localeCompare(b, 'nl'))
+    .join('\n');
+  navigator.clipboard.writeText(names).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Gekopieerd';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
