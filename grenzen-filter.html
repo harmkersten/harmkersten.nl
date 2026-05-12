@@ -759,7 +759,6 @@ function switchDataset(key) {
   document.getElementById('loaderWrap').style.display = 'none';
 
   if (isWoii) {
-    initWoiiMap();
     loadWoiiData();
   } else {
     document.getElementById('dlBtn').disabled = true;
@@ -865,12 +864,13 @@ function initWoiiMap() {
 }
 
 function loadWoiiData() {
-  // Laad de index van beschikbare frames
   fetch(WOII_INDEX_URL)
     .then(r => r.json())
     .then(dates => {
       WOII_DATES = dates;
+      woiiFrameIndex = 0;
       document.getElementById('woiiSlider').max = WOII_DATES.length - 1;
+      document.getElementById('woiiSlider').value = 0;
       initWoiiMap();
     })
     .catch(err => {
