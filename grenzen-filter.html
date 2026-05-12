@@ -618,6 +618,21 @@ footer {
         <div id="woiiMap"></div>
       </div>
     </div>
+
+    <div class="step">
+      <div class="step-header">
+        <span class="step-num" aria-hidden="true">2</span>
+        <span class="step-title">Download</span>
+      </div>
+      <div class="step-body">
+        <div class="btn-row">
+          <button class="btn-secondary" id="woiiDlBtn" onclick="woiiDownload()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download GeoJSON
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -939,6 +954,7 @@ async function loadAndRenderFrame(idx) {
   // Uit cache serveren indien mogelijk
   if (woiiFrameCache[date]) {
     if (woiiMapReady) woiiMap.getSource('woii-grenzen').setData(woiiFrameCache[date]);
+    document.getElementById('woiiDlBtn').disabled = false;
     prefetchNeighbours(idx);
     return;
   }
@@ -955,6 +971,7 @@ async function loadAndRenderFrame(idx) {
     if (WOII_DATES[woiiFrameIndex] === date) {
       if (woiiMapReady) woiiMap.getSource('woii-grenzen').setData(geojson);
       document.getElementById('woiiMapLabel').textContent = label;
+      document.getElementById('woiiDlBtn').disabled = false;
     }
     prefetchNeighbours(idx);
   } catch(err) {
@@ -1004,6 +1021,18 @@ function woiiTogglePlay() {
   }
 }
 
+
+function woiiDownload() {
+  const date = WOII_DATES[woiiFrameIndex];
+  const geojson = woiiFrameCache[date];
+  if (!geojson) return;
+  const blob = new Blob([JSON.stringify(geojson)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `grenzen_woii_${date}.geojson`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
 
 // ── Boot ──
 initMap();
