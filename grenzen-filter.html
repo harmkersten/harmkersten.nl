@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Historische grenzen — NOS Data</title>
+<title>Historische grenzen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -20,7 +20,7 @@
   --text: #1a1a1a;
   --text-muted: #666660;
   --tag-bg: #f0f0ee;
-  --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+  --sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
 }
 
 body {
@@ -62,15 +62,6 @@ body {
   padding: 3px 7px;
   line-height: 1;
 }
-.nos-divider { width: 1px; height: 20px; background: var(--border-strong); }
-.nos-tool-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .page {
   max-width: 720px;
   margin: 0 auto;
@@ -82,29 +73,12 @@ body {
   padding-bottom: 1.5rem;
   border-bottom: 2px solid var(--nos-red);
 }
-.kicker {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--nos-red);
-  margin-bottom: 6px;
-}
 h1 {
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 8px;
 }
-.intro {
-  font-size: 15px;
-  color: var(--text-muted);
-  font-weight: 300;
-  line-height: 1.6;
-}
-.intro a { color: var(--nos-red); text-decoration: none; }
-.intro a:hover { text-decoration: underline; }
-
 /* Toggle */
 .toggle-row {
   display: grid;
@@ -468,7 +442,6 @@ footer {
 @media (max-width: 520px) {
   .controls-row, .btn-row, .stats-grid { grid-template-columns: 1fr; }
   h1 { font-size: 1.4rem; }
-  .nos-tool-name, .nos-divider { display: none; }
   .map-wrap { height: 260px; }
 }
 </style>
@@ -478,19 +451,13 @@ footer {
 <div class="nos-bar"></div>
 <header class="nos-header">
   <div class="nos-header-inner">
-    <a class="nos-logo" href="https://nos.nl" target="_blank" rel="noopener" aria-label="NOS homepage">
-      <span class="nos-logo-box">NOS</span>
-    </a>
-    <div class="nos-divider"></div>
-    <span class="nos-tool-name">Data &amp; Visualisatie</span>
+    <span class="nos-logo-box">NOS</span>
   </div>
 </header>
 
 <main class="page">
   <div class="page-header">
-    <p class="kicker">Tool</p>
     <h1>Historische landsgrenzen</h1>
-    <p class="intro">Filter CShapes op jaar en exporteer als GeoJSON voor Mapcreator of QGIS.</p>
   </div>
 
   <div class="toggle-row">
@@ -576,10 +543,6 @@ footer {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             Download GeoJSON
           </button>
-          <button class="btn-secondary" id="copyBtn" onclick="copyNames()" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            Kopieer namen
-          </button>
         </div>
       </div>
     </div>
@@ -636,7 +599,7 @@ footer {
   </div>
 
   <footer>
-    <span>CShapes 2.0 — ETH Zürich, CC BY-NC-SA 4.0 &nbsp;·&nbsp; WO II — <em>European Borders WWII</em>, ESRI, 2011</span>
+    <span>CShapes 2.0 — ETH Zürich, CC BY-NC-SA 4.0 &nbsp;·&nbsp; WO II grenzen — Stanford Spatial History Project</span>
   </footer>
 </main>
 
@@ -800,7 +763,6 @@ function switchDataset(key) {
     loadWoiiData();
   } else {
     document.getElementById('dlBtn').disabled = true;
-    document.getElementById('copyBtn').disabled = true;
     document.getElementById('tagCloud').innerHTML = '';
     document.getElementById('resultCount').textContent = 'Voer eerst een filter uit.';
     loadDataset(key);
@@ -835,7 +797,6 @@ function runFilter() {
   document.getElementById('mapLabel').textContent =
     filtered.features.length + ' landen — 1\u00a0' + monthNames[month] + '\u00a0' + year;
   document.getElementById('dlBtn').disabled = false;
-  document.getElementById('copyBtn').disabled = false;
   updateMap();
 }
 
@@ -850,18 +811,6 @@ function downloadGeoJSON() {
   a.download = 'grenzen' + suffix + '_' + year + '_m' + month + '.geojson';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
-}
-
-function copyNames() {
-  if (!filtered) return;
-  const ds = DATASETS[currentDataset];
-  const names = filtered.features.map(f => ds.getName(f.properties)).sort((a, b) => a.localeCompare(b, 'nl')).join('\n');
-  navigator.clipboard.writeText(names).then(() => {
-    const btn = document.getElementById('copyBtn');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Gekopieerd';
-    setTimeout(() => { btn.innerHTML = orig; }, 2000);
-  });
 }
 
 // ═══════════════════════════════════════════════
