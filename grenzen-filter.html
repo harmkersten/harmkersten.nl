@@ -863,8 +863,11 @@ function switchDataset(key) {
   if (isWoii) {
     loadWoiiData();
   } else if (isHist) {
-    initHistMap();
-    setTimeout(() => { histMap && histMap.resize(); loadHistYear(); }, 50);
+    document.getElementById('histPanel').classList.add('active');
+    setTimeout(() => {
+      initHistMap();
+      setTimeout(() => { histMap && histMap.resize(); loadHistYear(); }, 100);
+    }, 10);
   } else {
     document.getElementById('dlBtn').disabled = true;
     document.getElementById('tagCloud').innerHTML = '';
@@ -1160,6 +1163,7 @@ function updateHistMap(label) {
   document.getElementById('histDlBtn').disabled = false;
 
   if (histMapReady) {
+    histMap.resize();
     histMap.getSource('hist-grenzen').setData(histCurrentGeoJSON);
     fitBounds(histMap, histCurrentGeoJSON.features);
   }
