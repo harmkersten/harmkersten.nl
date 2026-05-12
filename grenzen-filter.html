@@ -785,7 +785,8 @@ function initMap() {
     map.addSource('grenzen', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({ id: 'grenzen-fill', type: 'fill', source: 'grenzen', paint: { 'fill-color': '#ffecc9', 'fill-opacity': 1 } });
     map.addLayer({ id: 'grenzen-line', type: 'line', source: 'grenzen', paint: { 'line-color': '#8a7a65', 'line-width': 0.6 } });
-    map.addLayer({ id: 'grenzen-labels', type: 'symbol', source: 'grenzen', layout: {
+    map.addSource('grenzen-label-pts', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'grenzen-labels', type: 'symbol', source: 'grenzen-label-pts', layout: {
       'text-field': ['get', 'name_nl'],
       'text-font': ['Noto Sans Bold'],
       'text-size': 11,
@@ -820,6 +821,7 @@ function updateMap() {
   if (!map || !filtered) return;
   if (!mapReady) { map.once('load', updateMap); return; }
   map.getSource('grenzen').setData(filtered);
+  map.getSource('grenzen-label-pts').setData(makeLabelPoints(filtered.features));
   if (filtered.features.length > 0) fitBounds(map, filtered.features);
 }
 
@@ -1020,7 +1022,8 @@ function initWoiiMap() {
       source: 'woii-grenzen',
       paint: { 'line-color': '#5a4a38', 'line-width': 0.8 }
     });
-    woiiMap.addLayer({ id: 'woii-labels', type: 'symbol', source: 'woii-grenzen', layout: {
+    woiiMap.addSource('woii-label-pts', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    woiiMap.addLayer({ id: 'woii-labels', type: 'symbol', source: 'woii-label-pts', layout: {
       'text-field': ['get', 'name_nl'],
       'text-font': ['Noto Sans Bold'],
       'text-size': 11,
@@ -1065,7 +1068,10 @@ async function loadAndRenderFrame(idx) {
 
   // Uit cache serveren indien mogelijk
   if (woiiFrameCache[date]) {
-    if (woiiMapReady) woiiMap.getSource('woii-grenzen').setData(woiiFrameCache[date]);
+    if (woiiMapReady) {
+      woiiMap.getSource('woii-grenzen').setData(woiiFrameCache[date]);
+      woiiMap.getSource('woii-label-pts').setData(makeLabelPoints(woiiFrameCache[date].features));
+    }
     document.getElementById('woiiDlBtn').disabled = false;
     prefetchNeighbours(idx);
     return;
@@ -1081,7 +1087,10 @@ async function loadAndRenderFrame(idx) {
     woiiFrameCache[date] = geojson;
     // Nog steeds het juiste frame?
     if (WOII_DATES[woiiFrameIndex] === date) {
-      if (woiiMapReady) woiiMap.getSource('woii-grenzen').setData(geojson);
+      if (woiiMapReady) {
+        woiiMap.getSource('woii-grenzen').setData(geojson);
+        woiiMap.getSource('woii-label-pts').setData(makeLabelPoints(geojson.features));
+      }
       document.getElementById('woiiMapLabel').textContent = label;
       document.getElementById('woiiDlBtn').disabled = false;
     }
@@ -1186,7 +1195,8 @@ function initHistMap() {
       source: 'hist-grenzen',
       paint: { 'line-color': '#8a7a65', 'line-width': 0.6 }
     });
-    histMap.addLayer({ id: 'hist-labels', type: 'symbol', source: 'hist-grenzen', layout: {
+    histMap.addSource('hist-label-pts', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    histMap.addLayer({ id: 'hist-labels', type: 'symbol', source: 'hist-label-pts', layout: {
       'text-field': ['get', 'name_nl'],
       'text-font': ['Noto Sans Bold'],
       'text-size': 11,
@@ -1195,7 +1205,10 @@ function initHistMap() {
       'visibility': 'none'
     }, paint: { 'text-color': '#3a2e22', 'text-halo-color': '#ffecc9', 'text-halo-width': 1.5 } });
     histMapReady = true;
-    if (histCurrentGeoJSON) histMap.getSource('hist-grenzen').setData(histCurrentGeoJSON);
+    if (histCurrentGeoJSON) {
+      histMap.getSource('hist-grenzen').setData(histCurrentGeoJSON);
+      histMap.getSource('hist-label-pts').setData(makeLabelPoints(histCurrentGeoJSON.features));
+    }
   });
 }
 
@@ -1236,6 +1249,7 @@ function updateHistMap(label) {
   if (histMapReady) {
     histMap.resize();
     histMap.getSource('hist-grenzen').setData(histCurrentGeoJSON);
+    histMap.getSource('hist-label-pts').setData(makeLabelPoints(histCurrentGeoJSON.features));
     fitBounds(histMap, histCurrentGeoJSON.features);
   }
 }
@@ -1249,6 +1263,58 @@ function histDownload() {
   a.download = `grenzen_${year}.geojson`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
+}
+
+// ── Label punt-helpers ──
+function polygonArea(ring) {
+  let area = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    area += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
+  }
+  return Math.abs(area / 2);
+}
+
+function largestPolygonCentroid(geometry) {
+  let polys = [];
+  if (geometry.type === 'Polygon') {
+    polys = [geometry.coordinates];
+  } else if (geometry.type === 'MultiPolygon') {
+    polys = geometry.coordinates;
+  }
+  let best = null, bestArea = 0;
+  for (const poly of polys) {
+    const area = polygonArea(poly[0]);
+    if (area > bestArea) { bestArea = area; best = poly[0]; }
+  }
+  if (!best) return null;
+  let x = 0, y = 0;
+  for (const c of best) { x += c[0]; y += c[1]; }
+  return [x / best.length, y / best.length];
+}
+
+function makeLabelPoints(features) {
+  const seen = {};
+  const pts = [];
+  for (const feat of features) {
+    const name = feat.properties.name_nl || feat.properties.name_nl || '';
+    if (!name) continue;
+    const geom = feat.geometry;
+    if (!geom) continue;
+    // Pick largest polygon per name
+    let area = 0;
+    if (geom.type === 'Polygon') area = polygonArea(geom.coordinates[0]);
+    else if (geom.type === 'MultiPolygon') {
+      for (const p of geom.coordinates) area = Math.max(area, polygonArea(p[0]));
+    }
+    if (!seen[name] || area > seen[name].area) {
+      const coord = largestPolygonCentroid(geom);
+      if (coord) seen[name] = { area, coord, props: feat.properties };
+    }
+  }
+  for (const name in seen) {
+    pts.push({ type: 'Feature', geometry: { type: 'Point', coordinates: seen[name].coord }, properties: seen[name].props });
+  }
+  return { type: 'FeatureCollection', features: pts };
 }
 
 // ── Label toggles ──
