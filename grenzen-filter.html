@@ -618,27 +618,6 @@ footer {
         <div id="woiiMap"></div>
       </div>
     </div>
-
-    <div class="step">
-      <div class="step-header">
-        <span class="step-num" aria-hidden="true">2</span>
-        <span class="step-title">Landen &amp; bezettingen</span>
-      </div>
-      <div class="step-body">
-        <p class="woii-result-meta" id="woiiResultMeta">—</p>
-        <div class="tag-cloud" id="woiiTagCloud" aria-label="Landen in selectie"></div>
-        <div class="btn-row">
-          <button class="btn-secondary" id="woiiDlBtn" onclick="woiiDownload()" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Download GeoJSON
-          </button>
-          <button class="btn-secondary" id="woiiCopyBtn" onclick="woiiCopyNames()" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            Kopieer namen
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <footer>
@@ -899,27 +878,11 @@ function initWoiiMap() {
   woiiMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
   woiiMap.on('load', () => {
     woiiMap.addSource('woii-grenzen', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    // Bezet gebied: rode tint
-    woiiMap.addLayer({
-      id: 'woii-fill-bezet',
-      type: 'fill',
-      source: 'woii-grenzen',
-      filter: ['!=', ['get', 'foreign_power'], ''],
-      paint: { 'fill-color': '#f5d5c0', 'fill-opacity': 1 }
-    });
-    // Soevereine landen: historische landkleur
-    woiiMap.addLayer({
-      id: 'woii-fill-soeverein',
-      type: 'fill',
-      source: 'woii-grenzen',
-      filter: ['==', ['get', 'foreign_power'], ''],
-      paint: { 'fill-color': '#ffecc9', 'fill-opacity': 1 }
-    });
     woiiMap.addLayer({
       id: 'woii-line',
       type: 'line',
       source: 'woii-grenzen',
-      paint: { 'line-color': '#8a7a65', 'line-width': 0.6 }
+      paint: { 'line-color': '#5a4a38', 'line-width': 0.8 }
     });
     woiiMapReady = true;
     if (woiiData) renderWoiiFrame(woiiFrameIndex);
@@ -1000,31 +963,6 @@ function renderWoiiFrame(idx) {
   if (woiiMapReady) {
     woiiMap.getSource('woii-grenzen').setData(woiiCurrentGeoJSON);
   }
-
-  // Update tags
-  const soeverein = [], bezet = [];
-  woiiCurrentGeoJSON.features.forEach(f => {
-    const p = f.properties;
-    if (p.foreign_power) bezet.push({ name: p.name, by: p.foreign_power });
-    else soeverein.push(p.name);
-  });
-  soeverein.sort((a, b) => a.localeCompare(b, 'nl'));
-  bezet.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
-
-  const tags = [
-    ...soeverein.map(n => '<span class="tag">' + n + '</span>'),
-    ...bezet.map(b => '<span class="tag bezetting-tag" title="bezet door ' + b.by + '">' + b.name + ' ✕</span>')
-  ];
-  document.getElementById('woiiTagCloud').innerHTML = tags.join('') ||
-    '<span style="font-size:13px;color:var(--text-muted)">Geen data.</span>';
-
-  document.getElementById('woiiResultMeta').innerHTML =
-    '<strong>' + soeverein.length + ' soevereine landen</strong>' +
-    (bezet.length ? ', <strong style="color:#a30000">' + bezet.length + ' bezet</strong>' : '') +
-    ' — ' + label;
-
-  document.getElementById('woiiDlBtn').disabled = false;
-  document.getElementById('woiiCopyBtn').disabled = false;
 }
 
 function woiiOnSlider() {
@@ -1054,27 +992,6 @@ function woiiTogglePlay() {
   }
 }
 
-function woiiDownload() {
-  if (!woiiCurrentGeoJSON) return;
-  const frame = woiiData.frames[woiiFrameIndex];
-  const blob = new Blob([JSON.stringify(woiiCurrentGeoJSON)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'grenzen_woii_' + frame.d + '.geojson';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
-}
-
-function woiiCopyNames() {
-  if (!woiiCurrentGeoJSON) return;
-  const names = woiiCurrentGeoJSON.features.map(f => f.properties.name).sort((a, b) => a.localeCompare(b, 'nl')).join('\n');
-  navigator.clipboard.writeText(names).then(() => {
-    const btn = document.getElementById('woiiCopyBtn');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Gekopieerd';
-    setTimeout(() => { btn.innerHTML = orig; }, 2000);
-  });
-}
 
 // ── Boot ──
 initMap();
