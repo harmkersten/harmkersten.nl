@@ -817,32 +817,16 @@ function downloadGeoJSON() {
 //  WOII — slider logica (losse bestanden per maand)
 // ═══════════════════════════════════════════════
 
-// Genereer alle 88 datums (feb 1938 – mei 1945)
-const WOII_DATES = (() => {
-  const dates = [];
-  const endYear = 1945, endMonth = 5;
-  for (let y = 1938; y <= endYear; y++) {
-    const startM = y === 1938 ? 2 : 1;
-    const endM   = y === endYear ? endMonth : 12;
-    for (let m = startM; m <= endM; m++) {
-      // Laatste dag van de maand
-      const lastDay = new Date(y, m, 0).getDate();
-      const mm = String(m).padStart(2, '0');
-      const dd = String(lastDay).padStart(2, '0');
-      dates.push(`${y}-${mm}-${dd}`);
-    }
-  }
-  return dates;
-})();
+const WOII_FRAMES_DIR = 'wwii_frames';
+const WOII_INDEX_URL  = 'wwii_frames_index.json';
 
-const WOII_FRAMES_DIR = 'wwii_frames';  // map naast grenzen-filter.html
-
+let WOII_DATES = [];
 let woiiFrameIndex = 0;
 let woiiMap = null;
 let woiiMapReady = false;
 let woiiPlaying = false;
 let woiiPlayTimer = null;
-let woiiFrameCache = {};   // date_str → GeoJSON object
+let woiiFrameCache = {};
 let woiiFetchPending = false;
 
 const nlMonthNames = ['','jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
@@ -881,9 +865,18 @@ function initWoiiMap() {
 }
 
 function loadWoiiData() {
-  // Initialiseer slider en laad eerste frame
-  document.getElementById('woiiSlider').max = WOII_DATES.length - 1;
-  initWoiiMap();
+  // Laad de index van beschikbare frames
+  fetch(WOII_INDEX_URL)
+    .then(r => r.json())
+    .then(dates => {
+      WOII_DATES = dates;
+      document.getElementById('woiiSlider').max = WOII_DATES.length - 1;
+      initWoiiMap();
+    })
+    .catch(err => {
+      console.error('WOII index laden mislukt:', err);
+      document.getElementById('woiiMapLabel').textContent = 'Index niet gevonden';
+    });
 }
 
 async function loadAndRenderFrame(idx) {
