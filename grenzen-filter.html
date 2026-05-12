@@ -629,8 +629,7 @@ footer {
           <option value="bc200">200 v.Chr.</option>
           <option value="bc100">100 v.Chr.</option>
           <option value="bc1">1 v.Chr.</option>
-          <option value="1">1 n.Chr.</option>
-          <option value="100">100</option>
+          <option value="100">100 n.Chr.</option>
           <option value="200">200</option>
           <option value="300">300</option>
           <option value="400">400</option>
@@ -865,7 +864,7 @@ function switchDataset(key) {
     loadWoiiData();
   } else if (isHist) {
     initHistMap();
-    loadHistYear();
+    setTimeout(() => { histMap && histMap.resize(); loadHistYear(); }, 50);
   } else {
     document.getElementById('dlBtn').disabled = true;
     document.getElementById('tagCloud').innerHTML = '';
