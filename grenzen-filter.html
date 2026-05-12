@@ -240,7 +240,30 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
 }
 #map { width: 100%; height: 100%; }
 
-.map-label {
+.map-label-toggle {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 10;
+  background: white;
+  border: 1px solid var(--border-strong);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.map-label-toggle:hover { color: var(--text); border-color: var(--text); }
+.map-label-toggle.active { color: var(--nos-red); border-color: var(--nos-red); }
+.map-label-toggle svg { flex-shrink: 0; }
+
+
   position: absolute;
   top: 10px;
   left: 10px;
@@ -530,6 +553,10 @@ footer {
       <div class="map-wrap">
         <div class="map-label" id="mapLabel">—</div>
         <div id="map"></div>
+        <button class="map-label-toggle" id="labelToggleMain" onclick="toggleLabels('main')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Labels
+        </button>
       </div>
     </div>
 
@@ -582,6 +609,10 @@ footer {
       <div class="map-wrap">
         <div class="map-label" id="woiiMapLabel">—</div>
         <div id="woiiMap"></div>
+        <button class="map-label-toggle" id="labelToggleWoii" onclick="toggleLabels('woii')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Labels
+        </button>
       </div>
     </div>
 
@@ -676,6 +707,10 @@ footer {
       <div class="map-wrap">
         <div class="map-label" id="histMapLabel">—</div>
         <div id="histMap"></div>
+        <button class="map-label-toggle" id="labelToggleHist" onclick="toggleLabels('hist')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Labels
+        </button>
       </div>
     </div>
 
@@ -752,6 +787,14 @@ function initMap() {
     map.addSource('grenzen', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({ id: 'grenzen-fill', type: 'fill', source: 'grenzen', paint: { 'fill-color': '#ffecc9', 'fill-opacity': 1 } });
     map.addLayer({ id: 'grenzen-line', type: 'line', source: 'grenzen', paint: { 'line-color': '#8a7a65', 'line-width': 0.6 } });
+    map.addLayer({ id: 'grenzen-labels', type: 'symbol', source: 'grenzen', layout: {
+      'text-field': ['get', 'name_nl'],
+      'text-font': ['Open Sans Regular'],
+      'text-size': 11,
+      'text-max-width': 8,
+      'text-allow-overlap': false,
+      'visibility': 'none'
+    }, paint: { 'text-color': '#3a2e22', 'text-halo-color': '#ffecc9', 'text-halo-width': 1.5 } });
     mapReady = true;
     if (filtered) updateMap();
   });
@@ -978,6 +1021,14 @@ function initWoiiMap() {
       source: 'woii-grenzen',
       paint: { 'line-color': '#5a4a38', 'line-width': 0.8 }
     });
+    woiiMap.addLayer({ id: 'woii-labels', type: 'symbol', source: 'woii-grenzen', layout: {
+      'text-field': ['get', 'name_nl'],
+      'text-font': ['Open Sans Regular'],
+      'text-size': 11,
+      'text-max-width': 8,
+      'text-allow-overlap': false,
+      'visibility': 'none'
+    }, paint: { 'text-color': '#3a2e22', 'text-halo-color': '#ffecc9', 'text-halo-width': 1.5 } });
     woiiMapReady = true;
     loadAndRenderFrame(0);
   });
@@ -1135,6 +1186,14 @@ function initHistMap() {
       source: 'hist-grenzen',
       paint: { 'line-color': '#8a7a65', 'line-width': 0.6 }
     });
+    histMap.addLayer({ id: 'hist-labels', type: 'symbol', source: 'hist-grenzen', layout: {
+      'text-field': ['get', 'name_nl'],
+      'text-font': ['Open Sans Regular'],
+      'text-size': 11,
+      'text-max-width': 8,
+      'text-allow-overlap': false,
+      'visibility': 'none'
+    }, paint: { 'text-color': '#3a2e22', 'text-halo-color': '#ffecc9', 'text-halo-width': 1.5 } });
     histMapReady = true;
     if (histCurrentGeoJSON) histMap.getSource('hist-grenzen').setData(histCurrentGeoJSON);
   });
@@ -1190,6 +1249,24 @@ function histDownload() {
   a.download = `grenzen_${year}.geojson`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
+}
+
+// ── Label toggles ──
+const labelState = { main: false, woii: false, hist: false };
+
+function toggleLabels(which) {
+  labelState[which] = !labelState[which];
+  const vis = labelState[which] ? 'visible' : 'none';
+  const btn = document.getElementById('labelToggle' + which.charAt(0).toUpperCase() + which.slice(1));
+  btn.classList.toggle('active', labelState[which]);
+
+  if (which === 'main' && map && mapReady) {
+    map.setLayoutProperty('grenzen-labels', 'visibility', vis);
+  } else if (which === 'woii' && woiiMap && woiiMapReady) {
+    woiiMap.setLayoutProperty('woii-labels', 'visibility', vis);
+  } else if (which === 'hist' && histMap && histMapReady) {
+    histMap.setLayoutProperty('hist-labels', 'visibility', vis);
+  }
 }
 
 // ── Boot ──
