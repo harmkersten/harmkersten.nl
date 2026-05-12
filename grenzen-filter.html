@@ -787,7 +787,7 @@ function initMap() {
     map.addLayer({ id: 'grenzen-line', type: 'line', source: 'grenzen', paint: { 'line-color': '#8a7a65', 'line-width': 0.6 } });
     map.addLayer({ id: 'grenzen-labels', type: 'symbol', source: 'grenzen', layout: {
       'text-field': ['get', 'name_nl'],
-      'text-font': ['Open Sans Regular'],
+      'text-font': ['Noto Sans Bold'],
       'text-size': 11,
       'text-max-width': 8,
       'text-allow-overlap': false,
@@ -1022,7 +1022,7 @@ function initWoiiMap() {
     });
     woiiMap.addLayer({ id: 'woii-labels', type: 'symbol', source: 'woii-grenzen', layout: {
       'text-field': ['get', 'name_nl'],
-      'text-font': ['Open Sans Regular'],
+      'text-font': ['Noto Sans Bold'],
       'text-size': 11,
       'text-max-width': 8,
       'text-allow-overlap': false,
@@ -1188,7 +1188,7 @@ function initHistMap() {
     });
     histMap.addLayer({ id: 'hist-labels', type: 'symbol', source: 'hist-grenzen', layout: {
       'text-field': ['get', 'name_nl'],
-      'text-font': ['Open Sans Regular'],
+      'text-font': ['Noto Sans Bold'],
       'text-size': 11,
       'text-max-width': 8,
       'text-allow-overlap': false,
