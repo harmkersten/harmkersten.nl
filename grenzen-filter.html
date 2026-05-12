@@ -1281,15 +1281,19 @@ function largestPolygonCentroid(geometry) {
   } else if (geometry.type === 'MultiPolygon') {
     polys = geometry.coordinates;
   }
-  let best = null, bestArea = 0;
+  // Weighted average centroid across all polygons
+  let totalArea = 0, wx = 0, wy = 0;
   for (const poly of polys) {
-    const area = polygonArea(poly[0]);
-    if (area > bestArea) { bestArea = area; best = poly[0]; }
+    const ring = poly[0];
+    const area = polygonArea(ring);
+    let cx = 0, cy = 0;
+    for (const c of ring) { cx += c[0]; cy += c[1]; }
+    cx /= ring.length; cy /= ring.length;
+    wx += cx * area; wy += cy * area;
+    totalArea += area;
   }
-  if (!best) return null;
-  let x = 0, y = 0;
-  for (const c of best) { x += c[0]; y += c[1]; }
-  return [x / best.length, y / best.length];
+  if (totalArea === 0) return null;
+  return [wx / totalArea, wy / totalArea];
 }
 
 function makeLabelPoints(features) {
