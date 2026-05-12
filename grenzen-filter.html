@@ -319,11 +319,9 @@ button {
 .btn-secondary:hover:not(:disabled) { border-color: var(--text); }
 .btn-secondary:disabled { opacity: 0.35; cursor: default; }
 
-/* WOII slider */
+/* WOII & Hist panels */
 .woii-panel { display: none; }
-.woii-panel.active { display: block; }
 .cshapes-panel { display: block; }
-.cshapes-panel.hidden { display: none; }
 
 .slider-wrap {
   background: var(--surface);
@@ -845,25 +843,37 @@ function updateStats(key) {
   document.getElementById('yearInput').max = maxY;
 }
 
+function showPanel(key) {
+  // Verberg alles
+  document.getElementById('ui').style.display = 'none';
+  document.getElementById('woiiPanel').style.display = 'none';
+  document.getElementById('histPanel').style.display = 'none';
+  // Toon het juiste panel
+  if (key === 'world' || key === 'europe') {
+    document.getElementById('ui').style.display = 'block';
+  } else if (key === 'woii') {
+    document.getElementById('woiiPanel').style.display = 'block';
+  } else if (key === 'hist') {
+    document.getElementById('histPanel').style.display = 'block';
+  }
+}
+
 function switchDataset(key) {
   if (key === currentDataset) return;
   currentDataset = key;
+
   document.getElementById('btnWorld').classList.toggle('active', key === 'world');
   document.getElementById('btnEurope').classList.toggle('active', key === 'europe');
   document.getElementById('btnWWII').classList.toggle('active', key === 'woii');
   document.getElementById('btnHist').classList.toggle('active', key === 'hist');
 
-  const isWoii = key === 'woii';
-  const isHist = key === 'hist';
-  document.getElementById('ui').style.display = (isWoii || isHist) ? 'none' : 'block';
-  document.getElementById('woiiPanel').classList.toggle('active', isWoii);
-  document.getElementById('histPanel').classList.toggle('active', isHist);
   document.getElementById('loaderWrap').style.display = 'none';
+  showPanel(key);
 
-  if (isWoii) {
+  if (key === 'woii') {
+    setTimeout(() => { woiiMap && woiiMap.resize(); }, 50);
     loadWoiiData();
-  } else if (isHist) {
-    document.getElementById('histPanel').classList.add('active');
+  } else if (key === 'hist') {
     setTimeout(() => {
       initHistMap();
       setTimeout(() => { histMap && histMap.resize(); loadHistYear(); }, 100);
@@ -872,6 +882,7 @@ function switchDataset(key) {
     document.getElementById('dlBtn').disabled = true;
     document.getElementById('tagCloud').innerHTML = '';
     document.getElementById('resultCount').textContent = 'Voer eerst een filter uit.';
+    setTimeout(() => { map && map.resize(); }, 50);
     loadDataset(key, true);
   }
 }
@@ -1181,6 +1192,7 @@ function histDownload() {
 }
 
 // ── Boot ──
+showPanel('world');
 initMap();
 loadDataset('world');
 </script>
