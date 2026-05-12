@@ -850,15 +850,36 @@ function copyNames() {
 }
 
 // ═══════════════════════════════════════════════
-//  WOII — slider logica
+//  WOII — slider logica (losse bestanden per maand)
 // ═══════════════════════════════════════════════
-let woiiData = null;       // { geometries: {hash: geom}, frames: [{d, c}] }
+
+// Genereer alle 88 datums (feb 1938 – mei 1945)
+const WOII_DATES = (() => {
+  const dates = [];
+  const endYear = 1945, endMonth = 5;
+  for (let y = 1938; y <= endYear; y++) {
+    const startM = y === 1938 ? 2 : 1;
+    const endM   = y === endYear ? endMonth : 12;
+    for (let m = startM; m <= endM; m++) {
+      // Laatste dag van de maand
+      const lastDay = new Date(y, m, 0).getDate();
+      const mm = String(m).padStart(2, '0');
+      const dd = String(lastDay).padStart(2, '0');
+      dates.push(`${y}-${mm}-${dd}`);
+    }
+  }
+  return dates;
+})();
+
+const WOII_FRAMES_DIR = 'wwii_frames';  // map naast grenzen-filter.html
+
 let woiiFrameIndex = 0;
 let woiiMap = null;
 let woiiMapReady = false;
 let woiiPlaying = false;
 let woiiPlayTimer = null;
-let woiiCurrentGeoJSON = null;
+let woiiFrameCache = {};   // date_str → GeoJSON object
+let woiiFetchPending = false;
 
 const nlMonthNames = ['','jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 
@@ -879,99 +900,90 @@ function initWoiiMap() {
   woiiMap.on('load', () => {
     woiiMap.addSource('woii-grenzen', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     woiiMap.addLayer({
+      id: 'woii-fill',
+      type: 'fill',
+      source: 'woii-grenzen',
+      paint: { 'fill-color': '#ffecc9', 'fill-opacity': 1 }
+    });
+    woiiMap.addLayer({
       id: 'woii-line',
       type: 'line',
       source: 'woii-grenzen',
       paint: { 'line-color': '#5a4a38', 'line-width': 0.8 }
     });
     woiiMapReady = true;
-    if (woiiData) renderWoiiFrame(woiiFrameIndex);
+    loadAndRenderFrame(0);
   });
 }
 
-async function loadWoiiData() {
-  if (woiiData) { renderWoiiFrame(woiiFrameIndex); return; }
-
-  document.getElementById('loaderWrap').style.display = 'block';
-  document.getElementById('loaderBar').style.width = '0%';
-  document.getElementById('loaderText').textContent = 'WO II data laden…';
-
-  try {
-    const res = await fetch('wwii_borders_slider.json');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const total = parseInt(res.headers.get('content-length') || '0');
-    const reader = res.body.getReader();
-    const chunks = [];
-    let received = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      received += value.length;
-      if (total > 0) {
-        const pct = Math.round(received / total * 100);
-        document.getElementById('loaderBar').style.width = pct + '%';
-        document.getElementById('loaderText').textContent = 'Laden — ' + pct + '%';
-      }
-    }
-    document.getElementById('loaderText').textContent = 'Verwerken…';
-    const text = await new Blob(chunks).text();
-    woiiData = JSON.parse(text);
-    document.getElementById('loaderWrap').style.display = 'none';
-    document.getElementById('woiiSlider').max = woiiData.frames.length - 1;
-    renderWoiiFrame(0);
-  } catch(err) {
-    document.getElementById('loaderWrap').style.display = 'none';
-    document.getElementById('errorBox').style.display = 'block';
-    document.getElementById('errorBox').querySelector('p').innerHTML =
-      '<strong>WO II data kon niet worden geladen.</strong><br>Controleer of <code>wwii_borders_slider.json</code> in dezelfde map staat als dit bestand.';
-    console.error('WOII laden mislukt:', err);
-  }
+function loadWoiiData() {
+  // Initialiseer slider en laad eerste frame
+  document.getElementById('woiiSlider').max = WOII_DATES.length - 1;
+  initWoiiMap();
 }
 
-function woiiFrameToGeoJSON(frameIdx) {
-  const frame = woiiData.frames[frameIdx];
-  const features = frame.c.map(c => ({
-    type: 'Feature',
-    properties: {
-      name: c.n,
-      foreign_power: (c.f && c.f !== '<Null>') ? c.f : ''
-    },
-    geometry: woiiData.geometries[c.g]
-  }));
-  return { type: 'FeatureCollection', features };
-}
-
-function renderWoiiFrame(idx) {
-  if (!woiiData) return;
-  idx = Math.max(0, Math.min(idx, woiiData.frames.length - 1));
+async function loadAndRenderFrame(idx) {
+  idx = Math.max(0, Math.min(idx, WOII_DATES.length - 1));
   woiiFrameIndex = idx;
-
-  const frame = woiiData.frames[idx];
-  const [y, m] = frame.d.split('-');
+  const date = WOII_DATES[idx];
+  const [y, m] = date.split('-');
   const label = nlMonthNames[parseInt(m)] + ' ' + y;
 
+  // UI bijwerken
   document.getElementById('woiiDateDisplay').textContent = label;
   document.getElementById('woiiMapLabel').textContent = label;
   document.getElementById('woiiSlider').value = idx;
   document.getElementById('woiiPrev').disabled = idx === 0;
-  document.getElementById('woiiNext').disabled = idx === woiiData.frames.length - 1;
+  document.getElementById('woiiNext').disabled = idx === WOII_DATES.length - 1;
 
-  woiiCurrentGeoJSON = woiiFrameToGeoJSON(idx);
-
-  // Update map
-  if (woiiMapReady) {
-    woiiMap.getSource('woii-grenzen').setData(woiiCurrentGeoJSON);
+  // Uit cache serveren indien mogelijk
+  if (woiiFrameCache[date]) {
+    if (woiiMapReady) woiiMap.getSource('woii-grenzen').setData(woiiFrameCache[date]);
+    prefetchNeighbours(idx);
+    return;
   }
+
+  // Laden
+  woiiFetchPending = true;
+  document.getElementById('woiiMapLabel').textContent = label + ' — laden…';
+  try {
+    const res = await fetch(`${WOII_FRAMES_DIR}/${date}.geojson`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const geojson = await res.json();
+    woiiFrameCache[date] = geojson;
+    // Nog steeds het juiste frame?
+    if (WOII_DATES[woiiFrameIndex] === date) {
+      if (woiiMapReady) woiiMap.getSource('woii-grenzen').setData(geojson);
+      document.getElementById('woiiMapLabel').textContent = label;
+    }
+    prefetchNeighbours(idx);
+  } catch(err) {
+    document.getElementById('woiiMapLabel').textContent = label + ' — laadfoult';
+    console.error('Frame laden mislukt:', date, err);
+  }
+  woiiFetchPending = false;
+}
+
+function prefetchNeighbours(idx) {
+  // Stil de volgende 2 frames alvast ophalen
+  [1, 2].forEach(offset => {
+    const next = WOII_DATES[idx + offset];
+    if (next && !woiiFrameCache[next]) {
+      fetch(`${WOII_FRAMES_DIR}/${next}.geojson`)
+        .then(r => r.ok ? r.json() : null)
+        .then(g => { if (g) woiiFrameCache[next] = g; })
+        .catch(() => {});
+    }
+  });
 }
 
 function woiiOnSlider() {
   const idx = parseInt(document.getElementById('woiiSlider').value);
-  renderWoiiFrame(idx);
+  loadAndRenderFrame(idx);
 }
 
 function woiiStep(delta) {
-  renderWoiiFrame(woiiFrameIndex + delta);
+  loadAndRenderFrame(woiiFrameIndex + delta);
 }
 
 function woiiTogglePlay() {
@@ -980,12 +992,12 @@ function woiiTogglePlay() {
   if (woiiPlaying) {
     icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
     woiiPlayTimer = setInterval(() => {
-      if (woiiFrameIndex >= woiiData.frames.length - 1) {
-        woiiTogglePlay(); // stop aan het einde
+      if (woiiFrameIndex >= WOII_DATES.length - 1) {
+        woiiTogglePlay();
         return;
       }
-      renderWoiiFrame(woiiFrameIndex + 1);
-    }, 600);
+      loadAndRenderFrame(woiiFrameIndex + 1);
+    }, 800);
   } else {
     icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
     clearInterval(woiiPlayTimer);
