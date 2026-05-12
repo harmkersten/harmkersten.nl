@@ -684,7 +684,7 @@ function updateMap() {
   if (filtered.features.length > 0) fitBounds(map, filtered.features);
 }
 
-async function loadDataset(key) {
+async function loadDataset(key, userTriggered = false) {
   if (cache[key]) {
     rawData = cache[key];
     updateStats(key);
@@ -728,7 +728,7 @@ async function loadDataset(key) {
     runFilter();
   } catch(err) {
     document.getElementById('loaderWrap').style.display = 'none';
-    document.getElementById('errorBox').style.display = 'block';
+    if (userTriggered) document.getElementById('errorBox').style.display = 'block';
     console.error('Laden mislukt:', err);
   }
 }
@@ -764,7 +764,7 @@ function switchDataset(key) {
     document.getElementById('dlBtn').disabled = true;
     document.getElementById('tagCloud').innerHTML = '';
     document.getElementById('resultCount').textContent = 'Voer eerst een filter uit.';
-    loadDataset(key);
+    loadDataset(key, true);
   }
 }
 
