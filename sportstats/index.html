@@ -67,29 +67,30 @@
     position:relative; font-family:'Effra', Arial, sans-serif; font-weight:700;
     overflow:hidden; display:flex; flex-direction:column;
   }
-  .page .topbar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding: calc(var(--u)*40px) calc(var(--u)*40px) 0; }
-  .page .nosbug{ display:flex; align-items:center; gap:calc(var(--u)*4px); font-size:calc(var(--u)*34px); letter-spacing:-.01em; }
+  .page .topbar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding: calc(var(--uh)*40px) calc(var(--uw)*40px) 0; }
+  .page .nosbug{ display:flex; align-items:center; gap:calc(var(--uw)*4px); font-size:calc(var(--ut)*34px); letter-spacing:-.01em; }
   .page .nosbug .n,.page .nosbug .s{ color:#fff; }
   .page .nosbug .o{ color:var(--nos-red); }
-  .page .nosbug img, .page .logoimg{ height:calc(var(--u)*48px); width:auto; display:block; }
+  .page .nosbug img, .page .logoimg{ height:calc(var(--ut)*48px); width:auto; display:block; }
   .page .titlebox{
-    background:#fff; color:#232323; border-radius:calc(var(--u)*6px);
-    padding:calc(var(--u)*18px) calc(var(--u)*44px); font-size:calc(var(--u)*60px); text-align:center;
+    background:#fff; color:#232323; border-radius:0;
+    padding:calc(var(--ut)*18px) calc(var(--ut)*44px); font-size:calc(var(--ut)*60px); text-align:center;
   }
-  .page .tables{ flex:1; display:flex; gap:calc(var(--u)*40px); padding:calc(var(--u)*36px) calc(var(--u)*40px) calc(var(--u)*40px); align-items:flex-start; }
+  .page .tables{ flex:1; display:flex; gap:calc(var(--uh)*40px); padding:calc(var(--uh)*36px) calc(var(--uw)*40px) calc(var(--uh)*40px); align-items:flex-start; }
   .page .tables.stacked{ flex-direction:column; }
+  .page .tables.stacked .tblock{ max-width:calc(var(--uw)*624px); margin:0 auto; width:100%; }
   .page .tblock{ flex:1; min-width:0; }
-  .page .colheader{ display:flex; justify-content:flex-end; gap:calc(var(--u)*16px); padding:0 calc(var(--u)*24px) calc(var(--u)*10px); }
-  .page .colheader span{ width:calc(var(--u)*54px); height:calc(var(--u)*54px); display:flex; align-items:center; justify-content:center; font-size:calc(var(--u)*22px); color:#657c9b; }
-  .page .trow{ display:flex; align-items:center; height:calc(var(--u)*54px); padding:0 calc(var(--u)*24px); gap:calc(var(--u)*16px); }
+  .page .colheader{ display:flex; justify-content:flex-end; gap:calc(var(--uw)*16px); padding:0 calc(var(--uw)*24px) calc(var(--uh)*10px); }
+  .page .colheader span{ width:calc(var(--uw)*54px); height:calc(var(--uh)*54px); display:flex; align-items:center; justify-content:center; font-size:calc(var(--uh)*22px); color:#657c9b; }
+  .page .trow{ display:flex; align-items:center; height:calc(var(--uh)*54px); padding:0 calc(var(--uw)*24px); gap:calc(var(--uw)*16px); }
   .page .trow:nth-child(odd){ background:var(--rowA); }
   .page .trow:nth-child(even){ background:var(--rowB); }
-  .page .namebar{ display:flex; align-items:center; gap:calc(var(--u)*16px); height:calc(var(--u)*54px); flex:0 1 calc(var(--u)*420px); min-width:0; }
+  .page .namebar{ display:flex; align-items:center; gap:calc(var(--uw)*16px); height:calc(var(--uh)*54px); flex:0 1 calc(var(--uw)*420px); min-width:0; }
   .page .rowspacer{ flex:1; min-width:0; }
-  .page .pos{ width:calc(var(--u)*40px); font-size:calc(var(--u)*30px); color:#fff; flex-shrink:0; }
-  .page .crest{ width:calc(var(--u)*40px); height:calc(var(--u)*40px); border-radius:50%; background:#fff; flex-shrink:0; background-size:contain; background-repeat:no-repeat; background-position:center; display:flex; align-items:center; justify-content:center; font-size:calc(var(--u)*16px); color:#555; overflow:hidden; }
-  .page .team{ flex:1; min-width:0; font-size:calc(var(--u)*36px); color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .page .stat{ width:calc(var(--u)*54px); height:calc(var(--u)*54px); display:flex; align-items:center; justify-content:center; flex-shrink:0; text-align:center; font-size:calc(var(--u)*30px); color:#fff; }
+  .page .pos{ width:calc(var(--uw)*40px); font-size:calc(var(--uh)*30px); color:#fff; flex-shrink:0; }
+  .page .crest{ width:calc(var(--uw)*40px); height:calc(var(--uh)*40px); border-radius:50%; flex-shrink:0; background-size:contain; background-repeat:no-repeat; background-position:center; display:flex; align-items:center; justify-content:center; font-size:calc(var(--uh)*16px); color:#555; overflow:hidden; }
+  .page .team{ flex:1; min-width:0; font-size:calc(var(--uh)*36px); color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .page .stat{ width:calc(var(--uw)*54px); height:calc(var(--uh)*54px); display:flex; align-items:center; justify-content:center; flex-shrink:0; text-align:center; font-size:calc(var(--uh)*30px); color:#fff; }
 
   @media (max-width:900px){
     .app{ grid-template-columns:1fr; }
@@ -111,12 +112,21 @@
         <div style="flex:1"><label>Breedte</label><input type="number" id="cw"></div>
         <div style="flex:1"><label>Hoogte</label><input type="number" id="ch"></div>
       </div>
+      <label style="margin-top:10px;">Aantal kolommen</label>
+      <select id="numColumns">
+        <option value="2" selected>2 kolommen</option>
+        <option value="1">1 kolom</option>
+      </select>
       <label style="margin-top:10px;">Layout van tabellen</label>
       <select id="layout">
         <option value="auto">Automatisch (op verhouding)</option>
         <option value="side">Naast elkaar</option>
         <option value="stack">Onder elkaar</option>
       </select>
+      <div id="splitAtWrap" style="display:none; margin-top:8px;">
+        <label>Rijen in kolom 1 (rest naar kolom 2)</label>
+        <input type="number" id="splitAt" min="1">
+      </div>
       <label class="row-inline" style="margin-top:10px; cursor:pointer;">
         <input type="checkbox" id="splitSocial" style="width:auto;"> Verdeel over twee losse afbeeldingen (social)
       </label>
@@ -168,7 +178,11 @@
           <button id="addRow">+ Rij toevoegen</button>
           <button id="autoLogos">Logo's automatisch zoeken</button>
         </div>
-        <div class="hint">Logo's worden gezocht via TheSportsDB op teamnaam. Werkt goed voor voetbalclubs, niet voor wielerploegen — daar kun je een kleur of eigen afbeelding per rij gebruiken.</div>
+        <div class="row-inline" style="margin-top:8px;">
+          <input type="number" id="rowCountInput" min="1" style="width:80px;">
+          <button id="setRowCount">Aantal rijen instellen</button>
+        </div>
+        <div class="hint">Logo's worden eerst gezocht in je eigen <code>logos/</code>-map (alle submappen), dan in de football-logos GitHub-collectie, met TheSportsDB als laatste terugval. Werkt goed voor voetbalclubs, niet voor wielerploegen — daar kun je een kleur of eigen afbeelding per rij gebruiken.</div>
       </div>
 
       <div class="tabpane" id="tab-csv">
@@ -213,7 +227,9 @@ const PRESETS = [
 const state = {
   canvas: {w:1920, h:1080},
   layout: 'auto',
+  columns: 2,
   splitSocial: false,
+  splitAt: null,
   scale: 1,
   title: 'Champions League',
   bgMode: 'gradient',
@@ -258,8 +274,10 @@ function initials(name){
 }
 
 function splitRows(){
-  const half = Math.ceil(state.rows.length/2);
-  return [state.rows.slice(0,half), state.rows.slice(half)];
+  const n = state.rows.length;
+  let cut = state.splitAt;
+  if(!cut || cut<1 || cut>=n) cut = Math.ceil(n/2);
+  return [state.rows.slice(0,cut), state.rows.slice(cut)];
 }
 
 function resolveLayout(w,h){
@@ -292,7 +310,7 @@ function buildTableBlock(rows, startPos){
 }
 
 function pageInnerHtml(rowGroups, w, h, showTitle){
-  const layout = resolveLayout(w,h);
+  const layout = (rowGroups.length === 1) ? 'stack' : resolveLayout(w,h);
   const blocksHtml = rowGroups.map((g,idx)=> buildTableBlock(g.rows, g.start)).join('');
   const logo = state.logoImage
     ? `<img class="logoimg" src="${state.logoImage}">`
@@ -310,12 +328,9 @@ function pageInnerHtml(rowGroups, w, h, showTitle){
 }
 
 function makePageEl(w,h, rowGroups, showTitle){
-  const u = (h/1080) * state.scale;
   const el = document.createElement('div');
   el.className = 'page';
   el.style.width = w+'px';
-  el.style.height = h+'px';
-  el.style.setProperty('--u', u);
   el.style.setProperty('--rowA', state.rowA);
   el.style.setProperty('--rowB', state.rowB);
   if(state.bgMode === 'image' && state.bgImage){
@@ -324,8 +339,43 @@ function makePageEl(w,h, rowGroups, showTitle){
     el.style.background = `linear-gradient(135deg, ${state.bgFrom}, ${state.bgTo})`;
   }
   el.innerHTML = pageInnerHtml(rowGroups, w, h, showTitle);
-  // apply column-label color
   el.querySelectorAll('.colheader span').forEach(s=> s.style.color = state.colLabel);
+
+  // --- auto-fit: measure the natural (unit-scale) content height, then derive
+  // the largest vertical scale that fits the canvas given the current row count.
+  // The horizontal scale (uw) stays independent of row count, so the GS/P
+  // squares and name bar never get narrower just because more rows are added —
+  // only the row height (uh) compresses to make room.
+  el.style.setProperty('--uw', 1);
+  el.style.setProperty('--uh', 1);
+  el.style.setProperty('--ut', 1);
+  el.style.height = 'auto';
+  el.style.overflow = 'visible';
+  el.style.position = 'fixed';
+  el.style.left = '-99999px';
+  el.style.top = '0';
+  document.body.appendChild(el);
+  const measuredH1 = el.scrollHeight || el.offsetHeight || 1;
+  document.body.removeChild(el);
+  el.style.position = '';
+  el.style.left = '';
+  el.style.top = '';
+
+  const rawU = h/1080;
+  const portraitFactor = (w < h) ? 0.8 : 1;
+  const fitU = h/measuredH1;
+  const uw = rawU * portraitFactor * state.scale;
+  const uh = Math.min(rawU * portraitFactor, fitU) * state.scale;
+  // title & logo: keep them at the same size as the 16:9/4:3 reference for
+  // every portrait format, instead of letting them inflate on tall canvases
+  // or shrink just because the canvas happens to be narrow.
+  const ut = (w < h) ? 1 * state.scale : uw;
+
+  el.style.height = h+'px';
+  el.style.overflow = 'hidden';
+  el.style.setProperty('--uw', uw);
+  el.style.setProperty('--uh', uh);
+  el.style.setProperty('--ut', ut);
   return el;
 }
 
@@ -381,8 +431,13 @@ function render(){
     document.getElementById('downloadBtn').style.display = 'none';
   } else {
     document.getElementById('downloadBtn').style.display = 'block';
-    const [r1,r2] = splitRows();
-    const groups = [{rows:r1, start:1}, {rows:r2, start:r1.length+1}];
+    let groups;
+    if(state.columns === 1){
+      groups = [{rows: state.rows, start: 1}];
+    } else {
+      const [r1,r2] = splitRows();
+      groups = [{rows:r1, start:1}, {rows:r2, start:r1.length+1}];
+    }
 
     const scaleF = Math.min(PREVIEW_MAX_W / w, 1);
     const shell = document.createElement('div');
@@ -456,7 +511,7 @@ function renderRowsEditor(){
       });
     });
     div.querySelector('[data-act=del]').addEventListener('click', ()=>{
-      state.rows.splice(idx,1); renderRowsEditor(); render();
+      state.rows.splice(idx,1); document.getElementById('rowCountInput').value = state.rows.length; renderRowsEditor(); render();
     });
     div.querySelector('[data-act=logoUpload]').addEventListener('click', ()=>{
       const inp = document.createElement('input');
@@ -474,7 +529,81 @@ function renderRowsEditor(){
   });
 }
 
+let footballLogosTreeCache = null;
+let localLogosManifestCache = null;
+
+function normalizeLogoName(s){
+  return s.toLowerCase()
+    .replace(/\.(png|svg|jpg|jpeg)$/i,'')
+    .replace(/[^a-z0-9]+/g,'');
+}
+
+async function getLocalLogosManifest(){
+  if(localLogosManifestCache) return localLogosManifestCache;
+  try{
+    const res = await fetch('logos/manifest.json');
+    localLogosManifestCache = await res.json();
+  }catch(e){
+    console.warn('Could not load local logos manifest', e);
+    localLogosManifestCache = [];
+  }
+  return localLogosManifestCache;
+}
+
+function findInManifest(teamName, manifest){
+  const target = normalizeLogoName(teamName);
+  let exact = null, partial = null;
+  for(const path of manifest){
+    const base = path.split('/').pop();
+    const norm = normalizeLogoName(base);
+    if(norm === target){ exact = path; break; }
+    if(!partial && (norm.includes(target) || target.includes(norm))) partial = path;
+  }
+  const path = exact || partial;
+  if(!path) return null;
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+
+async function getFootballLogosTree(){
+  if(footballLogosTreeCache) return footballLogosTreeCache;
+  try{
+    const res = await fetch('https://api.github.com/repos/luukhopman/football-logos/git/trees/master?recursive=1');
+    const data = await res.json();
+    footballLogosTreeCache = (data.tree || [])
+      .filter(t => t.type === 'blob' && t.path.startsWith('logos/') && /\.(png|svg)$/i.test(t.path));
+  }catch(e){
+    console.warn('Could not load football-logos repo tree', e);
+    footballLogosTreeCache = [];
+  }
+  return footballLogosTreeCache;
+}
+
+async function fetchLogoFromFootballLogosRepo(teamName){
+  const tree = await getFootballLogosTree();
+  if(!tree.length) return null;
+  const target = normalizeLogoName(teamName);
+  let exact = null, partial = null;
+  for(const entry of tree){
+    const base = entry.path.split('/').pop();
+    const norm = normalizeLogoName(base);
+    if(norm === target){ exact = entry.path; break; }
+    if(!partial && (norm.includes(target) || target.includes(norm))) partial = entry.path;
+  }
+  const path = exact || partial;
+  if(!path) return null;
+  return `https://cdn.jsdelivr.net/gh/luukhopman/football-logos@master/${path.split('/').map(encodeURIComponent).join('/')}`;
+}
+
 async function autoFetchLogo(teamName){
+  try{
+    const manifest = await getLocalLogosManifest();
+    const localPath = findInManifest(teamName, manifest);
+    if(localPath) return localPath;
+  }catch(e){ console.warn('local logo lookup failed for', teamName, e); }
+  try{
+    const repoUrl = await fetchLogoFromFootballLogosRepo(teamName);
+    if(repoUrl) return repoUrl;
+  }catch(e){ console.warn('football-logos repo lookup failed for', teamName, e); }
   try{
     const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`);
     const data = await res.json();
@@ -485,6 +614,10 @@ async function autoFetchLogo(teamName){
   return null;
 }
 
+function updateSplitAtVisibility(){
+  document.getElementById('splitAtWrap').style.display = (state.columns===2 || state.splitSocial) ? 'block':'none';
+}
+
 function wireEditor(){
   buildPresetSelect();
   document.getElementById('cw').value = state.canvas.w;
@@ -493,7 +626,25 @@ function wireEditor(){
   document.getElementById('ch').addEventListener('input', e=>{ state.canvas.h = Number(e.target.value)||state.canvas.h; render(); });
 
   document.getElementById('layout').addEventListener('change', e=>{ state.layout = e.target.value; render(); });
-  document.getElementById('splitSocial').addEventListener('change', e=>{ state.splitSocial = e.target.checked; render(); });
+  document.getElementById('numColumns').addEventListener('change', e=>{
+    state.columns = Number(e.target.value);
+    updateSplitAtVisibility();
+    render();
+  });
+  document.getElementById('splitSocial').addEventListener('change', e=>{
+    state.splitSocial = e.target.checked;
+    updateSplitAtVisibility();
+    if(state.splitSocial && !document.getElementById('splitAt').value){
+      const half = Math.ceil(state.rows.length/2);
+      document.getElementById('splitAt').value = half;
+      state.splitAt = half;
+    }
+    render();
+  });
+  document.getElementById('splitAt').addEventListener('input', e=>{
+    state.splitAt = Number(e.target.value) || null;
+    render();
+  });
 
   const scaleSlider = document.getElementById('scaleSlider');
   const scaleVal = document.getElementById('scaleval');
@@ -533,6 +684,20 @@ function wireEditor(){
 
   document.getElementById('addRow').addEventListener('click', ()=>{
     state.rows.push({team:'Nieuw team', gs:0, p:0, logo:null, color:'#ffffff'});
+    document.getElementById('rowCountInput').value = state.rows.length;
+    renderRowsEditor(); render();
+  });
+
+  document.getElementById('setRowCount').addEventListener('click', ()=>{
+    const n = Number(document.getElementById('rowCountInput').value);
+    if(!n || n < 1) return;
+    if(n < state.rows.length){
+      state.rows = state.rows.slice(0, n);
+    } else {
+      while(state.rows.length < n){
+        state.rows.push({team:'Team '+(state.rows.length+1), gs:0, p:0, logo:null, color:'#ffffff'});
+      }
+    }
     renderRowsEditor(); render();
   });
 
@@ -574,6 +739,7 @@ function wireEditor(){
     }
     if(newRows.length){
       state.rows = newRows;
+      document.getElementById('rowCountInput').value = state.rows.length;
       renderRowsEditor(); render();
     }
   });
@@ -607,6 +773,10 @@ function wireEditor(){
 }
 
 wireEditor();
+updateSplitAtVisibility();
+document.getElementById('splitAt').value = Math.ceil(state.rows.length/2);
+state.splitAt = Math.ceil(state.rows.length/2);
+document.getElementById('rowCountInput').value = state.rows.length;
 renderRowsEditor();
 render();
 </script>
