@@ -50,7 +50,9 @@
   .tabs button.active{ background:var(--ui-text); color:#fff; border-color:var(--ui-text); }
   .tabpane{ display:none; }
   .tabpane.active{ display:block; }
-  .rowedit{ display:grid; grid-template-columns:1fr 50px 50px auto auto auto; gap:6px; align-items:center; margin-bottom:6px; }
+  .rowedit{ display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:nowrap; }
+  .rowedit input[data-f="team"]{ flex:1 1 90px; min-width:60px; }
+  .rowedit input[data-stat]{ flex:0 0 50px; width:50px; }
   .rowedit input{ padding:4px 6px; font-size:12px; }
   .rowedit button{ padding:4px 6px; font-size:11px; }
   .swatch{ width:22px; height:22px; border-radius:50%; border:1px solid var(--ui-border); padding:0; }
@@ -114,8 +116,8 @@
       </div>
       <label style="margin-top:10px;">Aantal kolommen</label>
       <select id="numColumns">
-        <option value="2" selected>2 kolommen</option>
-        <option value="1">1 kolom</option>
+        <option value="2">2 kolommen</option>
+        <option value="1" selected>1 kolom</option>
       </select>
       <label style="margin-top:10px;">Layout van tabellen</label>
       <select id="layout">
@@ -167,35 +169,42 @@
     <fieldset>
       <legend>Data</legend>
       <div class="tabs">
-        <button data-tab="manual" class="active">Handmatig</button>
-        <button data-tab="csv">CSV</button>
+        <button data-tab="csv" class="active">Plak hier data</button>
+        <button data-tab="manual">Handmatig</button>
         <button data-tab="api">API</button>
       </div>
 
-      <div class="tabpane active" id="tab-manual">
+      <div class="tabpane" id="tab-manual">
         <div id="rowsEditor"></div>
         <div class="row-inline">
           <button id="addRow">+ Rij toevoegen</button>
+          <button id="addColumn">+ Kolom toevoegen</button>
+        </div>
+        <div class="row-inline" style="margin-top:8px;">
           <button id="autoLogos">Logo's automatisch zoeken</button>
         </div>
         <div class="row-inline" style="margin-top:8px;">
           <input type="number" id="rowCountInput" min="1" style="width:80px;">
           <button id="setRowCount">Aantal rijen instellen</button>
+          <button id="cleanupNames" title="Verwijdert een per ongeluk meegeplakt rangnummer voor de teamnaam">Nummers opschonen</button>
         </div>
+        <div class="hint">De koppen boven de cijfers (GS, P, ...) zijn direct te wijzigen — typ er gewoon een nieuwe naam in. Met "+ Kolom toevoegen" zet je een extra statistiek erbij (bijvoorbeeld W, G, V); het ✕'je naast een kop verwijdert die kolom weer.</div>
         <div class="hint">Logo's worden alleen gezocht in je eigen <code>logos/</code>-map (alle submappen, op basis van <code>logos/manifest.json</code>). Geen externe bronnen. Werkt goed voor voetbalclubs, niet voor wielerploegen — daar kun je een kleur of eigen afbeelding per rij gebruiken.</div>
         <div class="hint" id="logoSearchStatus" style="margin-top:6px;"></div>
       </div>
 
-      <div class="tabpane" id="tab-csv">
+      <div class="tabpane active" id="tab-csv">
         <div class="csvbox">
-          <label>Plak CSV (team,GS,P — per regel)</label>
-          <textarea id="csvInput" placeholder="Liverpool,5,15&#10;Internazionale,5,15&#10;FC Barcelona,5,13"></textarea>
+          <label>Plak data (eerste kolom = team, daarna een kolom per statistiek)</label>
+          <textarea id="csvInput" placeholder="team,GS,W,G,V,P&#10;Bayern München,34,28,5,1,89&#10;Borussia Dortmund,34,22,7,5,73"></textarea>
         </div>
         <div class="row-inline" style="margin-top:8px;">
-          <label class="row-inline" style="cursor:pointer;"><input type="checkbox" id="csvHasHeader" style="width:auto;"> Eerste regel is kop</label>
+          <label class="row-inline" style="cursor:pointer;"><input type="checkbox" id="csvHasHeader" checked style="width:auto;"> Eerste regel is kop (kolomnamen)</label>
         </div>
         <button id="applyCsv" class="primary" style="margin-top:8px;">Toepassen</button>
         <input type="file" id="csvFile" accept=".csv,text/csv" style="margin-top:8px;">
+        <div class="hint">Met kop herkent de tool zelf welke kolommen je aanlevert (GS, W, G, V, P, eigen namen — alles mag), ook als rang en teamnaam los op hun eigen regel staan zoals bij een gekopieerde website-tabel. Een rangnummer dat per ongeluk vóór de teamnaam wordt geplakt, wordt automatisch verwijderd.</div>
+        <div class="hint" id="pasteStatus"></div>
       </div>
 
       <div class="tabpane" id="tab-api">
@@ -206,7 +215,7 @@
         <label>Endpoint URL (zodra je proxy live staat)</label>
         <input type="text" id="apiUrl" placeholder="/api/standings?competition=cl">
         <button id="fetchApi" style="margin-top:8px;">Ophalen</button>
-        <div class="hint">Verwacht JSON: <code>[{"team":"Liverpool","gs":5,"p":15}, ...]</code></div>
+        <div class="hint">Verwacht JSON: <code>[{"team":"Liverpool","gs":5,"p":15}, ...]</code> — extra velden worden automatisch eigen kolommen.</div>
       </div>
     </fieldset>
 
@@ -226,9 +235,9 @@ const PRESETS = [
 ];
 
 const state = {
-  canvas: {w:1920, h:1080},
+  canvas: {w:1080, h:1440},
   layout: 'auto',
-  columns: 2,
+  columns: 1,
   splitSocial: false,
   splitAt: null,
   scale: 1,
@@ -241,37 +250,71 @@ const state = {
   rowA: '#667895',
   rowB: '#596b87',
   colLabel: '#657c9b',
+  statColumns: [
+    {key:'gs', label:'GS', visible:true},
+    {key:'p', label:'P', visible:true},
+  ],
   rows: [
-    {team:'Liverpool', gs:5, p:15, logo:"logos/Voetbal/England%20-%20Premier%20League/Liverpool%20FC.png", color:'#ffffff'},
-    {team:'Internazionale', gs:5, p:15, logo:"logos/Voetbal/Italy%20-%20Serie%20A/Inter%20Milan.png", color:'#ffffff'},
-    {team:'FC Barcelona', gs:5, p:13, logo:"logos/Voetbal/Spain%20-%20LaLiga/FC%20Barcelona.png", color:'#ffffff'},
-    {team:'Borussia Dortmund', gs:5, p:13, logo:"logos/Voetbal/Germany%20-%20Bundesliga/Borussia%20Dortmund.png", color:'#ffffff'},
-    {team:'Atalanta', gs:5, p:12, logo:"logos/Voetbal/Italy%20-%20Serie%20A/Atalanta%20BC.png", color:'#ffffff'},
-    {team:'Bayer Leverkusen', gs:5, p:12, logo:"logos/Voetbal/Germany%20-%20Bundesliga/Bayer%2004%20Leverkusen.png", color:'#ffffff'},
-    {team:'Arsenal', gs:5, p:11, logo:"logos/Voetbal/England%20-%20Premier%20League/Arsenal%20FC.png", color:'#ffffff'},
-    {team:'AS Monaco', gs:5, p:10, logo:"logos/Voetbal/France%20-%20Ligue%201/AS%20Monaco.png", color:'#ffffff'},
-    {team:'Aston Villa', gs:5, p:10, logo:"logos/Voetbal/England%20-%20Premier%20League/Aston%20Villa.png", color:'#ffffff'},
-    {team:'Sporting CP', gs:5, p:10, logo:"logos/Voetbal/Portugal%20-%20Liga%20Portugal/Sporting%20CP.png", color:'#ffffff'},
-    {team:'Stade Brest', gs:5, p:10, logo:"logos/Voetbal/France%20-%20Ligue%201/Stade%20Brestois%2029.png", color:'#ffffff'},
-    {team:'Lille OSC', gs:5, p:10, logo:"logos/Voetbal/France%20-%20Ligue%201/LOSC%20Lille.png", color:'#ffffff'},
-    {team:'Bayern Munchen', gs:5, p:9, logo:"logos/Voetbal/Germany%20-%20Bundesliga/Bayern%20Munich.png", color:'#ffffff'},
-    {team:'Benfica', gs:5, p:9, logo:"logos/Voetbal/Portugal%20-%20Liga%20Portugal/SL%20Benfica.png", color:'#ffffff'},
-    {team:'Atletico Madrid', gs:5, p:9, logo:"logos/Voetbal/Spain%20-%20LaLiga/Atl%C3%A9tico%20de%20Madrid.png", color:'#ffffff'},
-    {team:'AC Milan', gs:5, p:8, logo:"logos/Voetbal/Italy%20-%20Serie%20A/AC%20Milan.png", color:'#ffffff'},
-    {team:'Manchester City', gs:5, p:8, logo:"logos/Voetbal/England%20-%20Premier%20League/Manchester%20City.png", color:'#ffffff'},
-    {team:'PSV', gs:5, p:8, logo:"logos/Voetbal/Netherlands%20-%20Eredivisie/PSV%20Eindhoven.png", color:'#ffffff'},
-    {team:'Juventus', gs:5, p:8, logo:"logos/Voetbal/Italy%20-%20Serie%20A/Juventus%20FC.png", color:'#ffffff'},
-    {team:'Celtic', gs:5, p:7, logo:"logos/Voetbal/Scotland%20-%20Scottish%20Premiership/Celtic%20FC.png", color:'#ffffff'},
-    {team:'Feyenoord', gs:5, p:7, logo:"logos/Voetbal/Netherlands%20-%20Eredivisie/Feyenoord%20Rotterdam.png", color:'#ffffff'},
-    {team:'Club Brugge', gs:5, p:7, logo:"logos/Voetbal/Belgium%20-%20Jupiler%20Pro%20League/Club%20Brugge%20KV.png", color:'#ffffff'},
-    {team:'Dinamo Zagreb', gs:5, p:7, logo:"logos/Voetbal/Croatia%20-%20SuperSport%20HNL/GNK%20Dinamo%20Zagreb.png", color:'#ffffff'},
-    {team:'Real Madrid', gs:5, p:6, logo:"logos/Voetbal/Spain%20-%20LaLiga/Real%20Madrid.png", color:'#ffffff'},
+    {team:'Liverpool', stats:{gs:5, p:15}, logo:"logos/Voetbal/England%20-%20Premier%20League/Liverpool%20FC.png", color:'#ffffff'},
+    {team:'Internazionale', stats:{gs:5, p:15}, logo:"logos/Voetbal/Italy%20-%20Serie%20A/Inter%20Milan.png", color:'#ffffff'},
+    {team:'FC Barcelona', stats:{gs:5, p:13}, logo:"logos/Voetbal/Spain%20-%20LaLiga/FC%20Barcelona.png", color:'#ffffff'},
+    {team:'Borussia Dortmund', stats:{gs:5, p:13}, logo:"logos/Voetbal/Germany%20-%20Bundesliga/Borussia%20Dortmund.png", color:'#ffffff'},
+    {team:'Atalanta', stats:{gs:5, p:12}, logo:"logos/Voetbal/Italy%20-%20Serie%20A/Atalanta%20BC.png", color:'#ffffff'},
+    {team:'Bayer Leverkusen', stats:{gs:5, p:12}, logo:"logos/Voetbal/Germany%20-%20Bundesliga/Bayer%2004%20Leverkusen.png", color:'#ffffff'},
+    {team:'Arsenal', stats:{gs:5, p:11}, logo:"logos/Voetbal/England%20-%20Premier%20League/Arsenal%20FC.png", color:'#ffffff'},
+    {team:'AS Monaco', stats:{gs:5, p:10}, logo:"logos/Voetbal/France%20-%20Ligue%201/AS%20Monaco.png", color:'#ffffff'},
+    {team:'Aston Villa', stats:{gs:5, p:10}, logo:"logos/Voetbal/England%20-%20Premier%20League/Aston%20Villa.png", color:'#ffffff'},
+    {team:'Sporting CP', stats:{gs:5, p:10}, logo:"logos/Voetbal/Portugal%20-%20Liga%20Portugal/Sporting%20CP.png", color:'#ffffff'},
+    {team:'Stade Brest', stats:{gs:5, p:10}, logo:"logos/Voetbal/France%20-%20Ligue%201/Stade%20Brestois%2029.png", color:'#ffffff'},
+    {team:'Lille OSC', stats:{gs:5, p:10}, logo:"logos/Voetbal/France%20-%20Ligue%201/LOSC%20Lille.png", color:'#ffffff'},
+    {team:'Bayern Munchen', stats:{gs:5, p:9}, logo:"logos/Voetbal/Germany%20-%20Bundesliga/Bayern%20Munich.png", color:'#ffffff'},
+    {team:'Benfica', stats:{gs:5, p:9}, logo:"logos/Voetbal/Portugal%20-%20Liga%20Portugal/SL%20Benfica.png", color:'#ffffff'},
+    {team:'Atletico Madrid', stats:{gs:5, p:9}, logo:"logos/Voetbal/Spain%20-%20LaLiga/Atl%C3%A9tico%20de%20Madrid.png", color:'#ffffff'},
+    {team:'AC Milan', stats:{gs:5, p:8}, logo:"logos/Voetbal/Italy%20-%20Serie%20A/AC%20Milan.png", color:'#ffffff'},
+    {team:'Manchester City', stats:{gs:5, p:8}, logo:"logos/Voetbal/England%20-%20Premier%20League/Manchester%20City.png", color:'#ffffff'},
+    {team:'PSV', stats:{gs:5, p:8}, logo:"logos/Voetbal/Netherlands%20-%20Eredivisie/PSV%20Eindhoven.png", color:'#ffffff'},
+    {team:'Juventus', stats:{gs:5, p:8}, logo:"logos/Voetbal/Italy%20-%20Serie%20A/Juventus%20FC.png", color:'#ffffff'},
+    {team:'Celtic', stats:{gs:5, p:7}, logo:"logos/Voetbal/Scotland%20-%20Scottish%20Premiership/Celtic%20FC.png", color:'#ffffff'},
+    {team:'Feyenoord', stats:{gs:5, p:7}, logo:"logos/Voetbal/Netherlands%20-%20Eredivisie/Feyenoord%20Rotterdam.png", color:'#ffffff'},
+    {team:'Club Brugge', stats:{gs:5, p:7}, logo:"logos/Voetbal/Belgium%20-%20Jupiler%20Pro%20League/Club%20Brugge%20KV.png", color:'#ffffff'},
+    {team:'Dinamo Zagreb', stats:{gs:5, p:7}, logo:"logos/Voetbal/Croatia%20-%20SuperSport%20HNL/GNK%20Dinamo%20Zagreb.png", color:'#ffffff'},
+    {team:'Real Madrid', stats:{gs:5, p:6}, logo:"logos/Voetbal/Spain%20-%20LaLiga/Real%20Madrid.png", color:'#ffffff'},
   ],
 };
 
 // ---------- helpers ----------
 function initials(name){
   return name.split(/\s+/).map(w=>w[0]).join('').slice(0,3).toUpperCase();
+}
+
+function makeEmptyStats(){
+  const s = {};
+  state.statColumns.forEach(c=> s[c.key] = 0);
+  return s;
+}
+
+function slugifyKey(label){
+  let base = label.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'') || 'kolom';
+  let key = base, n = 2;
+  while(state.statColumns.some(c => c.key === key)){ key = base + n; n++; }
+  return key;
+}
+
+// Strips an accidentally pasted leading rank number from a team name,
+// e.g. "14  Bayern München" -> "Bayern München". A real club name that
+// legitimately starts with a number (like "1. FC Köln") is left alone,
+// since that pattern uses a period, not a run of spaces.
+function stripLeadingRank(name){
+  if(typeof name !== 'string') return name;
+  const trimmed = name.replace(/^\s+/, '');
+  const m = trimmed.match(/^(\d{1,3})(\.)?(\s+)(.+)$/);
+  if(m){
+    const [, , dot, spaces, rest] = m;
+    if(!dot && spaces.length >= 1 && rest.trim().length > 2) return rest.trim();
+  }
+  return trimmed;
 }
 
 function splitRows(){
@@ -288,11 +331,13 @@ function resolveLayout(w,h){
 }
 
 function buildTableBlock(rows, startPos){
+  const cols = state.statColumns.filter(c => c.visible);
   let rowsHtml = rows.map((r,i)=>{
     const pos = startPos + i;
     const crest = r.logo
       ? `<div class="crest" style="background-image:url('${r.logo}')"></div>`
       : `<div class="crest" style="background:${r.color || '#fff'}">${r.logo ? '' : ''}</div>`;
+    const statsHtml = cols.map(c => `<div class="stat">${(r.stats && r.stats[c.key]) ?? 0}</div>`).join('');
     return `<div class="trow">
       <div class="namebar">
         <div class="pos">${pos}</div>
@@ -300,12 +345,12 @@ function buildTableBlock(rows, startPos){
         <div class="team">${r.team}</div>
       </div>
       <div class="rowspacer"></div>
-      <div class="stat">${r.gs}</div>
-      <div class="stat">${r.p}</div>
+      ${statsHtml}
     </div>`;
   }).join('');
+  const headerHtml = cols.map(c => `<span>${c.label}</span>`).join('');
   return `<div class="tblock">
-    <div class="colheader"><span>GS</span><span>P</span></div>
+    <div class="colheader">${headerHtml}</div>
     ${rowsHtml}
   </div>`;
 }
@@ -480,7 +525,7 @@ function buildPresetSelect(){
     o.value = i; o.textContent = p.label;
     sel.appendChild(o);
   });
-  sel.value = 0;
+  sel.value = 3;
   sel.addEventListener('change', ()=>{
     const p = PRESETS[sel.value];
     state.canvas = {w:p.w, h:p.h};
@@ -493,13 +538,42 @@ function buildPresetSelect(){
 function renderRowsEditor(){
   const host = document.getElementById('rowsEditor');
   host.innerHTML = '';
+
+  // header row mirroring the input layout below — column labels are directly editable,
+  // and each has a tiny remove button, so adding/removing/renaming columns happens right here.
+  const headerRow = document.createElement('div');
+  headerRow.className = 'rowedit';
+  headerRow.innerHTML = `<span style="flex:1 1 90px; font-size:10px; color:var(--ui-muted);">Team</span>` +
+    state.statColumns.map((c,ci)=>`
+      <span style="flex:0 0 50px; display:flex; flex-direction:column; align-items:center; gap:1px;">
+        <input type="text" value="${c.label}" data-colidx="${ci}" style="width:50px; padding:2px; font-size:11px; text-align:center;" title="Naam van deze kolom">
+        <button data-delcolidx="${ci}" title="Verwijder kolom" style="padding:0 4px; font-size:9px; line-height:1.4;">✕</button>
+      </span>`).join('') +
+    `<span></span><span></span><span></span>`;
+  headerRow.querySelectorAll('input[data-colidx]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      state.statColumns[Number(e.target.dataset.colidx)].label = e.target.value;
+      render();
+    });
+  });
+  headerRow.querySelectorAll('button[data-delcolidx]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      state.statColumns.splice(Number(e.target.dataset.delcolidx), 1);
+      renderRowsEditor(); render();
+    });
+  });
+  host.appendChild(headerRow);
+
   state.rows.forEach((r, idx)=>{
+    if(!r.stats) r.stats = makeEmptyStats();
     const div = document.createElement('div');
     div.className = 'rowedit';
+    const statInputs = state.statColumns.map(c =>
+      `<input type="number" value="${r.stats[c.key] ?? 0}" data-stat="${c.key}" style="width:50px;">`
+    ).join('');
     div.innerHTML = `
       <input type="text" value="${r.team}" data-f="team">
-      <input type="number" value="${r.gs}" data-f="gs">
-      <input type="number" value="${r.p}" data-f="p">
+      ${statInputs}
       ${r.logo ? `<img class="logothumb" src="${r.logo}">` : `<input type="color" class="swatch" value="${r.color}" data-f="color">`}
       <button data-act="logoUpload" title="Eigen logo">📁</button>
       <button data-act="del" title="Verwijder">✕</button>
@@ -507,7 +581,13 @@ function renderRowsEditor(){
     div.querySelectorAll('input[data-f]').forEach(inp=>{
       inp.addEventListener('input', e=>{
         const f = e.target.dataset.f;
-        r[f] = (f==='gs'||f==='p') ? Number(e.target.value) : e.target.value;
+        r[f] = e.target.value;
+        render();
+      });
+    });
+    div.querySelectorAll('input[data-stat]').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        r.stats[e.target.dataset.stat] = Number(e.target.value) || 0;
         render();
       });
     });
@@ -530,10 +610,16 @@ function renderRowsEditor(){
   });
 }
 
+function renderColumnsEditor(){
+  // column management now happens inline in the rows-editor header row (see renderRowsEditor)
+}
+
 let localLogosManifestCache = null;
 
 function wordsOf(s){
-  return s.toLowerCase()
+  return s
+    .replace(/^\s*\d+\s{2,}/, '') // strip an accidentally pasted leading rank number, e.g. "1  Bayern München"
+    .toLowerCase()
     .replace(/ø/g,'o').replace(/æ/g,'ae').replace(/ß/g,'ss')
     .replace(/ð/g,'d').replace(/þ/g,'th').replace(/ı/g,'i')
     .replace(/ğ/g,'g').replace(/ş/g,'s')
@@ -545,7 +631,7 @@ function wordsOf(s){
 // Finds the path whose filename contains every word from the team name
 // (in any order — "FC Twente" should still match "Twente Enschede FC.png"),
 // preferring the candidate with the fewest extra/unrelated words.
-const WORD_SYNONYMS = { 'munchen':'munich', 'koln':'cologne' };
+const WORD_SYNONYMS = { 'munchen':'munich', 'koln':'cologne', 'hsv':'hamburger' };
 
 function wordMatches(fileWord, teamWord){
   const fw = WORD_SYNONYMS[fileWord] || fileWord;
@@ -673,7 +759,7 @@ function wireEditor(){
   document.getElementById('colLabel').addEventListener('input', e=>{ state.colLabel = e.target.value; render(); });
 
   document.getElementById('addRow').addEventListener('click', ()=>{
-    state.rows.push({team:'Nieuw team', gs:0, p:0, logo:null, color:'#ffffff'});
+    state.rows.push({team:'Nieuw team', stats:makeEmptyStats(), logo:null, color:'#ffffff'});
     document.getElementById('rowCountInput').value = state.rows.length;
     renderRowsEditor(); render();
   });
@@ -685,10 +771,28 @@ function wireEditor(){
       state.rows = state.rows.slice(0, n);
     } else {
       while(state.rows.length < n){
-        state.rows.push({team:'Team '+(state.rows.length+1), gs:0, p:0, logo:null, color:'#ffffff'});
+        state.rows.push({team:'Team '+(state.rows.length+1), stats:makeEmptyStats(), logo:null, color:'#ffffff'});
       }
     }
     renderRowsEditor(); render();
+  });
+
+  document.getElementById('addColumn').addEventListener('click', ()=>{
+    const label = 'Kolom ' + (state.statColumns.length + 1);
+    const key = slugifyKey(label);
+    state.statColumns.push({key, label, visible:true});
+    state.rows.forEach(r=>{ if(!r.stats) r.stats = {}; if(!(key in r.stats)) r.stats[key] = 0; });
+    renderColumnsEditor(); renderRowsEditor(); render();
+  });
+
+  document.getElementById('cleanupNames').addEventListener('click', ()=>{
+    let changed = 0;
+    state.rows.forEach(r=>{
+      const cleaned = stripLeadingRank(r.team);
+      if(cleaned !== r.team){ r.team = cleaned; changed++; }
+    });
+    renderRowsEditor(); render();
+    alert(changed ? `${changed} teamnaam${changed===1?'':'en'} opgeschoond.` : 'Geen rangnummers gevonden om op te schonen.');
   });
 
   document.getElementById('autoLogos').addEventListener('click', async ()=>{
@@ -725,22 +829,117 @@ function wireEditor(){
   });
 
   // csv
+// Splits a header label like "PuntenPtn" into the full word ("Punten") and its
+// abbreviation ("Ptn") — sites often glue a full label and its short form together
+// when the table cell has two stacked text nodes. The abbreviation (after the last
+// lowercase->uppercase boundary) becomes the column label, since it fits a 54px square.
+function splitLabelAbbrev(header){
+  const parts = header.split(/(?<=[a-zà-öø-ÿ])(?=[A-ZÀ-ÖØ-Þ])/);
+  if(parts.length <= 1) return {full: header, abbr: header};
+  return {full: parts.slice(0, -1).join(''), abbr: parts[parts.length - 1]};
+}
+
+const RANK_HEADER_WORDS = /^(rg|rang|positie|pos|nr|#|rank)$/i;
+const TEAM_HEADER_WORDS = /^(team|club|naam|ploeg)$/i;
+
+function parsePastedHeader(headerLine){
+  const fields = headerLine.split(/\t|,/).map(s=>s.trim()).filter(Boolean);
+  let teamIdx = fields.findIndex(f => TEAM_HEADER_WORDS.test(f));
+  if(teamIdx === -1) teamIdx = fields.findIndex(f => !RANK_HEADER_WORDS.test(f));
+  const usedKeys = state.statColumns.map(c=>c.key);
+  const statCols = [];
+  fields.forEach((f, i)=>{
+    if(i === teamIdx || RANK_HEADER_WORDS.test(f)) return;
+    const {abbr} = splitLabelAbbrev(f);
+    const existing = state.statColumns.find(c => c.label.toLowerCase() === abbr.toLowerCase());
+    if(existing && !statCols.some(c=>c.key===existing.key)){
+      statCols.push({key: existing.key, label: existing.label});
+      return;
+    }
+    let base = abbr.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'') || 'kolom';
+    let key = base, n = 2;
+    while(usedKeys.includes(key)){ key = base + n; n++; }
+    usedKeys.push(key);
+    statCols.push({key, label: abbr});
+  });
+  return {teamIdx, statCols};
+}
+
+// Handles two paste shapes:
+// (A) one line per team: "Team,stat,stat,..." (classic CSV/manual entry)
+// (B) a "block" shape some sites produce: rank on its own line, the team name
+//     repeated on one or two lines, then a single tab/comma-separated line with
+//     just the numbers — e.g. copy-pasting a styled HTML standings table.
+function parsePastedBody(lines, expectedStatCount){
+  const splitTokens = l => l.split(/\t|,/).map(s=>s.trim()).filter(s=>s.length);
+  const nonEmpty = lines.filter(l=>l.trim().length);
+  if(!nonEmpty.length) return [];
+
+  const firstTokens = splitTokens(nonEmpty[0]);
+  const looksSimple = firstTokens.length === expectedStatCount + 1
+    && !/^-?\d+(\.\d+)?$/.test(firstTokens[0])
+    && firstTokens.slice(1).every(t => /^-?\d+(\.\d+)?$/.test(t));
+
+  if(looksSimple){
+    return nonEmpty.map(line=>{
+      const tokens = splitTokens(line);
+      if(tokens.length < expectedStatCount + 1) return null;
+      return {team: stripLeadingRank(tokens[0]), values: tokens.slice(1, expectedStatCount+1)};
+    }).filter(Boolean);
+  }
+
+  const rows = [];
+  let buffer = [];
+  for(const line of nonEmpty){
+    const tokens = splitTokens(line);
+    const allNumeric = tokens.length >= 1 && tokens.every(t => /^-?\d+(\.\d+)?$/.test(t));
+    if(allNumeric && tokens.length >= expectedStatCount){
+      const nameLines = buffer.filter(l => !/^-?\d+$/.test(l.trim()));
+      const uniqueNames = [...new Set(nameLines.map(l=>l.trim()))];
+      const team = stripLeadingRank(uniqueNames.join(' ').trim() || buffer.join(' ').trim());
+      if(team) rows.push({team, values: tokens.slice(0, expectedStatCount)});
+      buffer = [];
+    } else {
+      buffer.push(line);
+    }
+  }
+  return rows;
+}
+
   document.getElementById('applyCsv').addEventListener('click', ()=>{
     const raw = document.getElementById('csvInput').value.trim();
     if(!raw) return;
     const hasHeader = document.getElementById('csvHasHeader').checked;
-    const lines = raw.split(/\r?\n/).filter(l=>l.trim().length);
-    const startIdx = hasHeader ? 1 : 0;
-    const newRows = [];
-    for(let i=startIdx; i<lines.length; i++){
-      const parts = lines[i].split(/,|\t/).map(s=>s.trim());
-      if(parts.length < 3) continue;
-      newRows.push({team:parts[0], gs:Number(parts[1])||0, p:Number(parts[2])||0, logo:null, color:'#ffffff'});
+    const lines = raw.split(/\r?\n/);
+    if(!lines.length) return;
+
+    let statCols, bodyLines;
+    if(hasHeader){
+      const headerLine = lines.find(l=>l.trim().length);
+      ({statCols} = parsePastedHeader(headerLine));
+      bodyLines = lines.slice(lines.indexOf(headerLine)+1);
+    } else {
+      statCols = state.statColumns.map(c=>({key:c.key, label:c.label}));
+      bodyLines = lines;
     }
+
+    const parsed = parsePastedBody(bodyLines, statCols.length);
+    const newRows = parsed.map(({team, values})=>{
+      const stats = {};
+      statCols.forEach((c, ci)=> stats[c.key] = Number(values[ci]) || 0);
+      return {team, stats, logo:null, color:'#ffffff'};
+    });
+
     if(newRows.length){
+      if(hasHeader){
+        state.statColumns = statCols.map(c => ({key:c.key, label:c.label, visible:true}));
+      }
       state.rows = newRows;
       document.getElementById('rowCountInput').value = state.rows.length;
       renderRowsEditor(); render();
+      document.getElementById('pasteStatus').textContent = `${newRows.length} rijen herkend, ${statCols.length} kolommen: ${statCols.map(c=>c.label).join(', ')}.`;
+    } else {
+      document.getElementById('pasteStatus').textContent = 'Kon geen rijen herkennen — check of "Eerste regel is kop" overeenkomt met je geplakte data.';
     }
   });
   document.getElementById('csvFile').addEventListener('change', e=>{
@@ -757,8 +956,19 @@ function wireEditor(){
     try{
       const res = await fetch(url);
       const data = await res.json();
-      if(Array.isArray(data)){
-        state.rows = data.map(d=>({team:d.team, gs:Number(d.gs)||0, p:Number(d.p)||0, logo:null, color:'#ffffff'}));
+      if(Array.isArray(data) && data.length){
+        const statKeys = Object.keys(data[0]).filter(k => !['team','logo','color'].includes(k));
+        statKeys.forEach(key=>{
+          if(!state.statColumns.some(c=>c.key===key)){
+            state.statColumns.push({key, label:key.toUpperCase(), visible:true});
+          }
+        });
+        state.rows = data.map(d=>{
+          const stats = {};
+          statKeys.forEach(key=> stats[key] = Number(d[key]) || 0);
+          return {team: stripLeadingRank(String(d.team||'')), stats, logo:null, color:'#ffffff'};
+        });
+        document.getElementById('rowCountInput').value = state.rows.length;
         renderRowsEditor(); render();
       }
     }catch(e){
