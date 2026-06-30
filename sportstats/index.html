@@ -532,14 +532,36 @@ function renderRowsEditor(){
 let footballLogosTreeCache = null;
 let localLogosManifestCache = null;
 
-function normalizeLogoName(s){
+function wordsOf(s){
   return s.toLowerCase()
     .replace(/ø/g,'o').replace(/æ/g,'ae').replace(/ß/g,'ss')
     .replace(/ð/g,'d').replace(/þ/g,'th').replace(/ı/g,'i')
     .replace(/ğ/g,'g').replace(/ş/g,'s')
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/\.(png|svg|jpg|jpeg)$/i,'')
-    .replace(/[^a-z0-9]+/g,'');
+    .split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+// Finds the path whose filename contains every word from the team name
+// (in any order — "FC Twente" should still match "Twente Enschede FC.png"),
+// preferring the candidate with the fewest extra/unrelated words.
+function findBestPathMatch(teamName, paths){
+  const teamWords = wordsOf(teamName);
+  if(!teamWords.length) return null;
+  let best = null, bestExtra = Infinity;
+  for(const path of paths){
+    const base = path.split('/').pop();
+    const fileWords = wordsOf(base);
+    const allPresent = teamWords.every(w => fileWords.includes(w));
+    if(allPresent){
+      const extra = fileWords.length - teamWords.length;
+      if(extra < bestExtra){
+        best = path; bestExtra = extra;
+        if(extra === 0) break;
+      }
+    }
+  }
+  return best;
 }
 
 async function getLocalLogosManifest(){
@@ -555,15 +577,7 @@ async function getLocalLogosManifest(){
 }
 
 function findInManifest(teamName, manifest){
-  const target = normalizeLogoName(teamName);
-  let exact = null, partial = null;
-  for(const path of manifest){
-    const base = path.split('/').pop();
-    const norm = normalizeLogoName(base);
-    if(norm === target){ exact = path; break; }
-    if(!partial && (norm.includes(target) || target.includes(norm))) partial = path;
-  }
-  const path = exact || partial;
+  const path = findBestPathMatch(teamName, manifest);
   if(!path) return null;
   return path.split('/').map(encodeURIComponent).join('/');
 }
@@ -585,15 +599,7 @@ async function getFootballLogosTree(){
 async function fetchLogoFromFootballLogosRepo(teamName){
   const tree = await getFootballLogosTree();
   if(!tree.length) return null;
-  const target = normalizeLogoName(teamName);
-  let exact = null, partial = null;
-  for(const entry of tree){
-    const base = entry.path.split('/').pop();
-    const norm = normalizeLogoName(base);
-    if(norm === target){ exact = entry.path; break; }
-    if(!partial && (norm.includes(target) || target.includes(norm))) partial = entry.path;
-  }
-  const path = exact || partial;
+  const path = findBestPathMatch(teamName, tree.map(t => t.path));
   if(!path) return null;
   return `https://cdn.jsdelivr.net/gh/luukhopman/football-logos@master/${path.split('/').map(encodeURIComponent).join('/')}`;
 }
@@ -708,11 +714,11 @@ function wireEditor(){
   document.getElementById('autoLogos').addEventListener('click', async ()=>{
     const btn = document.getElementById('autoLogos');
     btn.textContent = 'Zoeken...'; btn.disabled = true;
-    for(const r of state.rows){
-      if(r.manualLogo) continue;
+    await Promise.all(state.rows.map(async r=>{
+      if(r.manualLogo) return;
       const url = await autoFetchLogo(r.team);
       if(url) r.logo = url;
-    }
+    }));
     btn.textContent = "Logo's automatisch zoeken"; btn.disabled = false;
     renderRowsEditor(); render();
   });
