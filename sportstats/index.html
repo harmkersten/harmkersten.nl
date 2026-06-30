@@ -564,13 +564,22 @@ function findBestPathMatch(teamName, paths){
   return best;
 }
 
+let lastManifestError = null;
+
 async function getLocalLogosManifest(forceReload){
   if(localLogosManifestCache && !forceReload) return localLogosManifestCache;
+  lastManifestError = null;
+  const url = new URL('logos/manifest.json', document.baseURI).href + '?v=' + Date.now();
   try{
-    // cache-bust so a stale cached manifest.json never lingers in the browser
-    const res = await fetch('logos/manifest.json?v=' + Date.now());
+    const res = await fetch(url);
+    if(!res.ok){
+      lastManifestError = `HTTP ${res.status} bij ${url}`;
+      localLogosManifestCache = [];
+      return localLogosManifestCache;
+    }
     localLogosManifestCache = await res.json();
   }catch(e){
+    lastManifestError = `${e.message} bij ${url}`;
     console.warn('Could not load local logos manifest', e);
     localLogosManifestCache = [];
   }
@@ -684,7 +693,7 @@ function wireEditor(){
     btn.textContent = "Logo's automatisch zoeken"; btn.disabled = false;
     const status = document.getElementById('logoSearchStatus');
     if(manifest.length === 0){
-      status.textContent = "Kon logos/manifest.json niet laden — controleer of dat bestand mee is gepusht.";
+      status.textContent = "Kon logos/manifest.json niet laden" + (lastManifestError ? ` (${lastManifestError})` : '') + ".";
     } else if(notFound.length === 0){
       status.textContent = `Alle ${state.rows.length} logo's gevonden in logos/ (${manifest.length} bestanden doorzocht).`;
     } else {
