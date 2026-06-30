@@ -182,7 +182,8 @@
           <input type="number" id="rowCountInput" min="1" style="width:80px;">
           <button id="setRowCount">Aantal rijen instellen</button>
         </div>
-        <div class="hint">Logo's worden eerst gezocht in je eigen <code>logos/</code>-map (alle submappen), dan in de football-logos GitHub-collectie, met TheSportsDB als laatste terugval. Werkt goed voor voetbalclubs, niet voor wielerploegen — daar kun je een kleur of eigen afbeelding per rij gebruiken.</div>
+        <div class="hint">Logo's worden alleen gezocht in je eigen <code>logos/</code>-map (alle submappen, op basis van <code>logos/manifest.json</code>). Geen externe bronnen. Werkt goed voor voetbalclubs, niet voor wielerploegen — daar kun je een kleur of eigen afbeelding per rij gebruiken.</div>
+        <div class="hint" id="logoSearchStatus" style="margin-top:6px;"></div>
       </div>
 
       <div class="tabpane" id="tab-csv">
@@ -529,7 +530,6 @@ function renderRowsEditor(){
   });
 }
 
-let footballLogosTreeCache = null;
 let localLogosManifestCache = null;
 
 function wordsOf(s){
@@ -564,10 +564,11 @@ function findBestPathMatch(teamName, paths){
   return best;
 }
 
-async function getLocalLogosManifest(){
-  if(localLogosManifestCache) return localLogosManifestCache;
+async function getLocalLogosManifest(forceReload){
+  if(localLogosManifestCache && !forceReload) return localLogosManifestCache;
   try{
-    const res = await fetch('logos/manifest.json');
+    // cache-bust so a stale cached manifest.json never lingers in the browser
+    const res = await fetch('logos/manifest.json?v=' + Date.now());
     localLogosManifestCache = await res.json();
   }catch(e){
     console.warn('Could not load local logos manifest', e);
@@ -580,48 +581,6 @@ function findInManifest(teamName, manifest){
   const path = findBestPathMatch(teamName, manifest);
   if(!path) return null;
   return path.split('/').map(encodeURIComponent).join('/');
-}
-
-async function getFootballLogosTree(){
-  if(footballLogosTreeCache) return footballLogosTreeCache;
-  try{
-    const res = await fetch('https://api.github.com/repos/luukhopman/football-logos/git/trees/master?recursive=1');
-    const data = await res.json();
-    footballLogosTreeCache = (data.tree || [])
-      .filter(t => t.type === 'blob' && t.path.startsWith('logos/') && /\.(png|svg)$/i.test(t.path));
-  }catch(e){
-    console.warn('Could not load football-logos repo tree', e);
-    footballLogosTreeCache = [];
-  }
-  return footballLogosTreeCache;
-}
-
-async function fetchLogoFromFootballLogosRepo(teamName){
-  const tree = await getFootballLogosTree();
-  if(!tree.length) return null;
-  const path = findBestPathMatch(teamName, tree.map(t => t.path));
-  if(!path) return null;
-  return `https://cdn.jsdelivr.net/gh/luukhopman/football-logos@master/${path.split('/').map(encodeURIComponent).join('/')}`;
-}
-
-async function autoFetchLogo(teamName){
-  try{
-    const manifest = await getLocalLogosManifest();
-    const localPath = findInManifest(teamName, manifest);
-    if(localPath) return localPath;
-  }catch(e){ console.warn('local logo lookup failed for', teamName, e); }
-  try{
-    const repoUrl = await fetchLogoFromFootballLogosRepo(teamName);
-    if(repoUrl) return repoUrl;
-  }catch(e){ console.warn('football-logos repo lookup failed for', teamName, e); }
-  try{
-    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`);
-    const data = await res.json();
-    if(data && data.teams && data.teams[0] && data.teams[0].strTeamBadge){
-      return data.teams[0].strTeamBadge;
-    }
-  }catch(e){ console.warn('logo fetch failed for', teamName, e); }
-  return null;
 }
 
 function updateSplitAtVisibility(){
@@ -714,12 +673,23 @@ function wireEditor(){
   document.getElementById('autoLogos').addEventListener('click', async ()=>{
     const btn = document.getElementById('autoLogos');
     btn.textContent = 'Zoeken...'; btn.disabled = true;
-    await Promise.all(state.rows.map(async r=>{
+    const manifest = await getLocalLogosManifest(true);
+    const notFound = [];
+    state.rows.forEach(r=>{
       if(r.manualLogo) return;
-      const url = await autoFetchLogo(r.team);
-      if(url) r.logo = url;
-    }));
+      const path = findInManifest(r.team, manifest);
+      if(path) r.logo = path;
+      else notFound.push(r.team);
+    });
     btn.textContent = "Logo's automatisch zoeken"; btn.disabled = false;
+    const status = document.getElementById('logoSearchStatus');
+    if(manifest.length === 0){
+      status.textContent = "Kon logos/manifest.json niet laden — controleer of dat bestand mee is gepusht.";
+    } else if(notFound.length === 0){
+      status.textContent = `Alle ${state.rows.length} logo's gevonden in logos/ (${manifest.length} bestanden doorzocht).`;
+    } else {
+      status.textContent = `${state.rows.length - notFound.length}/${state.rows.length} gevonden. Niet gevonden: ${notFound.join(', ')}.`;
+    }
     renderRowsEditor(); render();
   });
 
