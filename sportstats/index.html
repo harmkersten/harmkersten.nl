@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<title>NOS Standenmaker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  @font-face {
+    font-family: 'Effra';
+    src: url('Effra-Bold.ttf') format('truetype');
+    font-weight: 700;
+  }
+
+  :root{
+    --ui-bg:#f4f5f7;
+    --ui-panel:#ffffff;
+    --ui-border:#dfe2e7;
+    --ui-text:#1c1f24;
+    --ui-muted:#6b7280;
+    --nos-red:#e2001a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--ui-bg); color:var(--ui-text);
+  }
+  .app{ display:grid; grid-template-columns:380px 1fr; min-height:100vh; }
+  .editor{ background:var(--ui-panel); border-right:1px solid var(--ui-border); padding:20px; overflow-y:auto; max-height:100vh; }
+  .editor h1{ font-size:16px; margin:0 0 4px; }
+  .editor h1 span{ color:var(--nos-red); }
+  .editor .sub{ font-size:12px; color:var(--ui-muted); margin-bottom:18px; }
+  fieldset{ border:1px solid var(--ui-border); border-radius:8px; margin:0 0 16px; padding:12px; }
+  legend{ font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ui-muted); padding:0 4px; }
+  label{ display:block; font-size:12px; color:var(--ui-muted); margin:8px 0 3px; }
+  input[type=text], input[type=number], select, textarea{
+    width:100%; padding:6px 8px; border:1px solid var(--ui-border); border-radius:6px; font-size:13px; font-family:inherit;
+  }
+  input[type=color]{ width:36px; height:28px; padding:0; border:1px solid var(--ui-border); border-radius:6px; vertical-align:middle; }
+  .row-inline{ display:flex; gap:8px; align-items:center; }
+  .row-inline label{ margin:0; }
+  button{
+    background:#fff; border:1px solid var(--ui-border); border-radius:6px; padding:6px 10px; font-size:12px; cursor:pointer;
+  }
+  button:hover{ background:#f0f1f3; }
+  button.primary{ background:var(--nos-red); color:#fff; border-color:var(--nos-red); font-weight:600; }
+  button.primary:hover{ background:#c30016; }
+  .tabs{ display:flex; gap:4px; margin-bottom:10px; }
+  .tabs button{ flex:1; }
+  .tabs button.active{ background:var(--ui-text); color:#fff; border-color:var(--ui-text); }
+  .tabpane{ display:none; }
+  .tabpane.active{ display:block; }
+  .rowedit{ display:grid; grid-template-columns:1fr 50px 50px auto auto auto; gap:6px; align-items:center; margin-bottom:6px; }
+  .rowedit input{ padding:4px 6px; font-size:12px; }
+  .rowedit button{ padding:4px 6px; font-size:11px; }
+  .swatch{ width:22px; height:22px; border-radius:50%; border:1px solid var(--ui-border); padding:0; }
+  .logothumb{ width:22px; height:22px; border-radius:50%; object-fit:cover; background:#eee; }
+  .hint{ font-size:11px; color:var(--ui-muted); margin-top:4px; line-height:1.4; }
+  .csvbox textarea{ height:120px; font-family:ui-monospace, monospace; font-size:12px; }
+  .preview-wrap{ padding:24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .canvas-shell{ background:repeating-conic-gradient(#e9eaec 0% 25%, #fff 0% 50%) 50% / 16px 16px; border-radius:4px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+  .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .splitlabel{ font-size:12px; color:var(--ui-muted); font-weight:600; margin-bottom:6px; text-align:center; }
+
+  /* ---- exported graphic styling (scales via --u) ---- */
+  .page{
+    position:relative; font-family:'Effra', Arial, sans-serif; font-weight:700;
+    overflow:hidden; display:flex; flex-direction:column;
+  }
+  .page .topbar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding: calc(var(--u)*40px) calc(var(--u)*40px) 0; }
+  .page .nosbug{ display:flex; align-items:center; gap:calc(var(--u)*4px); font-size:calc(var(--u)*34px); letter-spacing:-.01em; }
+  .page .nosbug .n,.page .nosbug .s{ color:#fff; }
+  .page .nosbug .o{ color:var(--nos-red); }
+  .page .nosbug img, .page .logoimg{ height:calc(var(--u)*48px); width:auto; display:block; }
+  .page .titlebox{
+    background:#fff; color:#232323; border-radius:calc(var(--u)*6px);
+    padding:calc(var(--u)*18px) calc(var(--u)*44px); font-size:calc(var(--u)*60px); text-align:center;
+  }
+  .page .tables{ flex:1; display:flex; gap:calc(var(--u)*40px); padding:calc(var(--u)*36px) calc(var(--u)*40px) calc(var(--u)*40px); align-items:flex-start; }
+  .page .tables.stacked{ flex-direction:column; }
+  .page .tblock{ flex:1; min-width:0; }
+  .page .colheader{ display:flex; justify-content:flex-end; gap:calc(var(--u)*16px); padding:0 calc(var(--u)*24px) calc(var(--u)*10px); }
+  .page .colheader span{ width:calc(var(--u)*54px); height:calc(var(--u)*54px); display:flex; align-items:center; justify-content:center; font-size:calc(var(--u)*22px); color:#657c9b; }
+  .page .trow{ display:flex; align-items:center; height:calc(var(--u)*54px); padding:0 calc(var(--u)*24px); gap:calc(var(--u)*16px); }
+  .page .trow:nth-child(odd){ background:var(--rowA); }
+  .page .trow:nth-child(even){ background:var(--rowB); }
+  .page .namebar{ display:flex; align-items:center; gap:calc(var(--u)*16px); height:calc(var(--u)*54px); flex:0 1 calc(var(--u)*420px); min-width:0; }
+  .page .rowspacer{ flex:1; min-width:0; }
+  .page .pos{ width:calc(var(--u)*40px); font-size:calc(var(--u)*30px); color:#fff; flex-shrink:0; }
+  .page .crest{ width:calc(var(--u)*40px); height:calc(var(--u)*40px); border-radius:50%; background:#fff; flex-shrink:0; background-size:contain; background-repeat:no-repeat; background-position:center; display:flex; align-items:center; justify-content:center; font-size:calc(var(--u)*16px); color:#555; overflow:hidden; }
+  .page .team{ flex:1; min-width:0; font-size:calc(var(--u)*36px); color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .page .stat{ width:calc(var(--u)*54px); height:calc(var(--u)*54px); display:flex; align-items:center; justify-content:center; flex-shrink:0; text-align:center; font-size:calc(var(--u)*30px); color:#fff; }
+
+  @media (max-width:900px){
+    .app{ grid-template-columns:1fr; }
+    .editor{ max-height:none; border-right:none; border-bottom:1px solid var(--ui-border); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="editor">
+    <h1>NOS <span>Standenmaker</span></h1>
+    <div class="sub">Geautomatiseerde standen-graphics — geen design-tool nodig.</div>
+
+    <fieldset>
+      <legend>Canvas</legend>
+      <label>Formaat</label>
+      <select id="preset"></select>
+      <div class="row-inline" style="margin-top:8px;">
+        <div style="flex:1"><label>Breedte</label><input type="number" id="cw"></div>
+        <div style="flex:1"><label>Hoogte</label><input type="number" id="ch"></div>
+      </div>
+      <label style="margin-top:10px;">Layout van tabellen</label>
+      <select id="layout">
+        <option value="auto">Automatisch (op verhouding)</option>
+        <option value="side">Naast elkaar</option>
+        <option value="stack">Onder elkaar</option>
+      </select>
+      <label class="row-inline" style="margin-top:10px; cursor:pointer;">
+        <input type="checkbox" id="splitSocial" style="width:auto;"> Verdeel over twee losse afbeeldingen (social)
+      </label>
+      <label style="margin-top:10px;">Algemene schaal van tekst <span id="scaleval"></span></label>
+      <input type="range" id="scaleSlider" min="0.7" max="1.3" step="0.02" value="1">
+    </fieldset>
+
+    <fieldset>
+      <legend>Titel &amp; achtergrond</legend>
+      <label>Titel</label>
+      <input type="text" id="title" value="Champions League">
+      <label>Achtergrond</label>
+      <select id="bgmode">
+        <option value="gradient">Kleurverloop</option>
+        <option value="image">Eigen afbeelding</option>
+      </select>
+      <div id="bgGradientCtrls" class="row-inline" style="margin-top:8px;">
+        <input type="color" id="bgFrom" value="#a7c6ee">
+        <input type="color" id="bgTo" value="#e2feff">
+        <span class="hint">van &rarr; naar</span>
+      </div>
+      <div id="bgImageCtrls" style="display:none; margin-top:8px;">
+        <input type="file" id="bgImageFile" accept="image/*">
+      </div>
+      <label style="margin-top:10px;">Eigen NOS-logo (optioneel, anders tekstlogo)</label>
+      <input type="file" id="logoFile" accept="image/*">
+    </fieldset>
+
+    <fieldset>
+      <legend>Tabelkleuren</legend>
+      <div class="row-inline">
+        <div><label>Rij A</label><input type="color" id="rowA" value="#667895"></div>
+        <div><label>Rij B</label><input type="color" id="rowB" value="#596b87"></div>
+        <div><label>Kolomlabels</label><input type="color" id="colLabel" value="#657c9b"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Data</legend>
+      <div class="tabs">
+        <button data-tab="manual" class="active">Handmatig</button>
+        <button data-tab="csv">CSV</button>
+        <button data-tab="api">API</button>
+      </div>
+
+      <div class="tabpane active" id="tab-manual">
+        <div id="rowsEditor"></div>
+        <div class="row-inline">
+          <button id="addRow">+ Rij toevoegen</button>
+          <button id="autoLogos">Logo's automatisch zoeken</button>
+        </div>
+        <div class="hint">Logo's worden gezocht via TheSportsDB op teamnaam. Werkt goed voor voetbalclubs, niet voor wielerploegen — daar kun je een kleur of eigen afbeelding per rij gebruiken.</div>
+      </div>
+
+      <div class="tabpane" id="tab-csv">
+        <div class="csvbox">
+          <label>Plak CSV (team,GS,P — per regel)</label>
+          <textarea id="csvInput" placeholder="Liverpool,5,15&#10;Internazionale,5,15&#10;FC Barcelona,5,13"></textarea>
+        </div>
+        <div class="row-inline" style="margin-top:8px;">
+          <label class="row-inline" style="cursor:pointer;"><input type="checkbox" id="csvHasHeader" style="width:auto;"> Eerste regel is kop</label>
+        </div>
+        <button id="applyCsv" class="primary" style="margin-top:8px;">Toepassen</button>
+        <input type="file" id="csvFile" accept=".csv,text/csv" style="margin-top:8px;">
+      </div>
+
+      <div class="tabpane" id="tab-api">
+        <div class="hint" style="margin-bottom:8px;">
+          Live ophalen van standen vanuit een externe API kan vanuit de browser vaak niet door CORS- en API-key-beperkingen.
+          De aanbevolen route: een kleine Vercel serverless function als proxy (bv. <code>/api/standings?competition=cl</code>) die de externe API met je sleutel aanroept en schone JSON teruggeeft aan deze pagina.
+        </div>
+        <label>Endpoint URL (zodra je proxy live staat)</label>
+        <input type="text" id="apiUrl" placeholder="/api/standings?competition=cl">
+        <button id="fetchApi" style="margin-top:8px;">Ophalen</button>
+        <div class="hint">Verwacht JSON: <code>[{"team":"Liverpool","gs":5,"p":15}, ...]</code></div>
+      </div>
+    </fieldset>
+
+    <button id="downloadBtn" class="primary" style="width:100%; padding:10px; font-size:14px;">Download PNG</button>
+  </div>
+
+  <div class="preview-wrap" id="previewWrap"></div>
+</div>
+
+<script>
+const PRESETS = [
+  {label:'Breed 16:9 (1920\u00d71080)', w:1920, h:1080},
+  {label:'Breed 4:3 (1440\u00d71080)', w:1440, h:1080},
+  {label:'Portret 4:5 (1080\u00d71350)', w:1080, h:1350},
+  {label:'Portret 3:4 (1080\u00d71440)', w:1080, h:1440},
+  {label:'Story 9:16 (1080\u00d71920)', w:1080, h:1920},
+];
+
+const state = {
+  canvas: {w:1920, h:1080},
+  layout: 'auto',
+  splitSocial: false,
+  scale: 1,
+  title: 'Champions League',
+  bgMode: 'gradient',
+  bgFrom: '#a7c6ee',
+  bgTo: '#e2feff',
+  bgImage: null,
+  logoImage: 'data:image/png;base64,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',
+  rowA: '#667895',
+  rowB: '#596b87',
+  colLabel: '#657c9b',
+  rows: [
+    {team:'Liverpool', gs:5, p:15, logo:'logos/01_liverpool.png', color:'#ffffff'},
+    {team:'Internazionale', gs:5, p:15, logo:'logos/02_internazionale.png', color:'#ffffff'},
+    {team:'FC Barcelona', gs:5, p:13, logo:'logos/03_barcelona.png', color:'#ffffff'},
+    {team:'Borussia Dortmund', gs:5, p:13, logo:'logos/04_dortmund.png', color:'#ffffff'},
+    {team:'Atalanta', gs:5, p:12, logo:'logos/05_atalanta.png', color:'#ffffff'},
+    {team:'Bayer Leverkusen', gs:5, p:12, logo:'logos/06_leverkusen.png', color:'#ffffff'},
+    {team:'Arsenal', gs:5, p:11, logo:'logos/07_arsenal.png', color:'#ffffff'},
+    {team:'AS Monaco', gs:5, p:10, logo:'logos/08_monaco.png', color:'#ffffff'},
+    {team:'Aston Villa', gs:5, p:10, logo:'logos/09_aston_villa.png', color:'#ffffff'},
+    {team:'Sporting CP', gs:5, p:10, logo:'logos/10_sporting.png', color:'#ffffff'},
+    {team:'Stade Brest', gs:5, p:10, logo:'logos/11_brest.png', color:'#ffffff'},
+    {team:'Lille OSC', gs:5, p:10, logo:'logos/12_lille.png', color:'#ffffff'},
+    {team:'Bayern Munchen', gs:5, p:9, logo:'logos/13_bayern.png', color:'#ffffff'},
+    {team:'Benfica', gs:5, p:9, logo:'logos/14_benfica.png', color:'#ffffff'},
+    {team:'Atletico Madrid', gs:5, p:9, logo:'logos/15_atletico.png', color:'#ffffff'},
+    {team:'AC Milan', gs:5, p:8, logo:'logos/16_acmilan.png', color:'#ffffff'},
+    {team:'Manchester City', gs:5, p:8, logo:'logos/17_mancity.png', color:'#ffffff'},
+    {team:'PSV', gs:5, p:8, logo:'logos/18_psv.png', color:'#ffffff'},
+    {team:'Juventus', gs:5, p:8, logo:'logos/19_juventus.png', color:'#ffffff'},
+    {team:'Celtic', gs:5, p:7, logo:'logos/20_celtic.png', color:'#ffffff'},
+    {team:'Feyenoord', gs:5, p:7, logo:'logos/21_feyenoord.png', color:'#ffffff'},
+    {team:'Club Brugge', gs:5, p:7, logo:'logos/22_clubbrugge.png', color:'#ffffff'},
+    {team:'Dinamo Zagreb', gs:5, p:7, logo:'logos/23_dinamo.png', color:'#ffffff'},
+    {team:'Real Madrid', gs:5, p:6, logo:'logos/24_realmadrid.png', color:'#ffffff'},
+  ],
+};
+
+// ---------- helpers ----------
+function initials(name){
+  return name.split(/\s+/).map(w=>w[0]).join('').slice(0,3).toUpperCase();
+}
+
+function splitRows(){
+  const half = Math.ceil(state.rows.length/2);
+  return [state.rows.slice(0,half), state.rows.slice(half)];
+}
+
+function resolveLayout(w,h){
+  if(state.layout === 'side') return 'side';
+  if(state.layout === 'stack') return 'stack';
+  return (w/h > 1.15) ? 'side' : 'stack';
+}
+
+function buildTableBlock(rows, startPos){
+  let rowsHtml = rows.map((r,i)=>{
+    const pos = startPos + i;
+    const crest = r.logo
+      ? `<div class="crest" style="background-image:url('${r.logo}')"></div>`
+      : `<div class="crest" style="background:${r.color || '#fff'}">${r.logo ? '' : ''}</div>`;
+    return `<div class="trow">
+      <div class="namebar">
+        <div class="pos">${pos}</div>
+        ${crest}
+        <div class="team">${r.team}</div>
+      </div>
+      <div class="rowspacer"></div>
+      <div class="stat">${r.gs}</div>
+      <div class="stat">${r.p}</div>
+    </div>`;
+  }).join('');
+  return `<div class="tblock">
+    <div class="colheader"><span>GS</span><span>P</span></div>
+    ${rowsHtml}
+  </div>`;
+}
+
+function pageInnerHtml(rowGroups, w, h, showTitle){
+  const layout = resolveLayout(w,h);
+  const blocksHtml = rowGroups.map((g,idx)=> buildTableBlock(g.rows, g.start)).join('');
+  const logo = state.logoImage
+    ? `<img class="logoimg" src="${state.logoImage}">`
+    : `<div class="nosbug"><span class="n">N</span><span class="o">O</span><span class="s">S</span></div>`;
+  return `
+    <div class="topbar">
+      ${logo}
+      ${showTitle ? `<div class="titlebox">${state.title}</div>` : `<div></div>`}
+      <div></div>
+    </div>
+    <div class="tables ${layout==='stack' ? 'stacked':''}">
+      ${blocksHtml}
+    </div>
+  `;
+}
+
+function makePageEl(w,h, rowGroups, showTitle){
+  const u = (h/1080) * state.scale;
+  const el = document.createElement('div');
+  el.className = 'page';
+  el.style.width = w+'px';
+  el.style.height = h+'px';
+  el.style.setProperty('--u', u);
+  el.style.setProperty('--rowA', state.rowA);
+  el.style.setProperty('--rowB', state.rowB);
+  if(state.bgMode === 'image' && state.bgImage){
+    el.style.background = `url('${state.bgImage}') center/cover no-repeat`;
+  } else {
+    el.style.background = `linear-gradient(135deg, ${state.bgFrom}, ${state.bgTo})`;
+  }
+  el.innerHTML = pageInnerHtml(rowGroups, w, h, showTitle);
+  // apply column-label color
+  el.querySelectorAll('.colheader span').forEach(s=> s.style.color = state.colLabel);
+  return el;
+}
+
+function render(){
+  const wrap = document.getElementById('previewWrap');
+  wrap.innerHTML = '';
+  const {w,h} = state.canvas;
+  const PREVIEW_MAX_W = 760;
+
+  if(state.splitSocial){
+    const [r1,r2] = splitRows();
+    const groups = [
+      {label:'Afbeelding 1', rows:[{rows:r1, start:1}]},
+      {label:'Afbeelding 2', rows:[{rows:r2, start:r1.length+1}]},
+    ];
+    const toolbar = document.createElement('div');
+    toolbar.className = 'toolbar';
+    wrap.appendChild(toolbar);
+
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.gap = '24px';
+    container.style.flexWrap = 'wrap';
+    container.style.justifyContent = 'center';
+    wrap.appendChild(container);
+
+    groups.forEach((g, idx)=>{
+      const col = document.createElement('div');
+      col.style.display='flex'; col.style.flexDirection='column'; col.style.alignItems='center'; col.style.gap='8px';
+      const lbl = document.createElement('div'); lbl.className='splitlabel'; lbl.textContent = g.label; col.appendChild(lbl);
+
+      const scaleF = Math.min(PREVIEW_MAX_W / w, 1);
+      const shell = document.createElement('div');
+      shell.className = 'canvas-shell';
+      shell.style.width = (w*scaleF)+'px';
+      shell.style.height = (h*scaleF)+'px';
+      const inner = document.createElement('div');
+      inner.style.transform = `scale(${scaleF})`;
+      inner.style.transformOrigin = 'top left';
+      const page = makePageEl(w,h, g.rows, true);
+      page.dataset.exportName = 'standen-deel'+(idx+1);
+      inner.appendChild(page);
+      shell.appendChild(inner);
+      col.appendChild(shell);
+
+      const dl = document.createElement('button');
+      dl.textContent = 'Download deel '+(idx+1);
+      dl.onclick = ()=> exportPage(page, w, h, 'standen-deel'+(idx+1));
+      col.appendChild(dl);
+
+      container.appendChild(col);
+    });
+    document.getElementById('downloadBtn').style.display = 'none';
+  } else {
+    document.getElementById('downloadBtn').style.display = 'block';
+    const [r1,r2] = splitRows();
+    const groups = [{rows:r1, start:1}, {rows:r2, start:r1.length+1}];
+
+    const scaleF = Math.min(PREVIEW_MAX_W / w, 1);
+    const shell = document.createElement('div');
+    shell.className = 'canvas-shell';
+    shell.style.width = (w*scaleF)+'px';
+    shell.style.height = (h*scaleF)+'px';
+    const inner = document.createElement('div');
+    inner.style.transform = `scale(${scaleF})`;
+    inner.style.transformOrigin = 'top left';
+    const page = makePageEl(w,h, groups, true);
+    page.id = 'mainPage';
+    inner.appendChild(page);
+    shell.appendChild(inner);
+    wrap.appendChild(shell);
+  }
+}
+
+function exportPage(pageEl, w, h, name){
+  // render an off-DOM full-resolution clone (unscaled) for crisp export
+  const clone = pageEl.cloneNode(true);
+  clone.style.position = 'fixed';
+  clone.style.left = '-99999px';
+  clone.style.top = '0';
+  document.body.appendChild(clone);
+  html2canvas(clone, {width:w, height:h, scale:1, backgroundColor:null}).then(canvas=>{
+    const link = document.createElement('a');
+    link.download = (name||'standen') + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    clone.remove();
+  });
+}
+
+// ---------- editor wiring ----------
+function buildPresetSelect(){
+  const sel = document.getElementById('preset');
+  PRESETS.forEach((p,i)=>{
+    const o = document.createElement('option');
+    o.value = i; o.textContent = p.label;
+    sel.appendChild(o);
+  });
+  sel.value = 0;
+  sel.addEventListener('change', ()=>{
+    const p = PRESETS[sel.value];
+    state.canvas = {w:p.w, h:p.h};
+    document.getElementById('cw').value = p.w;
+    document.getElementById('ch').value = p.h;
+    render();
+  });
+}
+
+function renderRowsEditor(){
+  const host = document.getElementById('rowsEditor');
+  host.innerHTML = '';
+  state.rows.forEach((r, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'rowedit';
+    div.innerHTML = `
+      <input type="text" value="${r.team}" data-f="team">
+      <input type="number" value="${r.gs}" data-f="gs">
+      <input type="number" value="${r.p}" data-f="p">
+      ${r.logo ? `<img class="logothumb" src="${r.logo}">` : `<input type="color" class="swatch" value="${r.color}" data-f="color">`}
+      <button data-act="logoUpload" title="Eigen logo">📁</button>
+      <button data-act="del" title="Verwijder">✕</button>
+    `;
+    div.querySelectorAll('input[data-f]').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const f = e.target.dataset.f;
+        r[f] = (f==='gs'||f==='p') ? Number(e.target.value) : e.target.value;
+        render();
+      });
+    });
+    div.querySelector('[data-act=del]').addEventListener('click', ()=>{
+      state.rows.splice(idx,1); renderRowsEditor(); render();
+    });
+    div.querySelector('[data-act=logoUpload]').addEventListener('click', ()=>{
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = ()=>{
+        if(inp.files[0]){
+          const reader = new FileReader();
+          reader.onload = ()=>{ r.logo = reader.result; renderRowsEditor(); render(); };
+          reader.readAsDataURL(inp.files[0]);
+        }
+      };
+      inp.click();
+    });
+    host.appendChild(div);
+  });
+}
+
+async function autoFetchLogo(teamName){
+  try{
+    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`);
+    const data = await res.json();
+    if(data && data.teams && data.teams[0] && data.teams[0].strTeamBadge){
+      return data.teams[0].strTeamBadge;
+    }
+  }catch(e){ console.warn('logo fetch failed for', teamName, e); }
+  return null;
+}
+
+function wireEditor(){
+  buildPresetSelect();
+  document.getElementById('cw').value = state.canvas.w;
+  document.getElementById('ch').value = state.canvas.h;
+  document.getElementById('cw').addEventListener('input', e=>{ state.canvas.w = Number(e.target.value)||state.canvas.w; render(); });
+  document.getElementById('ch').addEventListener('input', e=>{ state.canvas.h = Number(e.target.value)||state.canvas.h; render(); });
+
+  document.getElementById('layout').addEventListener('change', e=>{ state.layout = e.target.value; render(); });
+  document.getElementById('splitSocial').addEventListener('change', e=>{ state.splitSocial = e.target.checked; render(); });
+
+  const scaleSlider = document.getElementById('scaleSlider');
+  const scaleVal = document.getElementById('scaleval');
+  scaleVal.textContent = '×' + scaleSlider.value;
+  scaleSlider.addEventListener('input', e=>{
+    state.scale = Number(e.target.value);
+    scaleVal.textContent = '×' + e.target.value;
+    render();
+  });
+
+  document.getElementById('title').addEventListener('input', e=>{ state.title = e.target.value; render(); });
+
+  document.getElementById('bgmode').addEventListener('change', e=>{
+    state.bgMode = e.target.value;
+    document.getElementById('bgGradientCtrls').style.display = state.bgMode==='gradient' ? 'flex':'none';
+    document.getElementById('bgImageCtrls').style.display = state.bgMode==='image' ? 'block':'none';
+    render();
+  });
+  document.getElementById('bgFrom').addEventListener('input', e=>{ state.bgFrom = e.target.value; render(); });
+  document.getElementById('bgTo').addEventListener('input', e=>{ state.bgTo = e.target.value; render(); });
+  document.getElementById('bgImageFile').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ state.bgImage = reader.result; render(); };
+    reader.readAsDataURL(f);
+  });
+  document.getElementById('logoFile').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ state.logoImage = reader.result; render(); };
+    reader.readAsDataURL(f);
+  });
+
+  document.getElementById('rowA').addEventListener('input', e=>{ state.rowA = e.target.value; render(); });
+  document.getElementById('rowB').addEventListener('input', e=>{ state.rowB = e.target.value; render(); });
+  document.getElementById('colLabel').addEventListener('input', e=>{ state.colLabel = e.target.value; render(); });
+
+  document.getElementById('addRow').addEventListener('click', ()=>{
+    state.rows.push({team:'Nieuw team', gs:0, p:0, logo:null, color:'#ffffff'});
+    renderRowsEditor(); render();
+  });
+
+  document.getElementById('autoLogos').addEventListener('click', async ()=>{
+    const btn = document.getElementById('autoLogos');
+    btn.textContent = 'Zoeken...'; btn.disabled = true;
+    for(const r of state.rows){
+      if(!r.logo){
+        const url = await autoFetchLogo(r.team);
+        if(url) r.logo = url;
+      }
+    }
+    btn.textContent = "Logo's automatisch zoeken"; btn.disabled = false;
+    renderRowsEditor(); render();
+  });
+
+  // tabs
+  document.querySelectorAll('.tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tabpane').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // csv
+  document.getElementById('applyCsv').addEventListener('click', ()=>{
+    const raw = document.getElementById('csvInput').value.trim();
+    if(!raw) return;
+    const hasHeader = document.getElementById('csvHasHeader').checked;
+    const lines = raw.split(/\r?\n/).filter(l=>l.trim().length);
+    const startIdx = hasHeader ? 1 : 0;
+    const newRows = [];
+    for(let i=startIdx; i<lines.length; i++){
+      const parts = lines[i].split(/,|\t/).map(s=>s.trim());
+      if(parts.length < 3) continue;
+      newRows.push({team:parts[0], gs:Number(parts[1])||0, p:Number(parts[2])||0, logo:null, color:'#ffffff'});
+    }
+    if(newRows.length){
+      state.rows = newRows;
+      renderRowsEditor(); render();
+    }
+  });
+  document.getElementById('csvFile').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ document.getElementById('csvInput').value = reader.result; };
+    reader.readAsText(f);
+  });
+
+  // api placeholder
+  document.getElementById('fetchApi').addEventListener('click', async ()=>{
+    const url = document.getElementById('apiUrl').value.trim();
+    if(!url) return;
+    try{
+      const res = await fetch(url);
+      const data = await res.json();
+      if(Array.isArray(data)){
+        state.rows = data.map(d=>({team:d.team, gs:Number(d.gs)||0, p:Number(d.p)||0, logo:null, color:'#ffffff'}));
+        renderRowsEditor(); render();
+      }
+    }catch(e){
+      alert('Ophalen mislukt: '+e.message+'\n\nControleer of de proxy/endpoint bestaat en CORS toestaat.');
+    }
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', ()=>{
+    const page = document.getElementById('mainPage');
+    exportPage(page, state.canvas.w, state.canvas.h, 'standen');
+  });
+}
+
+wireEditor();
+renderRowsEditor();
+render();
+</script>
+</body>
+</html>
