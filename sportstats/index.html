@@ -540,19 +540,28 @@ function renderRowsEditor(){
   host.innerHTML = '';
 
   // header row mirroring the input layout below — column labels are directly editable,
-  // and each has a tiny remove button, so adding/removing/renaming columns happens right here.
+  // each has a "tonen" checkbox and a tiny remove button, so managing columns happens right here.
   const headerRow = document.createElement('div');
   headerRow.className = 'rowedit';
   headerRow.innerHTML = `<span style="flex:1 1 90px; font-size:10px; color:var(--ui-muted);">Team</span>` +
     state.statColumns.map((c,ci)=>`
-      <span style="flex:0 0 50px; display:flex; flex-direction:column; align-items:center; gap:1px;">
-        <input type="text" value="${c.label}" data-colidx="${ci}" style="width:50px; padding:2px; font-size:11px; text-align:center;" title="Naam van deze kolom">
-        <button data-delcolidx="${ci}" title="Verwijder kolom" style="padding:0 4px; font-size:9px; line-height:1.4;">✕</button>
+      <span style="flex:0 0 50px; width:50px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; gap:1px;">
+        <input type="text" value="${c.label}" data-colidx="${ci}" style="width:50px; box-sizing:border-box; padding:2px; font-size:11px; text-align:center;" title="Naam van deze kolom">
+        <span style="display:flex; align-items:center; justify-content:center; gap:3px;">
+          <input type="checkbox" data-visidx="${ci}" ${c.visible?'checked':''} title="Tonen in de graphic" style="width:auto; margin:0;">
+          <button data-delcolidx="${ci}" title="Verwijder kolom" style="padding:0 4px; font-size:9px; line-height:1.2;">✕</button>
+        </span>
       </span>`).join('') +
     `<span></span><span></span><span></span>`;
   headerRow.querySelectorAll('input[data-colidx]').forEach(inp=>{
     inp.addEventListener('input', e=>{
       state.statColumns[Number(e.target.dataset.colidx)].label = e.target.value;
+      render();
+    });
+  });
+  headerRow.querySelectorAll('input[data-visidx]').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      state.statColumns[Number(e.target.dataset.visidx)].visible = e.target.checked;
       render();
     });
   });
