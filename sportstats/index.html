@@ -88,7 +88,7 @@
   .page .namebar{ display:flex; align-items:center; gap:calc(var(--uw)*16px); height:calc(var(--uh)*54px); flex:0 1 calc(var(--uw)*420px); min-width:0; }
   .page .rowspacer{ flex:1; min-width:0; }
   .page .pos{ width:calc(var(--uw)*40px); font-size:calc(var(--uh)*30px); color:#fff; flex-shrink:0; }
-  .page .crest{ width:calc(var(--uw)*40px); height:calc(var(--uh)*40px); border-radius:50%; flex-shrink:0; background-size:contain; background-repeat:no-repeat; background-position:center; display:flex; align-items:center; justify-content:center; font-size:calc(var(--uh)*16px); color:#555; overflow:hidden; }
+  .page .crest{ width:calc(var(--uw)*48px); height:calc(var(--uh)*48px); border-radius:50%; flex-shrink:0; background-size:contain; background-repeat:no-repeat; background-position:center; display:flex; align-items:center; justify-content:center; font-size:calc(var(--uh)*16px); color:#555; overflow:hidden; }
   .page .team{ flex:1; min-width:0; font-size:calc(var(--uh)*36px); color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .page .stat{ width:calc(var(--uw)*54px); height:calc(var(--uh)*54px); display:flex; align-items:center; justify-content:center; flex-shrink:0; text-align:center; font-size:calc(var(--uh)*30px); color:#fff; }
 
@@ -519,7 +519,7 @@ function renderRowsEditor(){
       inp.onchange = ()=>{
         if(inp.files[0]){
           const reader = new FileReader();
-          reader.onload = ()=>{ r.logo = reader.result; renderRowsEditor(); render(); };
+          reader.onload = ()=>{ r.logo = reader.result; r.manualLogo = true; renderRowsEditor(); render(); };
           reader.readAsDataURL(inp.files[0]);
         }
       };
@@ -534,6 +534,10 @@ let localLogosManifestCache = null;
 
 function normalizeLogoName(s){
   return s.toLowerCase()
+    .replace(/ø/g,'o').replace(/æ/g,'ae').replace(/ß/g,'ss')
+    .replace(/ð/g,'d').replace(/þ/g,'th').replace(/ı/g,'i')
+    .replace(/ğ/g,'g').replace(/ş/g,'s')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/\.(png|svg|jpg|jpeg)$/i,'')
     .replace(/[^a-z0-9]+/g,'');
 }
@@ -705,10 +709,9 @@ function wireEditor(){
     const btn = document.getElementById('autoLogos');
     btn.textContent = 'Zoeken...'; btn.disabled = true;
     for(const r of state.rows){
-      if(!r.logo){
-        const url = await autoFetchLogo(r.team);
-        if(url) r.logo = url;
-      }
+      if(r.manualLogo) continue;
+      const url = await autoFetchLogo(r.team);
+      if(url) r.logo = url;
     }
     btn.textContent = "Logo's automatisch zoeken"; btn.disabled = false;
     renderRowsEditor(); render();
