@@ -25,7 +25,7 @@
     margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--ui-bg); color:var(--ui-text);
   }
-  .app{ display:grid; grid-template-columns:380px 1fr; min-height:100vh; }
+  .app{ display:grid; grid-template-columns:760px 1fr; min-height:100vh; }
   .editor{ background:var(--ui-panel); border-right:1px solid var(--ui-border); padding:20px; overflow-y:auto; max-height:100vh; }
   .editor h1{ font-size:16px; margin:0 0 4px; }
   .editor h1 span{ color:var(--nos-red); }
@@ -192,16 +192,11 @@
           <button id="addColumn">+ Kolom toevoegen</button>
         </div>
         <div class="row-inline" style="margin-top:8px;">
-          <button id="autoLogos">Logo's automatisch zoeken</button>
-        </div>
-        <div class="row-inline" style="margin-top:8px;">
           <input type="number" id="rowCountInput" min="1" style="width:80px;">
           <button id="setRowCount">Aantal rijen instellen</button>
           <button id="cleanupNames" title="Verwijdert een per ongeluk meegeplakt rangnummer voor de teamnaam">Nummers opschonen</button>
         </div>
         <div class="hint">De koppen boven de cijfers (GS, P, ...) zijn direct te wijzigen — typ er gewoon een nieuwe naam in. Met "+ Kolom toevoegen" zet je een extra statistiek erbij (bijvoorbeeld W, G, V); het ✕'je naast een kop verwijdert die kolom weer.</div>
-        <div class="hint">Logo's worden alleen gezocht in je eigen <code>logos/</code>-map (alle submappen, op basis van <code>logos/manifest.json</code>). Geen externe bronnen. Werkt goed voor voetbalclubs, niet voor wielerploegen — daar kun je een kleur of eigen afbeelding per rij gebruiken.</div>
-        <div class="hint" id="logoSearchStatus" style="margin-top:6px;"></div>
       </div>
 
       <div class="tabpane active" id="tab-csv">
@@ -228,6 +223,15 @@
         <button id="fetchApi" style="margin-top:8px;">Ophalen</button>
         <div class="hint">Verwacht JSON: <code>[{"team":"Liverpool","gs":5,"p":15}, ...]</code> — extra velden worden automatisch eigen kolommen.</div>
       </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Logo's</legend>
+      <div class="row-inline">
+        <button id="autoLogos">Logo's automatisch zoeken</button>
+      </div>
+      <div class="hint" id="logoSearchStatus" style="margin-top:6px;"></div>
+      <div class="hint">Zoekt in je eigen <code>logos/</code>-map op basis van <code>manifest.json</code>. Voor wielerploegen of ontbrekende clubs: gebruik het 📁-knopje naast de rij om een eigen PNG te uploaden.</div>
     </fieldset>
 
     <button id="downloadBtn" class="primary" style="width:100%; padding:10px; font-size:14px;">Download PNG</button>
