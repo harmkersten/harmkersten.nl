@@ -640,26 +640,40 @@ let localLogosManifestCache = null;
 
 function wordsOf(s){
   return s
-    .replace(/^\s*\d+\s{2,}/, '') // strip an accidentally pasted leading rank number, e.g. "1  Bayern München"
+    .replace(/^\s*\d+\s{2,}/, '') // strip accidentally-pasted leading rank number
     .toLowerCase()
     .replace(/ø/g,'o').replace(/æ/g,'ae').replace(/ß/g,'ss')
     .replace(/ð/g,'d').replace(/þ/g,'th').replace(/ı/g,'i')
     .replace(/ğ/g,'g').replace(/ş/g,'s')
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/\.(png|svg|jpg|jpeg)$/i,'')
+    .replace(/\.(football-logos\.cc|football-logos)$/i,'') // strip site-suffix before tokenising
+    .replace(/_\d+x\d+$/i,'')                             // strip size-suffix e.g. _64x64
     .split(/[^a-z0-9]+/).filter(Boolean);
 }
 
-// Finds the path whose filename contains every word from the team name
-// (in any order — "FC Twente" should still match "Twente Enschede FC.png"),
-// preferring the candidate with the fewest extra/unrelated words.
-const WORD_SYNONYMS = { 'munchen':'munich', 'koln':'cologne', 'hsv':'hamburger' };
+// Words that legitimately appear in club names but are routinely omitted from
+// logo filenames — their absence should never block a match.
+const OPTIONAL_CLUB_WORDS = new Set([
+  'fc','sc','sv','bv','rb','vfb','vfl','tsv','fsv','fk','fca','fcb',
+  'ac','as','us','ud','sd','cf','cd','rc','rcd','ssc','ss','pk','sk',
+  'if','ik','ff','bk','gk','hb','ob','aab','gjf','og','il','kv','kf',
+  'tsg','ksc','svw','bsc','msv','rwe','sgd','bts','gnk','nk','hsk','hnk',
+  'mv','at','co','ki','km','gk','ia','ul','hb','sl','sg','bi','go',
+]);
+
+const WORD_SYNONYMS = {
+  'munchen':'munich', 'muenchen':'munich',
+  'koln':'cologne', 'koeln':'cologne',
+  'hsv':'hamburger',
+  'monchengladbach':'moenchengladbach',
+};
 
 function wordMatches(fileWord, teamWord){
   const fw = WORD_SYNONYMS[fileWord] || fileWord;
   const tw = WORD_SYNONYMS[teamWord] || teamWord;
   if(fw === tw) return true;
-  const MIN = 4; // avoid trivial short-word false positives
+  const MIN = 4;
   if(fw.length >= MIN && tw.startsWith(fw)) return true;
   if(tw.length >= MIN && fw.startsWith(tw)) return true;
   return false;
@@ -668,16 +682,28 @@ function wordMatches(fileWord, teamWord){
 function findBestPathMatch(teamName, paths){
   const teamWords = wordsOf(teamName);
   if(!teamWords.length) return null;
-  let best = null, bestExtra = Infinity;
+  // Split into required (must match) and optional (nice to have) words.
+  // Pure numbers and known club-type abbreviations are optional.
+  const requiredWords = teamWords.filter(w => !OPTIONAL_CLUB_WORDS.has(w) && !/^\d+$/.test(w));
+  // Need at least one required word to avoid matching everything
+  const matchWords = requiredWords.length ? requiredWords : teamWords;
+
+  let best = null, bestScore = Infinity;
   for(const path of paths){
     const base = path.split('/').pop();
     const fileWords = wordsOf(base);
-    const allPresent = teamWords.every(tw => fileWords.some(fw => wordMatches(fw, tw)));
+    const allPresent = matchWords.every(tw => fileWords.some(fw => wordMatches(fw, tw)));
     if(allPresent){
-      const extra = fileWords.length - teamWords.length;
-      if(extra < bestExtra){
-        best = path; bestExtra = extra;
-        if(extra === 0) break;
+      // Score: primarily by extra file-words (fewer = better match), then by
+      // how many optional team-words also appear (more = better)
+      const extra = fileWords.length - matchWords.length;
+      const optionalMatched = teamWords.filter(tw =>
+        !matchWords.includes(tw) && fileWords.some(fw => wordMatches(fw, tw))
+      ).length;
+      const score = extra * 10 - optionalMatched;
+      if(score < bestScore){
+        best = path; bestScore = score;
+        if(extra === 0 && optionalMatched === teamWords.length - matchWords.length) break;
       }
     }
   }
