@@ -29,7 +29,12 @@
   .editor{ background:var(--ui-panel); border-right:1px solid var(--ui-border); padding:20px; overflow-y:auto; max-height:100vh; }
   .editor h1{ font-size:16px; margin:0 0 4px; }
   .editor h1 span{ color:var(--nos-red); }
-  .editor .sub{ font-size:12px; color:var(--ui-muted); margin-bottom:18px; }
+  .toggle-switch{ position:relative; display:inline-flex; align-items:center; cursor:pointer; flex-shrink:0; }
+  .toggle-switch input{ position:absolute; opacity:0; width:0; height:0; }
+  .toggle-track{ width:36px; height:20px; background:#ccc; border-radius:10px; transition:background .2s; display:block; }
+  .toggle-switch input:checked ~ .toggle-track{ background:var(--nos-red); }
+  .toggle-thumb{ position:absolute; top:3px; left:3px; width:14px; height:14px; background:#fff; border-radius:50%; transition:transform .2s; display:block; }
+  .toggle-switch input:checked ~ .toggle-track .toggle-thumb{ transform:translateX(16px); }
   fieldset{ border:1px solid var(--ui-border); border-radius:8px; margin:0 0 16px; padding:12px; }
   legend{ font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ui-muted); padding:0 4px; }
   label{ display:block; font-size:12px; color:var(--ui-muted); margin:8px 0 3px; }
@@ -68,28 +73,33 @@
   .page{
     position:relative; font-family:'Effra', Arial, sans-serif; font-weight:700;
     overflow:hidden; display:flex; flex-direction:column;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    letter-spacing:0.01em;
   }
-  .page .topbar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding: calc(var(--uh)*40px) calc(var(--uw)*40px) 0; }
+  .page .logo-corner{ position:absolute; top:calc(var(--ut)*50px); left:calc(var(--ut)*50px); z-index:2; }
   .page .nosbug{ display:flex; align-items:center; gap:calc(var(--uw)*4px); font-size:calc(var(--ut)*34px); letter-spacing:-.01em; }
   .page .nosbug .n,.page .nosbug .s{ color:#fff; }
   .page .nosbug .o{ color:var(--nos-red); }
   .page .nosbug img, .page .logoimg{ height:calc(var(--ut)*48px); width:auto; display:block; }
+  .page .topbar{ display:flex; align-items:flex-start; justify-content:center; padding: 0; pointer-events:none; }
   .page .titlebox{
+    position:absolute; top:calc(var(--ut)*80px); left:50%; transform:translateX(-50%);
     background:#fff; color:#232323; border-radius:0;
-    padding:calc(var(--ut)*18px) calc(var(--ut)*44px); font-size:calc(var(--ut)*60px); text-align:center;
+    padding:calc(var(--ut)*10px) calc(var(--ut)*44px); font-size:calc(var(--ut)*60px); text-align:center; white-space:nowrap;
+    pointer-events:auto;
   }
-  .page .tables{ flex:1; display:flex; gap:calc(var(--uh)*40px); padding:calc(var(--uh)*36px) calc(var(--uw)*40px) calc(var(--uh)*40px); align-items:flex-start; }
+  .page .tables{ flex:1; display:flex; gap:calc(var(--uh)*40px); padding:calc(var(--ut)*220px) calc(var(--ub)*100px) calc(var(--uh)*40px); align-items:flex-start; }
   .page .tables.stacked{ flex-direction:column; }
-  .page .tables.stacked .tblock{ max-width:calc(var(--uw)*624px); margin:0 auto; width:100%; }
+  .page .tables.stacked .tblock{ margin:0 auto; width:100%; }
   .page .tblock{ flex:1; min-width:0; }
-  .page .colheader{ display:flex; justify-content:flex-end; gap:calc(var(--uw)*16px); padding:0 calc(var(--uw)*24px) calc(var(--uh)*10px); }
+  .page .colheader{ display:flex; justify-content:flex-end; gap:calc(var(--ub)*16px); padding:0 calc(var(--ub)*24px) calc(var(--uh)*10px); }
   .page .colheader span{ width:calc(var(--uw)*54px); height:calc(var(--uh)*54px); display:flex; align-items:center; justify-content:center; font-size:calc(var(--uh)*22px); color:#657c9b; }
-  .page .trow{ display:flex; align-items:center; height:calc(var(--uh)*54px); padding:0 calc(var(--uw)*24px); gap:calc(var(--uw)*16px); }
+  .page .trow{ display:flex; align-items:center; height:calc(var(--uh)*54px); padding:0 calc(var(--ub)*24px); gap:calc(var(--ub)*16px); }
   .page .trow:nth-child(odd){ background:var(--rowA); }
   .page .trow:nth-child(even){ background:var(--rowB); }
-  .page .namebar{ display:flex; align-items:center; gap:calc(var(--uw)*16px); height:calc(var(--uh)*54px); flex:0 1 calc(var(--uw)*420px); min-width:0; }
-  .page .rowspacer{ flex:1; min-width:0; }
-  .page .pos{ width:calc(var(--uw)*40px); font-size:calc(var(--uh)*30px); color:#fff; flex-shrink:0; }
+  .page .namebar{ display:flex; align-items:center; gap:calc(var(--ub)*16px); height:calc(var(--uh)*54px); flex:1; min-width:0; }
+  .page .rowspacer{ flex:0; }
+  .page .pos{ width:calc(var(--ub)*40px); font-size:calc(var(--uh)*30px); color:#fff; flex-shrink:0; }
   .page .crest{ width:calc(var(--uw)*48px); height:calc(var(--uh)*48px); border-radius:50%; flex-shrink:0; background-size:contain; background-repeat:no-repeat; background-position:center; display:flex; align-items:center; justify-content:center; font-size:calc(var(--uh)*16px); color:#555; overflow:hidden; }
   .page .team{ flex:1; min-width:0; font-size:calc(var(--uh)*36px); color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .page .stat{ width:calc(var(--uw)*54px); height:calc(var(--uh)*54px); display:flex; align-items:center; justify-content:center; flex-shrink:0; text-align:center; font-size:calc(var(--uh)*30px); color:#fff; }
@@ -104,7 +114,6 @@
 <div class="app">
   <div class="editor">
     <h1>NOS <span>Standenmaker</span></h1>
-    <div class="sub">Geautomatiseerde standen-graphics — geen design-tool nodig.</div>
 
     <fieldset>
       <legend>Canvas</legend>
@@ -132,7 +141,7 @@
       <label class="row-inline" style="margin-top:10px; cursor:pointer;">
         <input type="checkbox" id="splitSocial" style="width:auto;"> Verdeel over twee losse afbeeldingen (social)
       </label>
-      <label style="margin-top:10px;">Algemene schaal van tekst <span id="scaleval"></span></label>
+      <label style="margin-top:10px;">Schaal van de datarijen <span id="scaleval"></span></label>
       <input type="range" id="scaleSlider" min="0.7" max="1.3" step="0.02" value="1">
     </fieldset>
 
@@ -145,16 +154,18 @@
         <option value="gradient">Kleurverloop</option>
         <option value="image">Eigen afbeelding</option>
       </select>
-      <div id="bgGradientCtrls" class="row-inline" style="margin-top:8px;">
-        <input type="color" id="bgFrom" value="#a7c6ee">
-        <input type="color" id="bgTo" value="#e2feff">
-        <span class="hint">van &rarr; naar</span>
-      </div>
       <div id="bgImageCtrls" style="display:none; margin-top:8px;">
         <input type="file" id="bgImageFile" accept="image/*">
       </div>
-      <label style="margin-top:10px;">Eigen NOS-logo (optioneel, anders tekstlogo)</label>
-      <input type="file" id="logoFile" accept="image/*">
+      <div class="row-inline" style="margin-top:10px; align-items:center; gap:10px;">
+        <label style="margin:0;">NOS-logo tonen</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="logoToggle" checked>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+        <button id="logoUploadBtn" style="font-size:11px;">Eigen logo uploaden</button>
+        <input type="file" id="logoFile" accept="image/*" style="display:none;">
+      </div>
     </fieldset>
 
     <fieldset>
@@ -241,11 +252,13 @@ const state = {
   splitSocial: false,
   splitAt: null,
   scale: 1,
+  letterSpacing: 0.01,
   title: 'Champions League',
   bgMode: 'gradient',
   bgFrom: '#a7c6ee',
   bgTo: '#e2feff',
   bgImage: null,
+  showLogo: true,
   logoImage: 'data:image/png;base64,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',
   rowA: '#667895',
   rowB: '#596b87',
@@ -362,10 +375,9 @@ function pageInnerHtml(rowGroups, w, h, showTitle){
     ? `<img class="logoimg" src="${state.logoImage}">`
     : `<div class="nosbug"><span class="n">N</span><span class="o">O</span><span class="s">S</span></div>`;
   return `
+    ${state.showLogo ? `<div class="logo-corner">${logo}</div>` : ''}
     <div class="topbar">
-      ${logo}
-      ${showTitle ? `<div class="titlebox">${state.title}</div>` : `<div></div>`}
-      <div></div>
+      ${showTitle ? `<div class="titlebox">${state.title}</div>` : ''}
     </div>
     <div class="tables ${layout==='stack' ? 'stacked':''}">
       ${blocksHtml}
@@ -395,6 +407,7 @@ function makePageEl(w,h, rowGroups, showTitle){
   el.style.setProperty('--uw', 1);
   el.style.setProperty('--uh', 1);
   el.style.setProperty('--ut', 1);
+  el.style.setProperty('--ub', 1);
   el.style.height = 'auto';
   el.style.overflow = 'visible';
   el.style.position = 'fixed';
@@ -412,16 +425,16 @@ function makePageEl(w,h, rowGroups, showTitle){
   const fitU = h/measuredH1;
   const uw = rawU * portraitFactor * state.scale;
   const uh = Math.min(rawU * portraitFactor, fitU) * state.scale;
-  // title & logo: keep them at the same size as the 16:9/4:3 reference for
-  // every portrait format, instead of letting them inflate on tall canvases
-  // or shrink just because the canvas happens to be narrow.
-  const ut = (w < h) ? 1 * state.scale : uw;
+  const ub = rawU * portraitFactor; // base: canvas-size only, no slider
+  const ut = (w < h) ? 1 : rawU;
 
   el.style.height = h+'px';
   el.style.overflow = 'hidden';
   el.style.setProperty('--uw', uw);
   el.style.setProperty('--uh', uh);
   el.style.setProperty('--ut', ut);
+  el.style.setProperty('--ub', ub);
+  el.style.letterSpacing = state.letterSpacing + 'em';
   return el;
 }
 
@@ -744,17 +757,22 @@ function wireEditor(){
 
   document.getElementById('bgmode').addEventListener('change', e=>{
     state.bgMode = e.target.value;
-    document.getElementById('bgGradientCtrls').style.display = state.bgMode==='gradient' ? 'flex':'none';
     document.getElementById('bgImageCtrls').style.display = state.bgMode==='image' ? 'block':'none';
     render();
   });
-  document.getElementById('bgFrom').addEventListener('input', e=>{ state.bgFrom = e.target.value; render(); });
-  document.getElementById('bgTo').addEventListener('input', e=>{ state.bgTo = e.target.value; render(); });
   document.getElementById('bgImageFile').addEventListener('change', e=>{
     const f = e.target.files[0]; if(!f) return;
     const reader = new FileReader();
     reader.onload = ()=>{ state.bgImage = reader.result; render(); };
     reader.readAsDataURL(f);
+  });
+
+  document.getElementById('logoToggle').addEventListener('change', e=>{
+    state.showLogo = e.target.checked;
+    render();
+  });
+  document.getElementById('logoUploadBtn').addEventListener('click', ()=>{
+    document.getElementById('logoFile').click();
   });
   document.getElementById('logoFile').addEventListener('change', e=>{
     const f = e.target.files[0]; if(!f) return;
