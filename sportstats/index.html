@@ -719,7 +719,10 @@ let lastManifestError = null;
 async function getLocalLogosManifest(forceReload){
   if(localLogosManifestCache && !forceReload) return localLogosManifestCache;
   lastManifestError = null;
-  const url = new URL('logos/manifest.json', document.baseURI).href + '?v=' + Date.now();
+  // Derive the path relative to the directory where index.html lives,
+  // regardless of whether the URL has a trailing slash or not.
+  const pageDir = window.location.href.replace(/\/[^/]*$/, '/');
+  const url = pageDir + 'logos/manifest.json?v=' + Date.now();
   try{
     const res = await fetch(url);
     if(!res.ok){
