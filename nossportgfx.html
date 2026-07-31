@@ -667,7 +667,7 @@ function Kop({ sport, titel, theme }) {
 /* breedte groter is dan maxW, zodat hij nooit buiten de balk valt. Meet via   */
 /* getComputedTextLength() i.p.v. een geschatte breedte, anders forceert       */
 /* textLength ook wanneer het niet nodig is en wordt tekst juist uitgerekt.    */
-function FitText({ x, y, maxW, size, weight = "700", fill, anchor = "start", children }) {
+function FitText({ x, y, maxW, size, weight = "700", fill, anchor = "start", opacity, children }) {
   const tekst = String(children);
   const ref = useRef(null);
   useEffect(() => {
@@ -683,7 +683,7 @@ function FitText({ x, y, maxW, size, weight = "700", fill, anchor = "start", chi
   }, [tekst, maxW, size, weight, x, y]);
   return (
     <text ref={ref} x={x} y={y} textAnchor={anchor} fontFamily={FONT} fontWeight={weight}
-      fontSize={size} fill={fill}>
+      fontSize={size} fill={fill} opacity={opacity}>
       {tekst}
     </text>
   );
@@ -1239,52 +1239,129 @@ function Veld() {
 /* tussen yEerste (achterste linie) en yLaatste (voorste); binnen een linie     */
 /* staan de spelers op vaste pitch, gecentreerd, en geknepen als ze anders      */
 /* buiten het veld zouden vallen.                                              */
-function posities(formatie, anker) {
+
+/* Het shirt is zichtbaar van y=61.07 (kraag) tot y=443.73 (torso) in           */
+/* jersey-eenheden, met het torsomidden op 255.535 als ankerpunt.               */
+const SHIRT_BOVEN = 194.465 / 500;   // ankerpunt -> bovenkant shirt
+const SHIRT_ONDER = 188.195 / 500;   // ankerpunt -> onderkant shirt
+const FONT_F = 24 / 115;             // fontgrootte t.o.v. de shirtmaat
+const FONT_MIN = 19;                 // ondergrens: kleiner wordt onleesbaar
+const MARGE = 8;                     // lucht tussen naam en het shirt eronder
+/* Ruimte tussen de onderkant van het shirt en de naamregel. Ruim = zoals in de */
+/* ontwerpen; krap wordt gebruikt als de formatie anders niet past.             */
+const GAP_KRAP = 10;
+
+const fontVoor = (shirt) => Math.max(FONT_MIN, FONT_F * shirt);
+const naamDyVoor = (shirt, gap) => SHIRT_ONDER * shirt + gap;
+
+/* Hoogte die GK + alle linies samen nodig hebben: per linie een gat (naam van   */
+/* de vorige + bovenkant van het volgende shirt + marge), plus onderaan nog de   */
+/* naam van de voorste linie zelf.                                               */
+function benodigdeHoogte(shirt, gap, aantalLijnen) {
+  const staart = naamDyVoor(shirt, gap) + 0.25 * fontVoor(shirt);
+  const gat = staart + SHIRT_BOVEN * shirt + MARGE;
+  return gat * aantalLijnen + staart;
+}
+
+/* Grootst mogelijke shirtmaat voor deze formatie. Past de ontwerpmaat, dan      */
+/* houden we die (en daarmee de afgemeten ankers). Zo niet — bij vier linies     */
+/* zoals 3-2-2-3, 4-4-1-1, 4-2-3-1 en 4-1-2-1-2 is een duelhelft daar te laag    */
+/* voor — dan zoeken we de grootste maat die met een krappere naamafstand nog    */
+/* wél past, in plaats van shirts over de namen heen te laten vallen.            */
+function pasMaat(anker, aantalLijnen, basis) {
+  const ruimte = Math.abs(anker.yGrens - anker.yGK);
+  if (benodigdeHoogte(basis.shirt, basis.gap, aantalLijnen) <= ruimte) {
+    return { shirt: basis.shirt, gap: basis.gap, krimpt: false };
+  }
+  // Bisectie: benodigdeHoogte is monotoon stijgend in de shirtmaat.
+  let klein = 20, groot = basis.shirt;
+  for (let i = 0; i < 40; i++) {
+    const mid = (klein + groot) / 2;
+    if (benodigdeHoogte(mid, GAP_KRAP, aantalLijnen) <= ruimte) klein = mid; else groot = mid;
+  }
+  return { shirt: klein, gap: GAP_KRAP, krimpt: true };
+}
+
+/* Geeft posities én de maatvoering terug: die twee hangen samen zodra er       */
+/* gekrompen moet worden.                                                       */
+function opstellingLayout(formatie, anker, basis) {
   const lijnen = linies(formatie);
+  const { shirt, gap, krimpt } = pasMaat(anker, lijnen.length, basis);
+  const richting = Math.sign(anker.yLaatste - anker.yGK) || 1;
+
+  // Past alles op ware grootte, dan blijven de afgemeten ankers uit het
+  // ontwerp staan. Anders verdelen we de beschikbare hoogte gelijk.
+  let yVan, yTot;
+  if (krimpt) {
+    const staart = naamDyVoor(shirt, gap) + 0.25 * fontVoor(shirt);
+    const gat = (Math.abs(anker.yGrens - anker.yGK) - staart) / lijnen.length;
+    yVan = anker.yGK + richting * gat;
+    yTot = anker.yGK + richting * gat * lijnen.length;
+  } else {
+    yVan = anker.yEerste;
+    yTot = anker.yLaatste;
+  }
+
+  const maat = { shirt, naamDy: naamDyVoor(shirt, gap), font: fontVoor(shirt) };
   const spelers = [{ x: VELD.cx, y: anker.yGK, gk: true, lijn: -1 }];
   lijnen.forEach((n, li) => {
-    const y = lijnen.length === 1
-      ? anker.yEerste
-      : anker.yEerste + (anker.yLaatste - anker.yEerste) * (li / (lijnen.length - 1));
-    const pitch = Math.min(anker.pitch, anker.maxSpreiding / Math.max(1, n - 1));
+    const y = lijnen.length === 1 ? yVan : yVan + (yTot - yVan) * (li / (lijnen.length - 1));
+    // Spreiding zo knijpen dat het buitenste shirt binnen het veld blijft.
+    const zichtbaar = (348.26 / 500) * shirt;
+    const maxSpreiding = (VELD.x1 - VELD.x0) - zichtbaar - 16;
+    const pitch = Math.min(anker.pitch, maxSpreiding / Math.max(1, n - 1));
     for (let i = 0; i < n; i++) {
       spelers.push({ x: VELD.cx + (i - (n - 1) / 2) * pitch, y, gk: false, lijn: li });
     }
   });
-  return spelers;
+  return { spelers, maat };
 }
 
 /* Ankers duel: bovenste helft uit design opstelling-01.svg, onderste helft     */
 /* gespiegeld (namen blijven ónder het shirt, dus niet exact puntsymmetrisch).  */
-const ANKER_DUEL_BOVEN = { yGK: 203.6, yEerste: 331.6, yLaatste: 594.4, pitch: 200.4, maxSpreiding: 708 };
-const ANKER_DUEL_ONDER = { yGK: 1129.8, yEerste: 1018.4, yLaatste: 742.8, pitch: 200.4, maxSpreiding: 708 };
-const ANKER_ENKEL = { yGK: 1084.8, yEerste: 920, yLaatste: 380.2, pitch: 265.9, maxSpreiding: 678 };
+/* yGrens = hoever de voorste linie mag komen (middenlijn resp. veldrand).      */
+const ANKER_DUEL_BOVEN = { yGK: 203.6, yEerste: 331.6, yLaatste: 594.4, pitch: 200.4, yGrens: VELD.midY - 10 };
+const ANKER_DUEL_ONDER = { yGK: 1129.8, yEerste: 1018.4, yLaatste: 742.8, pitch: 200.4, yGrens: VELD.midY + 10 };
+const ANKER_ENKEL = { yGK: 1084.8, yEerste: 920, yLaatste: 380.2, pitch: 265.9, yGrens: VELD.y0 + 8 };
 
-const MAAT_DUEL = { shirt: 115, naamDy: 68, font: 24 };
-const MAAT_ENKEL = { shirt: 158, naamDy: 91, font: 32 };
+/* Ontwerpmaten: gap zo gekozen dat naamDy exact op de afgemeten waarde uitkomt */
+/* (duel 68, enkel 91), zodat de referentieontwerpen 1-op-1 gereproduceerd      */
+/* worden zolang de formatie past.                                             */
+const MAAT_DUEL = { shirt: 115, gap: 68 - SHIRT_ONDER * 115 };
+const MAAT_ENKEL = { shirt: 158, gap: 91 - SHIRT_ONDER * 158 };
 
 /* Torsomidden ligt op y=255.5 in jersey-eenheden; daaruit volgt de bovenkant   */
 /* van het vierkante jerseyvlak t.o.v. de spelerspositie.                       */
 const JERSEY_TOP = (size) => (255.535 * size) / 500;
 
-function Opstelling({ ploeg, anker, maat, zijde }) {
+/* Placeholder onder een leeg naamveld: zo ziet de gebruiker meteen dát er nog  */
+/* iets ingevuld moet worden, in plaats van een shirt zonder tekst.             */
+const NAAM_PLACEHOLDER = "Speler";
+
+function Opstelling({ ploeg, anker, basisMaat, zijde, opSleep }) {
   const team = TEAM_INDEX[ploeg.team];
   const veldKit = team ? (team.kits[ploeg.kit] || team.kits.thuis) : null;
   const gkKit = keeperKit(ploeg.keeperKleur);
-  const spelers = posities(ploeg.formatie, anker);
+  const { spelers, maat } = opstellingLayout(ploeg.formatie, anker, basisMaat);
+  const verplaatst = ploeg.posities || {};
   return (
     <g id={`opstelling-${zijde}`}>
       {spelers.map((s, i) => {
         const kit = s.gk ? gkKit : veldKit;
-        const naam = ploeg.namen[i] || "";
+        const eigen = verplaatst[i];
+        const x = eigen ? eigen.x : s.x;
+        const y = eigen ? eigen.y : s.y;
+        const ingevuld = (ploeg.namen[i] || "").trim();
+        const naam = ingevuld || NAAM_PLACEHOLDER;
         return (
-          <g key={i} id={`speler-${zijde}-${i + 1}${naam ? "-" + naam.replace(/[^\w-]+/g, "-") : ""}`}>
+          <g key={i} id={`speler-${zijde}-${i + 1}${ingevuld ? "-" + ingevuld.replace(/[^\w-]+/g, "-") : ""}`}
+            style={opSleep ? { cursor: "grab" } : undefined}
+            onPointerDown={opSleep ? (e) => opSleep(e, zijde, i, x, y) : undefined}>
             {kit && <TenueShirt kit={kit} uid={`${zijde}-${i}`} size={maat.shirt}
-              x={s.x - maat.shirt / 2} y={s.y - JERSEY_TOP(maat.shirt)} />}
-            {naam && (
-              <FitText x={s.x} y={s.y + maat.naamDy} maxW={maat.shirt * 1.85}
-                anchor="middle" weight="700" size={maat.font} fill="#fff">{naam}</FitText>
-            )}
+              x={x - maat.shirt / 2} y={y - JERSEY_TOP(maat.shirt)} />}
+            <FitText x={x} y={y + maat.naamDy} maxW={maat.shirt * 1.85}
+              anchor="middle" weight="700" size={maat.font}
+              fill="#fff" opacity={ingevuld ? undefined : 0.55}>{naam}</FitText>
           </g>
         );
       })}
@@ -1292,32 +1369,91 @@ function Opstelling({ ploeg, anker, maat, zijde }) {
   );
 }
 
-function OpstellingDuelTemplate({ opst }) {
+/* Slepen: de muispositie komt binnen in schermpixels, maar de graphic rekent in */
+/* viewBox-eenheden (1080x1350). De verhouding daartussen halen we uit de        */
+/* werkelijke schermgrootte van de <svg>, zodat het ook klopt als de preview     */
+/* geschaald staat. De positie wordt binnen het veld gehouden.                   */
+function useSleep(zetPositie) {
+  const bezig = useRef(null);
+
+  // Scherm -> viewBox. Het kader wordt elke beweging opnieuw gemeten, zodat
+  // scrollen tijdens het slepen het shirt niet laat verspringen. Is het kader
+  // (nog) niet meetbaar, dan geven we null terug: anders levert de deling
+  // Infinity op en belandt er NaN in de opgeslagen positie.
+  const naarViewBox = (svg, clientX, clientY) => {
+    const kader = svg.getBoundingClientRect();
+    if (!kader.width || !kader.height) return null;
+    return {
+      x: ((clientX - kader.left) / kader.width) * W,
+      y: ((clientY - kader.top) / kader.height) * H,
+    };
+  };
+
+  const start = useCallback((e, zijde, index, x, y) => {
+    const svg = e.currentTarget.ownerSVGElement;
+    if (!svg) return;
+    const p = naarViewBox(svg, e.clientX, e.clientY);
+    if (!p) return;
+    // greep = waar in het shirt je het oppakt, zodat het niet wegspringt
+    bezig.current = { zijde, index, svg, grijpX: p.x - x, grijpY: p.y - y };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  }, []);
+
+  const beweeg = useCallback((e) => {
+    const b = bezig.current;
+    if (!b) return;
+    const p = naarViewBox(b.svg, e.clientX, e.clientY);
+    if (!p) return;
+    const x = p.x - b.grijpX;
+    const y = p.y - b.grijpY;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    // Binnen het veld houden, met wat marge zodat het shirt niet half wegvalt.
+    const marge = 30;
+    zetPositie(b.zijde, b.index, {
+      x: Math.min(Math.max(x, VELD.x0 + marge), VELD.x1 - marge),
+      y: Math.min(Math.max(y, VELD.y0 + marge), VELD.y1 - marge),
+    });
+  }, [zetPositie]);
+
+  const stop = useCallback(() => { bezig.current = null; }, []);
+
+  return { start, beweeg, stop };
+}
+
+function OpstellingDuelTemplate({ opst, sleep }) {
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
+      onPointerCancel={sleep && sleep.stop}>
       <defs><style>{fontFaceCss()}</style></defs>
       <rect id="achtergrond" width={W} height={H} fill={VELD.kleur} />
       <Veld />
-      <Opstelling ploeg={opst.a} anker={ANKER_DUEL_BOVEN} maat={MAAT_DUEL} zijde="a" />
-      <Opstelling ploeg={opst.b} anker={ANKER_DUEL_ONDER} maat={MAAT_DUEL} zijde="b" />
+      <Opstelling ploeg={opst.a} anker={ANKER_DUEL_BOVEN} basisMaat={MAAT_DUEL} zijde="a"
+        opSleep={sleep && sleep.start} />
+      <Opstelling ploeg={opst.b} anker={ANKER_DUEL_ONDER} basisMaat={MAAT_DUEL} zijde="b"
+        opSleep={sleep && sleep.start} />
     </svg>
   );
 }
 
-function OpstellingEnkelTemplate({ ploeg }) {
+function OpstellingEnkelTemplate({ ploeg, sleep }) {
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
+      onPointerCancel={sleep && sleep.stop}>
       <defs><style>{fontFaceCss()}</style></defs>
       <rect id="achtergrond" width={W} height={H} fill={VELD.kleur} />
       <Veld />
-      <Opstelling ploeg={ploeg} anker={ANKER_ENKEL} maat={MAAT_ENKEL} zijde="e" />
+      <Opstelling ploeg={ploeg} anker={ANKER_ENKEL} basisMaat={MAAT_ENKEL} zijde="e"
+        opSleep={sleep && sleep.start} />
     </svg>
   );
 }
 
 /* ---- Editor-paneel --------------------------------------------------------- */
 
-function PloegEditor({ titel, ploeg, wijzig }) {
+function PloegEditor({ titel, ploeg, wijzig, herstel }) {
   const team = TEAM_INDEX[ploeg.team];
   const heeftUit = !!(team && team.kits.uit);
   const lijnen = linies(ploeg.formatie);
@@ -1377,6 +1513,13 @@ function PloegEditor({ titel, ploeg, wijzig }) {
         </label>
       </div>
 
+      {herstel && Object.keys(ploeg.posities || {}).length > 0 && (
+        <button onClick={herstel} style={{
+          width: "100%", padding: "8px 0", marginBottom: 8, borderRadius: 8,
+          border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280",
+          fontSize: 13, fontWeight: 600, cursor: "pointer",
+        }}>Gesleepte posities herstellen ({Object.keys(ploeg.posities).length})</button>
+      )}
       <input value={ploeg.namen[0]} onChange={(e) => zetNaam(0, e.target.value)}
         placeholder="Keeper" style={veldStijl} />
       {blokken.map((b) => (
@@ -1402,7 +1545,7 @@ const veldStijl = {
 
 const legePloeg = (keeperKleur) => ({
   team: "", kit: "thuis", formatie: "4-3-3", keeperKleur,
-  namen: Array(11).fill(""),
+  namen: Array(11).fill(""), posities: {},
 });
 
 
@@ -1655,6 +1798,16 @@ function App() {
   const wijzigPloeg = (zijde) => (patch) =>
     setOpst((o) => ({ ...o, [zijde]: { ...o[zijde], ...patch } }));
 
+  // Handmatig gesleepte posities per speler; leeg = volg de formatie.
+  const zetPositie = useCallback((zijde, index, punt) => {
+    setOpst((o) => ({
+      ...o,
+      [zijde]: { ...o[zijde], posities: { ...(o[zijde].posities || {}), [index]: punt } },
+    }));
+  }, []);
+  const sleep = useSleep(zetPositie);
+  const herstelPosities = (zijde) => wijzigPloeg(zijde)({ posities: {} });
+
   const exportPNG = useCallback(async () => {
     const svg = svgWrap.current?.querySelector("svg");
     if (!svg) return;
@@ -1771,13 +1924,19 @@ function App() {
                   <Keuzeknop key={k} label={v.label} actief={type === k} onClick={() => setType(k)} />
                 ))}
                 {isOpstelling && type && (
-                  <div style={{ marginTop: 16, maxHeight: 520, overflowY: "auto", paddingRight: 4 }}>
-                    <PloegEditor titel={type === "duel" ? "Team boven" : null}
-                      ploeg={opst.a} wijzig={wijzigPloeg("a")} />
-                    {type === "duel" && (
-                      <PloegEditor titel="Team onder" ploeg={opst.b} wijzig={wijzigPloeg("b")} />
-                    )}
-                  </div>
+                  <>
+                    <p style={{ fontSize: 13, color: "#6b7280", margin: "14px 0 0" }}>
+                      Sleep een shirt in de preview om het los van de formatie neer te zetten.
+                    </p>
+                    <div style={{ marginTop: 12, maxHeight: 520, overflowY: "auto", paddingRight: 4 }}>
+                      <PloegEditor titel={type === "duel" ? "Team boven" : null}
+                        ploeg={opst.a} wijzig={wijzigPloeg("a")} herstel={() => herstelPosities("a")} />
+                      {type === "duel" && (
+                        <PloegEditor titel="Team onder" ploeg={opst.b} wijzig={wijzigPloeg("b")}
+                          herstel={() => herstelPosities("b")} />
+                      )}
+                    </div>
+                  </>
                 )}
                 {type && (
                   <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
@@ -1813,8 +1972,8 @@ function App() {
                   {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={data} />}
                   {sport === "wielrennen" && type === "uitslag" && <TdFUitslagTemplate data={data} />}
                   {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={data} />}
-                  {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} />}
-                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} />}
+                  {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
+                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} />}
                 </div>
               </div>
             )}
