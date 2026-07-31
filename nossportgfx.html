@@ -1244,84 +1244,126 @@ function Veld() {
 /* jersey-eenheden, met het torsomidden op 255.535 als ankerpunt.               */
 const SHIRT_BOVEN = 194.465 / 500;   // ankerpunt -> bovenkant shirt
 const SHIRT_ONDER = 188.195 / 500;   // ankerpunt -> onderkant shirt
+const SHIRT_BREED = 348.26 / 500;    // zichtbare breedte incl. mouwen
 const FONT_F = 24 / 115;             // fontgrootte t.o.v. de shirtmaat
-const FONT_MIN = 19;                 // ondergrens: kleiner wordt onleesbaar
 const MARGE = 8;                     // lucht tussen naam en het shirt eronder
-/* Ruimte tussen de onderkant van het shirt en de naamregel. Ruim = zoals in de */
-/* ontwerpen; krap wordt gebruikt als de formatie anders niet past.             */
-const GAP_KRAP = 10;
+/* Hoe dicht twee linies mogen komen als ze in elkaar geschoven zijn, als       */
+/* fractie van de shirtmaat. De shirts overlappen dan verticaal, maar staan     */
+/* horizontaal in elkaars gaten, dus ze raken elkaar niet.                      */
+const IN_ELKAAR_F = 0.55;
 
-const fontVoor = (shirt) => Math.max(FONT_MIN, FONT_F * shirt);
 const naamDyVoor = (shirt, gap) => SHIRT_ONDER * shirt + gap;
 
-/* Hoogte die GK + alle linies samen nodig hebben: per linie een gat (naam van   */
-/* de vorige + bovenkant van het volgende shirt + marge), plus onderaan nog de   */
-/* naam van de voorste linie zelf.                                               */
-function benodigdeHoogte(shirt, gap, aantalLijnen) {
-  const staart = naamDyVoor(shirt, gap) + 0.25 * fontVoor(shirt);
-  const gat = staart + SHIRT_BOVEN * shirt + MARGE;
-  return gat * aantalLijnen + staart;
+/* De x-posities van één linie: gelijk verdeeld en gecentreerd, geknepen als de */
+/* spelers anders buiten het veld vallen.                                       */
+function lijnPosities(n, pitchMax, shirt) {
+  const maxSpreiding = (VELD.x1 - VELD.x0) - SHIRT_BREED * shirt - 16;
+  const pitch = Math.min(pitchMax, maxSpreiding / Math.max(1, n - 1));
+  return Array.from({ length: n }, (_, i) => VELD.cx + (i - (n - 1) / 2) * pitch);
 }
 
-/* Grootst mogelijke shirtmaat voor deze formatie. Past de ontwerpmaat, dan      */
-/* houden we die (en daarmee de afgemeten ankers). Zo niet — bij vier linies     */
-/* zoals 3-2-2-3, 4-4-1-1, 4-2-3-1 en 4-1-2-1-2 is een duelhelft daar te laag    */
-/* voor — dan zoeken we de grootste maat die met een krappere naamafstand nog    */
-/* wél past, in plaats van shirts over de namen heen te laten vallen.            */
-function pasMaat(anker, aantalLijnen, basis) {
-  const ruimte = Math.abs(anker.yGrens - anker.yGK);
-  if (benodigdeHoogte(basis.shirt, basis.gap, aantalLijnen) <= ruimte) {
-    return { shirt: basis.shirt, gap: basis.gap, krimpt: false };
-  }
-  // Bisectie: benodigdeHoogte is monotoon stijgend in de shirtmaat.
-  let klein = 20, groot = basis.shirt;
-  for (let i = 0; i < 40; i++) {
-    const mid = (klein + groot) / 2;
-    if (benodigdeHoogte(mid, GAP_KRAP, aantalLijnen) <= ruimte) klein = mid; else groot = mid;
-  }
-  return { shirt: klein, gap: GAP_KRAP, krimpt: true };
-}
-
-/* Geeft posities én de maatvoering terug: die twee hangen samen zodra er       */
-/* gekrompen moet worden.                                                       */
+/* Shirtmaat en naamafstand liggen vast; de linies schuiven in elkaar wanneer   */
+/* de hoogte anders niet toereikend is.                                          */
+/*                                                                              */
+/* Dat kan omdat opeenvolgende linies meestal horizontaal verspringen: een      */
+/* oneven aantal spelers zet er één op de middenas, een even aantal zet ze een  */
+/* halve pitch opzij. Zulke linies vallen in elkaars gaten en mogen dus dicht   */
+/* op elkaar. Staan de spelers wél recht boven elkaar (zoals 4 achter 4, of de  */
+/* spits achter drie middenvelders), dan is de volle afstand nodig.             */
+/*                                                                              */
+/* Per overgang wordt daarom de echte horizontale afstand gemeten, en alleen    */
+/* daar ruimte gereserveerd waar het moet. Overgebleven hoogte wordt gelijk     */
+/* over alle overgangen verdeeld, zodat het geheel het veld blijft vullen.      */
 function opstellingLayout(formatie, anker, basis) {
   const lijnen = linies(formatie);
-  const { shirt, gap, krimpt } = pasMaat(anker, lijnen.length, basis);
-  const richting = Math.sign(anker.yLaatste - anker.yGK) || 1;
+  const shirt = basis.shirt;
+  const naamDy = naamDyVoor(shirt, basis.gap);
+  const font = FONT_F * shirt;
+  const breed = SHIRT_BREED * shirt;
+  // Wat de naam onder een shirt in beslag neemt (tot en met de staartletters).
+  const staart = naamDy + 0.25 * font;
+  // Volle afstand: de naam van de ene linie moet boven het shirt van de
+  // volgende blijven. In elkaar geschoven mag het krapper.
+  const vol = staart + SHIRT_BOVEN * shirt + MARGE;
+  const krap = IN_ELKAAR_F * shirt;
 
-  // Past alles op ware grootte, dan blijven de afgemeten ankers uit het
-  // ontwerp staan. Anders verdelen we de beschikbare hoogte gelijk.
-  let yVan, yTot;
-  if (krimpt) {
-    const staart = naamDyVoor(shirt, gap) + 0.25 * fontVoor(shirt);
-    const gat = (Math.abs(anker.yGrens - anker.yGK) - staart) / lijnen.length;
-    yVan = anker.yGK + richting * gat;
-    yTot = anker.yGK + richting * gat * lijnen.length;
+  const richting = Math.sign(anker.yLaatste - anker.yGK) || 1;
+  const xPerLijn = lijnen.map((n) => lijnPosities(n, anker.pitch, shirt));
+  // De keeper telt als een linie van één voor het meten van de overgangen.
+  const alleLijnen = [[VELD.cx], ...xPerLijn];
+
+  // Kleinste horizontale afstand tussen twee opeenvolgende linies.
+  const afstanden = [];
+  for (let i = 0; i < alleLijnen.length - 1; i++) {
+    let kleinste = Infinity;
+    alleLijnen[i].forEach((a) => alleLijnen[i + 1].forEach((b) => {
+      kleinste = Math.min(kleinste, Math.abs(a - b));
+    }));
+    afstanden.push(kleinste);
+  }
+  // Genoeg tussenruimte om de shirts langs elkaar te laten schuiven?
+  const inElkaar = afstanden.map((d) => d >= breed + 12);
+  const minima = inElkaar.map((v) => (v ? krap : vol));
+
+  // Aan het verre eind moet er nog iets bij: bij een ploeg die naar beneden
+  // speelt de naam onder de voorste linie, bij een ploeg die omhoog speelt de
+  // bovenkant van het voorste shirt (de naam hangt dan aan de veldkant).
+  const reserve = richting > 0 ? staart : SHIRT_BOVEN * shirt;
+  const ruimte = Math.abs(anker.yGrens - anker.yGK) - reserve;
+
+  // De afgemeten ankers uit het ontwerp aanhouden zolang elke overgang daar
+  // ruim genoeg voor is; anders zelf verdelen.
+  const ontwerp = [Math.abs(anker.yEerste - anker.yGK)];
+  for (let i = 1; i < lijnen.length; i++) {
+    ontwerp.push(Math.abs(anker.yLaatste - anker.yEerste) / (lijnen.length - 1));
+  }
+  const ontwerpPast = ontwerp.every((g, i) => g >= minima[i] - 0.01) &&
+    ontwerp.reduce((a, b) => a + b, 0) <= ruimte + 0.01;
+
+  let gaten;
+  if (ontwerpPast) {
+    gaten = ontwerp;
   } else {
-    yVan = anker.yEerste;
-    yTot = anker.yLaatste;
+    const som = minima.reduce((a, b) => a + b, 0);
+    const over = ruimte - som;
+    // Past het zelfs in elkaar geschoven niet, dan knijpen we alles evenredig
+    // in plaats van de graphic buiten het veld te laten lopen.
+    gaten = over >= 0
+      ? minima.map((m) => m + over / minima.length)
+      : minima.map((m) => m * (ruimte / som));
   }
 
-  const maat = { shirt, naamDy: naamDyVoor(shirt, gap), font: fontVoor(shirt) };
-  const spelers = [{ x: VELD.cx, y: anker.yGK, gk: true, lijn: -1 }];
+  const maat = { shirt, naamDy, font };
+  const spelers = [{ x: VELD.cx, y: anker.yGK, gk: true, lijn: -1, naamMaxW: shirt * 1.85 }];
+  let y = anker.yGK;
   lijnen.forEach((n, li) => {
-    const y = lijnen.length === 1 ? yVan : yVan + (yTot - yVan) * (li / (lijnen.length - 1));
-    // Spreiding zo knijpen dat het buitenste shirt binnen het veld blijft.
-    const zichtbaar = (348.26 / 500) * shirt;
-    const maxSpreiding = (VELD.x1 - VELD.x0) - zichtbaar - 16;
-    const pitch = Math.min(anker.pitch, maxSpreiding / Math.max(1, n - 1));
-    for (let i = 0; i < n; i++) {
-      spelers.push({ x: VELD.cx + (i - (n - 1) / 2) * pitch, y, gk: false, lijn: li });
-    }
+    y += richting * gaten[li];
+    // Overlapt de naam van deze linie de shirts van de volgende, dan moet hij
+    // binnen het gat tussen die shirts blijven passen.
+    const volgend = gaten[li + 1];
+    const ruimBoven = volgend === undefined || volgend >= vol - 0.01;
+    const naamMaxW = ruimBoven
+      ? shirt * 1.85
+      : Math.max(shirt * 0.8, 2 * (afstanden[li + 1] - breed / 2) - 10);
+    xPerLijn[li].forEach((x) => spelers.push({ x, y, gk: false, lijn: li, naamMaxW }));
   });
+  // Zelfde correctie voor de keeper, die als eerste een linie onder zich heeft.
+  if (gaten[0] < vol - 0.01) {
+    spelers[0].naamMaxW = Math.max(shirt * 0.8, 2 * (afstanden[0] - breed / 2) - 10);
+  }
   return { spelers, maat };
 }
 
 /* Ankers duel: bovenste helft uit design opstelling-01.svg, onderste helft     */
 /* gespiegeld (namen blijven ónder het shirt, dus niet exact puntsymmetrisch).  */
-/* yGrens = hoever de voorste linie mag komen (middenlijn resp. veldrand).      */
-const ANKER_DUEL_BOVEN = { yGK: 203.6, yEerste: 331.6, yLaatste: 594.4, pitch: 200.4, yGrens: VELD.midY - 10 };
-const ANKER_DUEL_ONDER = { yGK: 1129.8, yEerste: 1018.4, yLaatste: 742.8, pitch: 200.4, yGrens: VELD.midY + 10 };
+/*                                                                              */
+/* yGrens = hoever de voorste linie mag reiken. Die is afgeleid uit het ontwerp */
+/* zelf — de onderkant van de naam bij de voorste linie boven (594,4 + 74) en   */
+/* de bovenkant van het voorste shirt onder (742,8 - 44,7) — zodat de           */
+/* referentie per definitie past. Tussen beide ploegen blijft zo een strook van */
+/* ongeveer 30px rond de middenlijn vrij.                                       */
+const ANKER_DUEL_BOVEN = { yGK: 203.6, yEerste: 331.6, yLaatste: 594.4, pitch: 200.4, yGrens: 668.5 };
+const ANKER_DUEL_ONDER = { yGK: 1129.8, yEerste: 1018.4, yLaatste: 742.8, pitch: 200.4, yGrens: 698.0 };
 const ANKER_ENKEL = { yGK: 1084.8, yEerste: 920, yLaatste: 380.2, pitch: 265.9, yGrens: VELD.y0 + 8 };
 
 /* Ontwerpmaten: gap zo gekozen dat naamDy exact op de afgemeten waarde uitkomt */
@@ -1359,7 +1401,7 @@ function Opstelling({ ploeg, anker, basisMaat, zijde, opSleep }) {
             onPointerDown={opSleep ? (e) => opSleep(e, zijde, i, x, y) : undefined}>
             {kit && <TenueShirt kit={kit} uid={`${zijde}-${i}`} size={maat.shirt}
               x={x - maat.shirt / 2} y={y - JERSEY_TOP(maat.shirt)} />}
-            <FitText x={x} y={y + maat.naamDy} maxW={maat.shirt * 1.85}
+            <FitText x={x} y={y + maat.naamDy} maxW={s.naamMaxW}
               anchor="middle" weight="700" size={maat.font}
               fill="#fff" opacity={ingevuld ? undefined : 0.55}>{naam}</FitText>
           </g>
