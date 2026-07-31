@@ -1380,14 +1380,18 @@ const JERSEY_TOP = (size) => (255.535 * size) / 500;
 /* iets ingevuld moet worden, in plaats van een shirt zonder tekst.             */
 const NAAM_PLACEHOLDER = "Speler";
 
-function Opstelling({ ploeg, anker, basisMaat, zijde, opSleep }) {
+/* zijde = sleutel in de state (a of b); laag = naam in de SVG-lagen. Die twee   */
+/* lopen uiteen bij de enkele opstelling: die toont ploeg a, maar heet in het    */
+/* exportbestand "e". Slepen moet naar de státe-sleutel, anders belandt de       */
+/* positie bij een ploeg die niet bestaat.                                       */
+function Opstelling({ ploeg, anker, basisMaat, zijde, laag = zijde, opSleep }) {
   const team = TEAM_INDEX[ploeg.team];
   const veldKit = team ? (team.kits[ploeg.kit] || team.kits.thuis) : null;
   const gkKit = keeperKit(ploeg.keeperKleur);
   const { spelers, maat } = opstellingLayout(ploeg.formatie, anker, basisMaat);
   const verplaatst = ploeg.posities || {};
   return (
-    <g id={`opstelling-${zijde}`}>
+    <g id={`opstelling-${laag}`}>
       {spelers.map((s, i) => {
         const kit = s.gk ? gkKit : veldKit;
         const eigen = verplaatst[i];
@@ -1396,10 +1400,10 @@ function Opstelling({ ploeg, anker, basisMaat, zijde, opSleep }) {
         const ingevuld = (ploeg.namen[i] || "").trim();
         const naam = ingevuld || NAAM_PLACEHOLDER;
         return (
-          <g key={i} id={`speler-${zijde}-${i + 1}${ingevuld ? "-" + ingevuld.replace(/[^\w-]+/g, "-") : ""}`}
+          <g key={i} id={`speler-${laag}-${i + 1}${ingevuld ? "-" + ingevuld.replace(/[^\w-]+/g, "-") : ""}`}
             style={opSleep ? { cursor: "grab" } : undefined}
             onPointerDown={opSleep ? (e) => opSleep(e, zijde, i, x, y) : undefined}>
-            {kit && <TenueShirt kit={kit} uid={`${zijde}-${i}`} size={maat.shirt}
+            {kit && <TenueShirt kit={kit} uid={`${laag}-${i}`} size={maat.shirt}
               x={x - maat.shirt / 2} y={y - JERSEY_TOP(maat.shirt)} />}
             <FitText x={x} y={y + maat.naamDy} maxW={s.naamMaxW}
               anchor="middle" weight="700" size={maat.font}
@@ -1487,7 +1491,7 @@ function OpstellingEnkelTemplate({ ploeg, sleep }) {
       <defs><style>{fontFaceCss()}</style></defs>
       <rect id="achtergrond" width={W} height={H} fill={VELD.kleur} />
       <Veld />
-      <Opstelling ploeg={ploeg} anker={ANKER_ENKEL} basisMaat={MAAT_ENKEL} zijde="e"
+      <Opstelling ploeg={ploeg} anker={ANKER_ENKEL} basisMaat={MAAT_ENKEL} zijde="a" laag="e"
         opSleep={sleep && sleep.start} />
     </svg>
   );
@@ -1774,6 +1778,43 @@ function TdFKlassementTemplate({ data }) {
 
 /* ============================ WIZARD + APP ================================= */
 
+/* Vangnet om de preview. Een fout tijdens het renderen haalt in React anders de
+   hele pagina onderuit — die wordt dan wit, inclusief de wizard, en alles wat je
+   had ingevuld is weg. Zo blijft het keuzepaneel staan en kun je verder. */
+class PreviewGrens extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { fout: null };
+  }
+  static getDerivedStateFromError(fout) {
+    return { fout };
+  }
+  componentDidUpdate(vorige) {
+    // Bij een nieuwe keuze (andere sport/competitie/type) opnieuw proberen.
+    if (this.state.fout && vorige.sleutel !== this.props.sleutel) {
+      this.setState({ fout: null });
+    }
+  }
+  render() {
+    if (!this.state.fout) return this.props.children;
+    return (
+      <div style={{ padding: 24, color: "#7f1d1d", background: "#fef2f2", borderRadius: 10 }}>
+        <strong style={{ display: "block", marginBottom: 6 }}>
+          De preview kon niet worden getekend.
+        </strong>
+        <p style={{ margin: "0 0 12px", fontSize: 14 }}>
+          Je keuzes staan er nog. Pas iets aan, of probeer het opnieuw.
+        </p>
+        <code style={{ fontSize: 12, opacity: 0.75 }}>{String(this.state.fout.message || this.state.fout)}</code>
+        <button onClick={() => this.setState({ fout: null })} style={{
+          display: "block", marginTop: 14, padding: "9px 14px", borderRadius: 8,
+          border: "none", background: NOS.rood, color: "#fff", fontWeight: 700, cursor: "pointer",
+        }}>Opnieuw proberen</button>
+      </div>
+    );
+  }
+}
+
 function Stap({ n, actief, gedaan, label }) {
   const kleur = actief ? NOS.rood : gedaan ? "#4b5563" : "#d1d5db";
   return (
@@ -1842,10 +1883,16 @@ function App() {
 
   // Handmatig gesleepte posities per speler; leeg = volg de formatie.
   const zetPositie = useCallback((zijde, index, punt) => {
-    setOpst((o) => ({
-      ...o,
-      [zijde]: { ...o[zijde], posities: { ...(o[zijde].posities || {}), [index]: punt } },
-    }));
+    setOpst((o) => {
+      const ploeg = o[zijde];
+      // Onbekende ploeg: niets doen. Zou dit doorlopen, dan gooit de update een
+      // TypeError binnen setState en haalt React de hele pagina onderuit.
+      if (!ploeg) return o;
+      return {
+        ...o,
+        [zijde]: { ...ploeg, posities: { ...(ploeg.posities || {}), [index]: punt } },
+      };
+    });
   }, []);
   const sleep = useSleep(zetPositie);
   const herstelPosities = (zijde) => wijzigPloeg(zijde)({ posities: {} });
@@ -2007,6 +2054,7 @@ function App() {
             )}
             {toonPreview && (
               <div ref={svgWrap} style={{ width: "100%" }}>
+                <PreviewGrens sleutel={`${sport}-${competitie}-${race}-${type}`}>
                 <div style={{ width: "100%", maxWidth: 640, margin: "0 auto" }}>
                   {sport === "formule1" && type === "uitslag" && <UitslagTemplate data={data} />}
                   {sport === "formule1" && type === "grid" && <GridTemplate data={data} />}
@@ -2017,6 +2065,7 @@ function App() {
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} />}
                 </div>
+                </PreviewGrens>
               </div>
             )}
           </div>
