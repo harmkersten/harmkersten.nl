@@ -1176,15 +1176,32 @@ function TenueShirt({ kit, uid, x, y, size }) {
 }
 
 /* ---- Teamlijst afgeleid uit de database ----------------------------------- */
-const TEAM_LIJST = [];
+/* De database bewaart landen in twee bakken (WK 2026 en UEFA overig), wat
+   klopt voor het genereren maar niet helpt bij het kiezen: je zoekt gewoon een
+   land, en hoeft niet te weten of het zich geplaatst heeft. Die twee worden
+   hier tot één groep "Landen" samengevoegd en alfabetisch gesorteerd. De
+   clubcompetities houden hun eigen groep en de volgorde van de database. */
+const LANDEN_BRONNEN = ["WK 2026", "UEFA overig"];
+const LANDEN_LABEL = "Landen";
+const groepLabel = (g) => (LANDEN_BRONNEN.includes(g) ? LANDEN_LABEL : g);
+
+const ruweTeams = [];
 Object.entries(SHIRTS_DB).forEach(([groep, teams]) => {
+  const label = groepLabel(groep);
   Object.entries(teams).forEach(([naam, kits]) => {
-    TEAM_LIJST.push({ id: `${groep}::${naam}`, groep, naam, kits });
+    ruweTeams.push({ id: `${label}::${naam}`, groep: label, naam, kits });
   });
 });
+const TEAM_LIJST = [
+  ...ruweTeams.filter((t) => t.groep !== LANDEN_LABEL),
+  // localeCompare met "nl" zodat Albanië, Ierland en Zwitserland op de juiste
+  // plek staan in plaats van achter de niet-geaccentueerde namen.
+  ...ruweTeams.filter((t) => t.groep === LANDEN_LABEL)
+    .sort((a, b) => a.naam.localeCompare(b.naam, "nl")),
+];
 const TEAM_INDEX = {};
 TEAM_LIJST.forEach((t) => { TEAM_INDEX[t.id] = t; });
-const TEAM_GROEPEN = Object.keys(SHIRTS_DB);
+const TEAM_GROEPEN = [...new Set(Object.keys(SHIRTS_DB).map(groepLabel))];
 
 /* Keeperstenue: niet in de database (die kent alleen veldtenues), dus een      */
 /* effen shirt in een zelfgekozen kleur met witte kraag, zoals in het ontwerp.  */
