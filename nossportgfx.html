@@ -168,6 +168,7 @@ const CONFIG = {
         types: {
           uitslag: { label: "Uitslag" },
           klassement: { label: "Algemeen klassement" },
+          deelnemers: { label: "Deelnemende teams" },
         },
       },
     },
@@ -1019,10 +1020,18 @@ const SHIRTS_DB = {"Eredivisie":{"Ajax":{"thuis":{"body":{"pattern":"middenbaan"
 /* Patronen worden op de TORSO gemeten (124-375 breed, 68-443 hoog), niet op   */
 /* het canvas. Rects steken met marge M buiten de torso en worden door de      */
 /* clipPath op de shirtvorm bijgesneden — exact zoals in de Python-generator.  */
-const TX0 = 124, TX1 = 375, TY0 = 68, TY1 = 443;
-const TW = TX1 - TX0, TH = TY1 - TY0, TCX = (TX0 + TX1) / 2;
+/* Patronen worden op de TORSO gemeten, niet op het canvas — anders valt de
+   helft van de banen buiten het tenue. Elke sport heeft zijn eigen torsomaten;
+   de patroonlogica eronder is gedeeld. */
+const meetkunde = (TX0, TX1, TY0, TY1) => ({
+  TX0, TX1, TY0, TY1,
+  TW: TX1 - TX0, TH: TY1 - TY0, TCX: (TX0 + TX1) / 2,
+});
+const VOETBAL_G = meetkunde(124, 375, 68, 443);          // NOS_jersey.svg
+const WIELER_G = meetkunde(60.9, 277.5, 6.2, 383.0);     // NOS wielrennen tenue.svg
 
-function patroonVlakken(spec, breed) {
+function patroonVlakken(spec, breed, G = VOETBAL_G) {
+  const { TX0, TX1, TY0, TY1, TW, TH, TCX } = G;
   if (!spec) return [];
   const p = spec.pattern, cols = spec.colors;
   const M = 40;
@@ -1174,6 +1183,68 @@ function TenueShirt({ kit, uid, x, y, size }) {
     </g>
   );
 }
+
+
+/* ==================== WIELRENNEN: TENUE-DATABASE ========================== */
+/* Auto-gegenereerd uit "NOS wielrennen tenue.svg" + teams.json (Wielrennen). */
+/* Vijf paden; het losse stipje rechtsonder in het bronbestand is overgeslagen. */
+/* Het kraagpad bevat ook de ritssluiting, dus die kleurt met de kraag mee.     */
+const WIELER_JERSEY = {
+  mouwL: "M61.5,145.7c-5.2-46.7,10.2-123.2,10.1-123.2C22.6,43.1,0,32.4,0,194.4h66c-.6-9.1-1.3-18.1-2.2-27-.7-7.1-1.4-14.4-2.3-21.7Z",
+  mouwR: "M275.6,143.9c-1.8,16.6-3.3,33.7-4.3,50.6h66.1c0-162-22.6-151.4-71.7-171.9,0,0,15.1,72.5,9.9,121.4Z",
+  torso: "M269.7,243.8c0-15.6.6-32.4,1.7-49.4,1-16.8,2.5-34,4.3-50.6,5.2-48.8-9.9-121.3-9.9-121.4l-43.7-16.2s-11.7,37.6-53.3,41.8c-1.2-.1-2.4-.3-3.5-.4-.2,0-.3,0-.5,0-1.1-.2-2.1-.4-3.2-.6-.2,0-.4,0-.6-.1-1-.2-2-.5-3-.7-.2,0-.3,0-.5-.1-1-.3-2-.6-3-.9,0,0,0,0,0,0-1-.3-1.9-.7-2.8-1-.1,0-.2,0-.4-.1-.9-.4-1.8-.7-2.6-1.1-.2,0-.3-.1-.5-.2-.8-.4-1.6-.8-2.4-1.2-.1,0-.3-.2-.4-.2-.8-.4-1.6-.9-2.4-1.3,0,0-.1,0-.2-.1-.7-.4-1.4-.9-2.1-1.3-.1,0-.2-.1-.3-.2-.7-.5-1.4-.9-2-1.4-.2-.1-.3-.2-.5-.3-.6-.5-1.2-.9-1.8-1.4-.2-.1-.3-.3-.5-.4-.6-.5-1.2-1-1.7-1.5-.1-.1-.3-.2-.4-.3-.5-.4-.9-.9-1.4-1.3-.1-.1-.3-.3-.4-.4-.5-.5-1-.9-1.4-1.4-.2-.2-.4-.4-.5-.5-.4-.5-.8-.9-1.2-1.4-.2-.2-.4-.4-.5-.6-.3-.4-.7-.8-1-1.2-.2-.3-.4-.5-.6-.8-.2-.3-.5-.6-.7-.9-.3-.4-.5-.7-.8-1.1-.2-.3-.4-.5-.6-.8-.2-.3-.4-.5-.6-.8h0c-5.8-8.3-8-15.3-8-15.3l-43.7,16.2s-15.4,76.4-10.1,123.2c.8,7.3,1.6,14.6,2.3,21.7.9,8.9,1.6,18,2.2,27,.4,5.3.7,10.7.9,16,.5,11.2.9,22.4.9,33.4,0,76.6-7.2,125.3-7.2,125.3,30,13.5,108.2,13.5,108.2,13.5,0,0,78.2,0,108.2-13.5,0,0-7.2-48.6-7.2-125.3Z",
+  hals: "M168.7,9.3c-22.8,0-36.7-9.3-36.7-9.3,0,0,9.9,32.9,36.7,32.9S205.4,0,205.4,0c0,0-13.8,9.3-36.7,9.3Z",
+  kraag: "M222,6.3l-16.7-6.3s-9.9,32.9-36.7,32.9S132.1,0,132.1,0l-16.7,6.3s2.2,7,8,15.3h0c.2.3.4.5.6.8.2.3.4.5.6.8.3.4.5.7.8,1.1.2.3.5.6.7.9.2.3.4.5.6.8.3.4.7.8,1,1.2.2.2.4.4.5.6.4.5.8.9,1.2,1.4.2.2.3.4.5.5.5.5.9,1,1.4,1.4.1.1.3.3.4.4.5.4.9.9,1.4,1.3.1.1.3.2.4.3.6.5,1.1,1,1.7,1.5.2.1.3.3.5.4.6.5,1.2,1,1.8,1.4.2.1.3.2.5.3.7.5,1.3,1,2,1.4.1,0,.2.1.3.2.7.5,1.4.9,2.1,1.3,0,0,.1,0,.2.1.8.5,1.6.9,2.4,1.3.1,0,.3.2.4.2.8.4,1.6.8,2.4,1.2.2,0,.3.1.5.2.9.4,1.7.8,2.6,1.1.1,0,.2,0,.4.1.9.4,1.9.7,2.8,1,0,0,0,0,0,0,1,.3,2,.6,3,.9.2,0,.3,0,.5.1,1,.3,2,.5,3,.7.2,0,.4,0,.6.1,1,.2,2.1.4,3.2.6.2,0,.3,0,.5,0,.5,0,1,.1,1.5.2v334.8h4V47.8c.5,0,1-.1,1.5-.2.2,0,.3,0,.5,0,1.1-.2,2.1-.4,3.2-.6.2,0,.4,0,.6-.1,1-.2,2-.5,3-.7.2,0,.3,0,.5-.1,1-.3,2-.6,3-.9,0,0,0,0,0,0,1-.3,1.9-.7,2.8-1,.1,0,.2,0,.4-.1.9-.4,1.8-.7,2.6-1.1.2,0,.3-.1.5-.2.8-.4,1.6-.8,2.4-1.2.1,0,.3-.2.4-.2.8-.4,1.6-.9,2.4-1.3,0,0,.1,0,.2-.1.7-.4,1.4-.9,2.1-1.3.1,0,.2-.1.3-.2.7-.5,1.4-.9,2-1.4.2-.1.3-.2.5-.3.6-.5,1.2-.9,1.8-1.4.2-.1.3-.3.5-.4.6-.5,1.2-1,1.7-1.5.1-.1.3-.2.4-.3.5-.4.9-.9,1.4-1.3.1-.1.3-.3.4-.4.5-.5,1-.9,1.4-1.4.2-.2.4-.4.5-.5.4-.5.8-.9,1.2-1.4.2-.2.4-.4.5-.6.3-.4.7-.8,1-1.2.2-.3.4-.5.6-.8.2-.3.5-.6.7-.9.3-.4.5-.7.8-1.1.2-.3.4-.5.6-.8.2-.3.4-.5.6-.8h0c5.8-8.3,8-15.3,8-15.3Z",
+};
+/* Zichtbare vorm loopt tot 337,4 x 383,0; ruimte voor de contourlijn eromheen. */
+const WIELER_VB = { x: -6, y: -6, w: 349.4, h: 395 };
+const WIELER_DB = {"UCI WorldTeams":{"Alpecin - Premier Tech":{"code":"APT","land":"BE","zeker":"benadering","body":{"pattern":"effen","colors":["#1E6FB9"]},"sleeves":"#1E6FB9","neck":"#12325C"},"Bahrain - Victorious":{"code":"TBV","land":"BH","zeker":"vast","body":{"pattern":"effen","colors":["#16233F"]},"sleeves":"#16233F","neck":"#00B0B9"},"Decathlon CMA CGM Team":{"code":"DAT","land":"FR","zeker":"benadering","body":{"pattern":"effen","colors":["#16264F"]},"sleeves":"#16264F","neck":"#00A94F"},"EF Education - EasyPost":{"code":"EFE","land":"US","zeker":"vast","body":{"pattern":"effen","colors":["#E9459B"]},"sleeves":"#E9459B","neck":"#E9459B"},"Groupama - FDJ United":{"code":"GFC","land":"FR","zeker":"vast","body":{"pattern":"effen","colors":["#1E7FD4"]},"sleeves":"#1E7FD4","neck":"#E4002B"},"Lidl - Trek":{"code":"LTK","land":"DE","zeker":"vast","body":{"pattern":"effen","colors":["#1B4C9B"]},"sleeve_left":"#E4002B","sleeve_right":"#FFD200","neck":"#FFFFFF"},"Lotto Intermarche":{"code":"LTO","land":"BE","zeker":"vast","body":{"pattern":"effen","colors":["#C8102E"]},"sleeves":"#C8102E","neck":"#FFFFFF"},"Movistar Team":{"code":"MOV","land":"ES","zeker":"vast","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#FFFFFF","neck":"#0033A0"},"Netcompany INEOS":{"code":"IGD","land":"GB","zeker":"vast","body":{"pattern":"effen","colors":["#9098A0"]},"sleeves":"#9098A0","neck":"#E4002B"},"NSN Cycling Team":{"code":"NSN","land":"CH","zeker":"benadering","body":{"pattern":"effen","colors":["#6EC9E8"]},"sleeves":"#FFFFFF","neck":"#F58220"},"Red Bull - BORA - hansgrohe":{"code":"RBH","land":"DE","zeker":"vast","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#0A2240","neck":"#E4002B"},"Soudal Quick-Step":{"code":"SOQ","land":"BE","zeker":"vast","body":{"pattern":"effen","colors":["#1E3A5F"]},"sleeves":"#1E3A5F","neck":"#E4002B"},"Team Jayco AlUla":{"code":"JAY","land":"AU","zeker":"vast","body":{"pattern":"effen","colors":["#6B3FA0"]},"sleeves":"#6B3FA0","neck":"#FFFFFF"},"Team Picnic PostNL":{"code":"PIC","land":"NL","zeker":"vast","body":{"pattern":"banen","colors":["#2B2D6E","#F26522"],"count":5},"sleeves":"#2B2D6E","neck":"#F26522"},"Team Visma | Lease a Bike":{"code":"TVL","land":"NL","zeker":"vast","body":{"pattern":"ringen","colors":["#FFE500","#FFE500","#151515"],"count":3},"sleeves":"#FFE500","neck":"#151515"},"UAE Team Emirates - XRG":{"code":"UAD","land":"AE","zeker":"vast","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#FFFFFF","neck":"#151515"},"Uno-X Mobility":{"code":"UXM","land":"NO","zeker":"vast","body":{"pattern":"effen","colors":["#E4002B"]},"sleeves":"#E4002B","neck":"#FFD200"},"XDS Astana Team":{"code":"XAT","land":"KZ","zeker":"benadering","body":{"pattern":"effen","colors":["#00A9CE"]},"sleeves":"#00A9CE","neck":"#FFD200"}},"UCI ProTeams":{"Bardiani CSF 7 Saber":{"code":"BCF","land":"IT","zeker":"vast","body":{"pattern":"effen","colors":["#2AC5D6"]},"sleeves":"#FFFFFF","neck":"#FFFFFF"},"Burgos Burpellet BH":{"code":"BBH","land":"ES","zeker":"benadering","body":{"pattern":"effen","colors":["#7B3F98"]},"sleeves":"#FFFFFF","neck":"#E9459B"},"Caja Rural - Seguros RGA":{"code":"CJR","land":"ES","zeker":"vast","body":{"pattern":"ringen","colors":["#FFFFFF","#00A54F"],"count":2},"sleeves":"#FFFFFF","neck":"#00A54F"},"Cofidis":{"code":"COF","land":"FR","zeker":"vast","body":{"pattern":"effen","colors":["#8B1538"]},"sleeves":"#F7C600","neck":"#F7C600"},"Equipo Kern Pharma":{"code":"EKP","land":"ES","zeker":"vast","body":{"pattern":"effen","colors":["#4CC38A"]},"sleeves":"#4CC38A","neck":"#0B6E4F"},"Euskaltel - Euskadi":{"code":"EUS","land":"ES","zeker":"vast","body":{"pattern":"effen","colors":["#F58220"]},"sleeves":"#F58220","neck":"#F58220"},"MBH Bank CSB Telecom Fort":{"code":"MBH","land":"HU","zeker":"vast","body":{"pattern":"effen","colors":["#1B2A5B"]},"sleeves":"#5BC2E7","neck":"#E4002B"},"Modern Adventure Pro Cycling":{"code":"MAP","land":"US","zeker":"vast","body":{"pattern":"effen","colors":["#5C1A2B"]},"sleeves":"#5C1A2B","neck":"#C9A96B"},"Pinarello Q36.5 Pro Cycling Team":{"code":"QPC","land":"CH","zeker":"vast","body":{"pattern":"effen","colors":["#1B2A5B"]},"sleeves":"#1B2A5B","neck":"#FFFFFF"},"Solution Tech NIPPO Rali":{"code":"NIP","land":"IT","zeker":"benadering","body":{"pattern":"effen","colors":["#1E5AA8"]},"sleeves":"#1E5AA8","neck":"#E4002B"},"Team Flanders - Baloise":{"code":"TFB","land":"BE","zeker":"vast","body":{"pattern":"ringen","colors":["#FFFFFF","#FFD200","#0B4DA1"],"count":3},"sleeves":"#FFFFFF","neck":"#0B4DA1"},"Team Novo Nordisk":{"code":"TNN","land":"US","zeker":"vast","body":{"pattern":"effen","colors":["#0F3D2E"]},"sleeves":"#0F3D2E","neck":"#00A550"},"Team Polti VisitMalta":{"code":"PVM","land":"IT","zeker":"vast","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#00A550","neck":"#E4002B"},"TotalEnergies":{"code":"TEN","land":"FR","zeker":"benadering","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#FFFFFF","neck":"#E4002B"},"Tudor Pro Cycling Team":{"code":"TUD","land":"CH","zeker":"vast","body":{"pattern":"effen","colors":["#151515"]},"sleeves":"#151515","neck":"#E4002B"},"Unibet Rose Rockets":{"code":"URR","land":"FR","zeker":"vast","body":{"pattern":"effen","colors":["#29B6E8"]},"sleeves":"#EC49A5","neck":"#EC49A5"}},"UCI Women's WorldTeams":{"AG Insurance - Soudal Team":{"code":"AGS","land":"BE","zeker":"vast","body":{"pattern":"effen","colors":["#14352E"]},"sleeves":"#14352E","neck":"#00A9CE"},"CANYON//SRAM":{"code":"CSR","land":"DE","zeker":"benadering","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#FFFFFF","neck":"#EC49A5"},"EF Education-Oatly":{"code":"EFO","land":"US","zeker":"vast","body":{"pattern":"effen","colors":["#E9459B"]},"sleeves":"#E9459B","neck":"#E9459B"},"FDJ United - SUEZ":{"code":"FST","land":"FR","zeker":"vast","body":{"pattern":"effen","colors":["#0B2C6F"]},"sleeves":"#1E7FD4","neck":"#1E7FD4"},"Fenix-Premier Tech":{"code":"FPT","land":"BE","zeker":"vast","body":{"pattern":"effen","colors":["#9C4A2F"]},"sleeves":"#9C4A2F","neck":"#FFFFFF"},"Human Powered Health":{"code":"HPM","land":"US","zeker":"benadering","body":{"pattern":"effen","colors":["#5B2D8E"]},"sleeves":"#F58220","neck":"#F58220"},"Lidl - Trek":{"code":"LTW","land":"DE","zeker":"vast","body":{"pattern":"effen","colors":["#1B4C9B"]},"sleeve_left":"#E4002B","sleeve_right":"#FFD200","neck":"#FFFFFF"},"Liv AlUla Jayco":{"code":"LAJ","land":"AU","zeker":"vast","body":{"pattern":"effen","colors":["#8B5CC7"]},"sleeves":"#8B5CC7","neck":"#FFFFFF"},"Movistar Team":{"code":"MOW","land":"ES","zeker":"vast","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#FFFFFF","neck":"#0033A0"},"Team Picnic PostNL":{"code":"PIW","land":"NL","zeker":"vast","body":{"pattern":"banen","colors":["#2B2D6E","#F26522"],"count":5},"sleeves":"#2B2D6E","neck":"#F26522"},"Team SD Worx - Protime":{"code":"SDW","land":"NL","zeker":"benadering","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#FFFFFF","neck":"#F58220"},"Team Visma | Lease a Bike":{"code":"TVW","land":"NL","zeker":"vast","body":{"pattern":"ringen","colors":["#FFE500","#FFE500","#151515"],"count":3},"sleeves":"#FFE500","neck":"#151515"},"UAE Team L'IMAD":{"code":"UAL","land":"AE","zeker":"vast","body":{"pattern":"effen","colors":["#FFFFFF"]},"sleeves":"#FFFFFF","neck":"#151515"},"Uno-X Mobility":{"code":"UXW","land":"NO","zeker":"vast","body":{"pattern":"effen","colors":["#E4002B"]},"sleeves":"#E4002B","neck":"#FFD200"}},"UCI Women's ProTeams":{"Cofidis Women Team":{"code":"COW","land":"FR","zeker":"vast","body":{"pattern":"effen","colors":["#8B1538"]},"sleeves":"#F7C600","neck":"#F7C600"},"Laboral Kutxa - Fundacion Euskadi":{"code":"LKE","land":"ES","zeker":"benadering","body":{"pattern":"effen","colors":["#C97BA8"]},"sleeves":"#C97BA8","neck":"#00A54F"},"Lotto Intermarche Ladies":{"code":"LIL","land":"BE","zeker":"vast","body":{"pattern":"effen","colors":["#C8102E"]},"sleeves":"#C8102E","neck":"#FFFFFF"},"Ma Petite Entreprise":{"code":"MPE","land":"FR","zeker":"vast","body":{"pattern":"effen","colors":["#1B2A5B"]},"sleeves":"#EC49A5","neck":"#EC49A5"},"Mayenne Monbana My Pie":{"code":"MMP","land":"FR","zeker":"vast","body":{"pattern":"effen","colors":["#151515"]},"sleeves":"#151515","neck":"#E4002B"},"St Michel - Preference Home - Auber93":{"code":"SMA","land":"FR","zeker":"vast","body":{"pattern":"helften","colors":["#F58220","#00A550"]},"sleeve_left":"#F58220","sleeve_right":"#00A550","neck":"#FFFFFF"},"VolkerWessels Cycling Team":{"code":"VWC","land":"NL","zeker":"vast","body":{"pattern":"effen","colors":["#29A9E0"]},"sleeves":"#151515","neck":"#151515"}}};
+
+
+/* Wielertenue: zelfde opbouw als TenueShirt, andere vorm en torsomaten. De
+   viewBox is niet vierkant (349,4 x 395), dus x/y/size gaan over een vak van
+   die verhouding; `size` is de hoogte. */
+const WIELER_SCHAAL = WIELER_VB.w / WIELER_VB.h;
+
+function WielerTenue({ kit, uid, x, y, size }) {
+  const s = size / WIELER_VB.h;
+  const b = kit.body;
+  const grond = b.colors[0];
+  const ml = kit.sleeve_left || kit.sleeves || grond;
+  const mr = kit.sleeve_right || kit.sleeves || grond;
+  const kraag = kit.neck || ml;
+  const hals = kit.hals || grond;
+  const clipId = `wieler-${uid}`;
+  return (
+    <g transform={`translate(${x},${y}) scale(${s}) translate(${-WIELER_VB.x},${-WIELER_VB.y})`}>
+      <defs>
+        <clipPath id={clipId}><path d={WIELER_JERSEY.torso} /></clipPath>
+      </defs>
+      <path fill={ml} d={WIELER_JERSEY.mouwL} />
+      <path fill={mr} d={WIELER_JERSEY.mouwR} />
+      <path fill={grond} d={WIELER_JERSEY.torso} />
+      <g clipPath={`url(#${clipId})`}>{patroonVlakken(b, false, WIELER_G)}</g>
+      <path fill={hals} d={WIELER_JERSEY.hals} />
+      <path fill={kraag} d={WIELER_JERSEY.kraag} />
+      <g opacity="0.18" fill="none" stroke="#000000" strokeWidth="10" strokeLinejoin="round">
+        <path d={WIELER_JERSEY.mouwL} /><path d={WIELER_JERSEY.mouwR} />
+        <path d={WIELER_JERSEY.torso} /><path d={WIELER_JERSEY.hals} />
+        <path d={WIELER_JERSEY.kraag} />
+      </g>
+    </g>
+  );
+}
+
+/* Platte ploegenlijst voor de aanvinklijst en het raster. */
+const WIELER_LIJST = [];
+Object.entries(WIELER_DB).forEach(([klasse, ploegen]) => {
+  Object.entries(ploegen).forEach(([naam, p]) => {
+    WIELER_LIJST.push({ id: `${klasse}::${naam}`, klasse, naam, ...p });
+  });
+});
+const WIELER_INDEX = {};
+WIELER_LIJST.forEach((t) => { WIELER_INDEX[t.id] = t; });
+const WIELER_KLASSEN = Object.keys(WIELER_DB);
 
 /* ---- Teamlijst afgeleid uit de database ----------------------------------- */
 /* De database bewaart landen in twee bakken (WK 2026 en UEFA overig), wat
@@ -1793,6 +1864,62 @@ function TdFKlassementTemplate({ data }) {
   );
 }
 
+
+/* ======================= WIELRENNEN: DEELNEMENDE TEAMS ===================== */
+/* Raster van tenues met ploegnaam en UCI-code + land. Het aantal kolommen en  */
+/* de tenuegrootte volgen uit het aantal aangevinkte ploegen, zodat een veld   */
+/* van 8 net zo goed vult als een Tour-startlijst van 23.                      */
+
+function DeelnemersTemplate({ data }) {
+  const teams = data.teams;
+  const n = teams.length;
+  const kol = n <= 6 ? 2 : n <= 12 ? 3 : n <= 24 ? 4 : 5;
+  const rijen = Math.ceil(n / kol);
+  const xL = 60, xR = 1020;
+  const vakB = (xR - xL) / kol;
+  const top = 292, bodem = 1296;
+  const vakH = (bodem - top) / rijen;
+
+  // Twee tekstregels onder het tenue; de rest is voor het tenue zelf.
+  const naamFont = Math.min(30, Math.max(17, vakB * 0.115));
+  const codeFont = Math.max(14, naamFont * 0.74);
+  const tekstH = naamFont + codeFont + 16;
+  const tenueH = Math.max(40, Math.min(vakH - tekstH - 14, vakB * 0.66));
+  const tenueB = tenueH * WIELER_SCHAAL;
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+      <Achtergrond theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <g id="deelnemers">
+        {teams.map((t, i) => {
+          const r = Math.floor(i / kol), c = i % kol;
+          // Laatste rij centreren als hij niet vol is.
+          const inRij = Math.min(kol, n - r * kol);
+          const rijBreed = inRij * vakB;
+          const x0 = xL + (xR - xL - rijBreed) / 2 + c * vakB;
+          const midX = x0 + vakB / 2;
+          const y0 = top + r * vakH;
+          const tenueY = y0 + (vakH - tekstH - tenueH) / 2;
+          const naamY = tenueY + tenueH + naamFont + 6;
+          return (
+            <g key={t.id} id={`ploeg-${t.code}`}>
+              <WielerTenue kit={t} uid={`d-${i}`} size={tenueH}
+                x={midX - tenueB / 2} y={tenueY} />
+              <FitText x={midX} y={naamY} maxW={vakB - 16} anchor="middle"
+                weight="700" size={naamFont} fill={NOS.wit}>{t.naam}</FitText>
+              <text x={midX} y={naamY + codeFont + 6} textAnchor="middle" fontFamily={FONT}
+                fontWeight="400" fontSize={codeFont} fill={NOS.wit} opacity="0.72">
+                {t.code} · {t.land}
+              </text>
+            </g>
+          );
+        })}
+      </g>
+    </svg>
+  );
+}
+
 /* ============================ WIZARD + APP ================================= */
 
 /* Vangnet om de preview. Een fout tijdens het renderen haalt in React anders de
@@ -1870,6 +1997,16 @@ function App() {
     b: legePloeg("#39B54A"),
   });
   const svgWrap = useRef(null);
+  // Aangevinkte ploegen voor de wielrennen-deelnemerslijst.
+  const [gekozenTeams, setGekozenTeams] = useState([]);
+  const wisselTeam = (id) => setGekozenTeams((g) =>
+    g.includes(id) ? g.filter((x) => x !== id) : [...g, id]);
+  const wisselKlasse = (klasse) => setGekozenTeams((g) => {
+    const ids = WIELER_LIJST.filter((t) => t.klasse === klasse).map((t) => t.id);
+    const allemaal = ids.every((id) => g.includes(id));
+    return allemaal ? g.filter((id) => !ids.includes(id))
+                    : [...g, ...ids.filter((id) => !g.includes(id))];
+  });
 
   // Effra in de document laden zodat ook de wizard-UI het font gebruikt.
   useEffect(() => {
@@ -1890,11 +2027,19 @@ function App() {
   // voetbal en wielrennen gaan direct van competitie naar type.
   const heeftRace = !!(sport && competitie && CONFIG[sport].competities[competitie].heeftRace);
   const klaarVoorType = heeftRace ? !!race : !!competitie;
-  // De opstelling-graphic komt niet uit de mock-datalaag maar uit de editor.
+  // Opstelling en deelnemerslijst komen niet uit de mock-datalaag maar uit de
+  // editor ernaast.
   const isOpstelling = sport === "voetbal" && competitie === "opstelling";
-  const data = type && klaarVoorType && !isOpstelling
+  const isDeelnemers = sport === "wielrennen" && type === "deelnemers";
+  const data = type && klaarVoorType && !isOpstelling && !isDeelnemers
     ? getMock(sport, competitie, type, race) : null;
-  const toonPreview = !!data || (isOpstelling && !!type);
+  const deelnemersData = isDeelnemers ? {
+    titel: "Tour de France 2026", ondertitel: "deelnemende teams",
+    theme: THEMES.tourdefrance,
+    teams: WIELER_LIJST.filter((t) => gekozenTeams.includes(t.id)),
+  } : null;
+  const toonPreview = !!data || (isOpstelling && !!type) ||
+    (isDeelnemers && deelnemersData.teams.length > 0);
   const wijzigPloeg = (zijde) => (patch) =>
     setOpst((o) => ({ ...o, [zijde]: { ...o[zijde], ...patch } }));
 
@@ -2029,6 +2174,64 @@ function App() {
                 {Object.entries(CONFIG[sport].competities[competitie].types).map(([k, v]) => (
                   <Keuzeknop key={k} label={v.label} actief={type === k} onClick={() => setType(k)} />
                 ))}
+                {isDeelnemers && (
+                  <div style={{ marginTop: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between",
+                      alignItems: "baseline", marginBottom: 8 }}>
+                      <h3 style={{ ...secTitel, marginBottom: 0 }}>Ploegen</h3>
+                      <span style={{ fontSize: 13, color: "#6b7280" }}>
+                        {gekozenTeams.length} gekozen
+                      </span>
+                    </div>
+                    {gekozenTeams.length > 0 && (
+                      <button onClick={() => setGekozenTeams([])} style={{
+                        width: "100%", padding: "8px 0", marginBottom: 10, borderRadius: 8,
+                        border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280",
+                        fontSize: 13, fontWeight: 600, cursor: "pointer",
+                      }}>Selectie wissen</button>
+                    )}
+                    <div style={{ maxHeight: 470, overflowY: "auto", paddingRight: 4 }}>
+                      {WIELER_KLASSEN.map((klasse) => {
+                        const ploegen = WIELER_LIJST.filter((t) => t.klasse === klasse);
+                        const aan = ploegen.filter((t) => gekozenTeams.includes(t.id)).length;
+                        return (
+                          <div key={klasse} style={{ marginBottom: 14 }}>
+                            <button onClick={() => wisselKlasse(klasse)} style={{
+                              width: "100%", textAlign: "left", padding: "8px 10px",
+                              borderRadius: 8, border: "none", background: "#f3f4f6",
+                              fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer",
+                              marginBottom: 6,
+                            }}>{klasse} · {aan}/{ploegen.length}</button>
+                            {ploegen.map((t) => {
+                              const aanuit = gekozenTeams.includes(t.id);
+                              return (
+                                <label key={t.id} style={{
+                                  display: "flex", alignItems: "center", gap: 8,
+                                  padding: "5px 10px", cursor: "pointer", fontSize: 14,
+                                  borderRadius: 6, background: aanuit ? "#fef2f2" : "transparent",
+                                }}>
+                                  <input type="checkbox" checked={aanuit}
+                                    onChange={() => wisselTeam(t.id)} />
+                                  <span style={{ flex: 1 }}>{t.naam}</span>
+                                  {/* Kleuren die nog nagelopen moeten worden krijgen een
+                                      stipje, zodat je ziet waar je op moet letten. */}
+                                  {t.zeker !== "vast" && (
+                                    <span title={`kleuren: ${t.zeker}`} style={{
+                                      width: 7, height: 7, borderRadius: "50%",
+                                      background: t.zeker === "onzeker" ? "#dc2626" : "#f59e0b",
+                                    }} />
+                                  )}
+                                  <span style={{ fontSize: 12, color: "#9ca3af" }}>{t.code}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {isOpstelling && type && (
                   <>
                     <p style={{ fontSize: 13, color: "#6b7280", margin: "14px 0 0" }}>
@@ -2081,6 +2284,7 @@ function App() {
                   {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={data} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} />}
+                  {isDeelnemers && <DeelnemersTemplate data={deelnemersData} />}
                 </div>
                 </PreviewGrens>
               </div>
