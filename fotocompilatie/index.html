@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fotocompilatie — NOS Weer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Fotocompilatie</h1>
+  <p>Drie ingezonden weerfoto's in één beeld van 1080 × 1080.</p>
+</header>
+
+<main>
+  <section>
+    <div class="stage" id="stage">
+      <canvas id="canvas" width="1080" height="1080"></canvas>
+    </div>
+    <p class="stage-hint">Sleep foto's op het beeld · sleep in een kader om de uitsnede te verschuiven · scroll om te zoomen</p>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2>Indeling</h2>
+      <div class="variants" id="variants"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Foto's</h2>
+      <div id="slots"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Opmaak</h2>
+      <label class="check">
+        <input type="checkbox" id="border-toggle" checked>
+        <span>Wit randje om de foto's</span>
+      </label>
+      <label class="slider-row">
+        <span>Randdikte</span>
+        <input type="range" id="border-width" min="0" max="16" step="1" value="6">
+        <output id="border-width-out">6 px</output>
+      </label>
+      <label class="slider-row">
+        <span>Schaduw</span>
+        <input type="range" id="shadow" min="0" max="100" step="1" value="35">
+        <output id="shadow-out">35%</output>
+      </label>
+    </div>
+
+    <div class="panel">
+      <h2>Exporteren</h2>
+      <div class="row">
+        <button class="primary" id="download">Download PNG</button>
+        <button class="secondary" id="clear">Leegmaken</button>
+      </div>
+      <p class="hint">Bestandsnaam: <code>weercompilatie-JJJJ-MM-DD.png</code> · 1080 × 1080 px</p>
+    </div>
+
+    <div class="panel">
+      <h2>Kaders</h2>
+      <div class="row">
+        <button class="secondary" id="toggle-frames" style="flex:1">Kaders bijstellen</button>
+      </div>
+      <div class="frame-editor" id="frame-editor">
+        <p class="hint" style="margin-top:12px">Posities in pixels op 1080 × 1080, voor de gekozen indeling.</p>
+        <div class="cols" style="margin:8px 0 4px">
+          <span class="hint" style="margin:0">x</span>
+          <span class="hint" style="margin:0">y</span>
+          <span class="hint" style="margin:0">breedte</span>
+          <span class="hint" style="margin:0">hoogte</span>
+        </div>
+        <div id="frame-inputs"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="mini" id="copy-json">Kopieer alle indelingen als JSON</button>
+        </div>
+        <p class="hint">Plak de JSON in <code>layouts.js</code> om hem vast te leggen.</p>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="file-input" accept="image/*" multiple hidden>
+
+<script src="layouts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
