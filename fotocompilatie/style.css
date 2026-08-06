@@ -1,3 +1,13 @@
+/* Het lettertype van de locatielabels. Wordt op het canvas getekend, dus het
+   moet geladen zijn voordat we tekenen — zie de font-check in app.js. */
+@font-face {
+  font-family: 'Effra CC';
+  src: url('assets/fonts/Effra_CC_SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: block;
+}
+
 :root {
   --bg: #1c1f24;
   --panel: #262a31;
@@ -124,6 +134,13 @@ main {
 }
 .slot .sub { font-size: 11px; color: var(--muted); }
 .slot .zoom { width: 100%; margin: 4px 0 0; accent-color: var(--accent); }
+.slot .label-input {
+  width: 100%; margin-top: 4px;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 4px; padding: 4px 7px; font: inherit; font-size: 12px;
+}
+.slot .label-input:focus { outline: none; border-color: var(--accent); }
+.slot .label-input::placeholder { color: var(--muted); }
 .slot .actions { display: flex; flex-direction: column; gap: 4px; }
 
 button.mini {

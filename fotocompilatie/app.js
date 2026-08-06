@@ -6,7 +6,21 @@ const SIZE = 1080;
 
 /* Opmaak van de kaders. schaduw is een sterkte van 0 (uit) tot 1 (zwaar);
    0.35 is de subtiele stand die we standaard gebruiken. */
-const stijl = { rand: true, randDikte: 6, schaduw: 0.35 };
+const stijl = { rand: true, randDikte: 6, schaduw: 0.35, labels: true };
+
+/* Het locatielabel: wit blokje linksboven in het kader, tekst in Effra
+   SemiBold. Maten afgeleid van het Illustrator-ontwerp. */
+const LABEL = {
+  hoogte: 46,
+  inzet: 16,      // afstand tot de linker- en bovenrand van het kader
+  padding: 24,    // ruimte links en rechts van de tekst
+  grootte: 30,
+  font: '"Effra CC", "Helvetica Neue", Helvetica, Arial, sans-serif',
+};
+
+/* Labelteksten staan los van de foto's, zodat ze blijven staan als er een
+   andere foto in hetzelfde kader wordt gezet. */
+const labels = ['Locatie', 'Locatie', 'Locatie'];
 
 /* Sterkte -> concrete schaduwwaarden. */
 function schaduwWaarden(s) {
@@ -110,7 +124,39 @@ function render() {
     ctx.clip();
     ctx.drawImage(slot.img, p.dx, p.dy, p.dw, p.dh);
     ctx.restore();
+
+    tekenLabel(f, labels[i]);
   });
+}
+
+/* Wit labelblokje linksboven in het kader. Het blokje groeit mee met de tekst;
+   past die niet in het kader, dan wordt hij afgekapt met een beletselteken. */
+function tekenLabel(f, tekst) {
+  if (!stijl.labels || !tekst.trim()) return;
+
+  ctx.save();
+  ctx.font = '600 ' + LABEL.grootte + 'px ' + LABEL.font;
+  ctx.textBaseline = 'middle';
+
+  const maxBreedte = f.w - LABEL.inzet * 2;
+  let regel = tekst.trim();
+  if (ctx.measureText(regel).width + LABEL.padding * 2 > maxBreedte) {
+    while (regel.length > 1 &&
+           ctx.measureText(regel + '…').width + LABEL.padding * 2 > maxBreedte) {
+      regel = regel.slice(0, -1);
+    }
+    regel += '…';
+  }
+
+  const x = f.x + LABEL.inzet;
+  const y = f.y + LABEL.inzet;
+  const w = Math.min(maxBreedte, ctx.measureText(regel).width + LABEL.padding * 2);
+
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(x, y, w, LABEL.hoogte);
+  ctx.fillStyle = '#000';
+  ctx.fillText(regel, x + LABEL.padding, y + LABEL.hoogte / 2 + 1);
+  ctx.restore();
 }
 
 /* ---------- foto's laden ---------- */
@@ -181,6 +227,7 @@ function buildSlots() {
   slots.forEach((slot, i) => {
     const row = document.createElement('div');
     row.className = 'slot';
+    row.dataset.i = i;
 
     const thumb = document.createElement('div');
     thumb.className = 'thumb' + (slot ? ' filled' : '');
@@ -208,6 +255,14 @@ function buildSlots() {
       zoom.min = '1'; zoom.max = '3'; zoom.step = '0.01'; zoom.value = String(slot.zoom);
       zoom.oninput = () => { slot.zoom = parseFloat(zoom.value); render(); };
       meta.appendChild(zoom);
+
+      const label = document.createElement('input');
+      label.type = 'text'; label.className = 'label-input';
+      label.placeholder = 'Locatie';
+      label.value = labels[i];
+      label.title = 'Locatielabel voor kader ' + (i + 1);
+      label.oninput = () => { labels[i] = label.value; render(); };
+      meta.appendChild(label);
     }
 
     const actions = document.createElement('div');
@@ -292,7 +347,10 @@ canvas.addEventListener('wheel', e => {
   e.preventDefault();
   const slot = slots[i];
   slot.zoom = Math.min(3, Math.max(1, slot.zoom - e.deltaY * 0.0015));
-  buildSlots();
+  /* Alleen de schuif bijwerken, niet de hele lijst opnieuw opbouwen: anders
+     springt de cursor uit het labelveld waar iemand net in typt. */
+  const zoom = document.querySelector('#slots .slot[data-i="' + i + '"] .zoom');
+  if (zoom) zoom.value = String(slot.zoom);
   render();
 }, { passive: false });
 
@@ -324,6 +382,9 @@ const borderWidth = document.getElementById('border-width');
 const borderWidthOut = document.getElementById('border-width-out');
 const shadowSlider = document.getElementById('shadow');
 const shadowOut = document.getElementById('shadow-out');
+
+const labelToggle = document.getElementById('label-toggle');
+labelToggle.onchange = () => { stijl.labels = labelToggle.checked; render(); };
 
 borderToggle.onchange = () => {
   stijl.rand = borderToggle.checked;
@@ -418,3 +479,11 @@ buildVariants();
 buildSlots();
 buildFrameInputs();
 render();
+
+/* Canvas laadt zelf geen webfonts: zonder deze stap tekent het eerste beeld de
+   labels in het reservelettertype. Daarom na het laden nog een keer tekenen. */
+if (document.fonts) {
+  document.fonts.load('600 ' + LABEL.grootte + 'px "Effra CC"')
+    .then(render)
+    .catch(() => toast('Effra kon niet worden geladen — labels in reservelettertype'));
+}
