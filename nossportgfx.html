@@ -545,6 +545,109 @@ const CLUB_LOGO = {
 
 const heeftVlag = (code) => !!VLAG_URI[code];
 
+/* ============================================================================
+   REDACTEUR-INVOER: land-naam (NL) -> vlagcode, fuzzy club-logo matching, en
+   parsers die tekst (copy/paste vanuit een NOS-widget) omzetten naar rijen.
+   Bedoeld als tussenstap voor de echte Gracenote-koppeling: de redacteur
+   plakt een tabel uit de bestaande widget, wij zetten 'm om naar het
+   DATA_CONTRACT-formaat hierboven.
+   ========================================================================== */
+const LANDNAAM_NAAR_CODE = {
+  "nederland": "nl", "verenigd koninkrijk": "gb", "groot brittannie": "gb", "engeland": "gb",
+  "schotland": "gb", "wales": "gb", "italie": "it", "monaco": "mc", "frankrijk": "fr",
+  "nieuw zeeland": "nz", "duitsland": "de", "australie": "au", "argentinie": "ar",
+  "brazilie": "br", "spanje": "es", "canada": "ca", "finland": "fi", "mexico": "mx",
+  "japan": "jp", "verenigde staten": "us", "ecuador": "ec", "belgie": "be", "slovenie": "si",
+  "noorwegen": "no", "denemarken": "dk", "zwitserland": "ch",
+  "venezuela": "ve", "colombia": "co", "portugal": "pt", "polen": "pl", "oostenrijk": "at",
+  "zweden": "se", "ierland": "ie", "kroatie": "hr", "tsjechie": "cz", "slowakije": "sk",
+  "hongarije": "hu", "griekenland": "gr", "turkije": "tr", "rusland": "ru", "oekraine": "ua",
+  "zuid afrika": "za", "marokko": "ma", "algerije": "dz", "eritrea": "er", "ethiopie": "et",
+  "kenia": "ke", "rwanda": "rw", "israel": "il", "uruguay": "uy", "chili": "cl", "peru": "pe",
+  "costa rica": "cr", "luxemburg": "lu", "ijsland": "is", "litouwen": "lt", "letland": "lv",
+  "estland": "ee", "wit rusland": "by", "belarus": "by", "servie": "rs", "bulgarije": "bg",
+  "roemenie": "ro", "bosnie en herzegovina": "ba", "noord macedonie": "mk", "cyprus": "cy",
+  "zuid korea": "kr", "china": "cn", "india": "in", "qatar": "qa", "bahrein": "bh",
+  "saudi arabie": "sa", "verenigde arabische emiraten": "ae", "egypte": "eg", "tunesie": "tn",
+  "senegal": "sn", "kameroen": "cm", "ghana": "gh", "nigeria": "ng",
+};
+
+// lowercase, diakrieten weg, interpunctie -> spatie; "sc-heerenveen" en
+// "SC Heerenveen" komen zo op dezelfde sleutel uit.
+const normSpace = (s) => (s || "").toString().toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/[^a-z0-9]+/g, " ").trim();
+// zelfde, maar zonder spaties: voor het matchen van clubnamen ("N.E.C." -> "nec").
+const normTight = (s) => normSpace(s).replace(/\s+/g, "");
+
+function landcode(naam) {
+  return LANDNAAM_NAAR_CODE[normSpace(naam)] || null;
+}
+function vindClubLogo(naam) {
+  const doel = normTight(naam);
+  const key = Object.keys(CLUB_LOGO).find((k) => normTight(k) === doel);
+  return key ? CLUB_LOGO[key] : null;
+}
+// Tab-gescheiden cijferregel; valt terug op spaties als tabs verloren gingen
+// bij het plakken.
+function splitCijfers(regel) {
+  let delen = regel.split("\t").map((s) => s.trim()).filter((s) => s !== "");
+  if (delen.length < 2) delen = regel.split(/\s+/).map((s) => s.trim()).filter((s) => s !== "");
+  return delen;
+}
+
+/* Voetbalstand-widget: "Rg  Team  Ptn  Wd  W  G  V  DV  DT  DS", waarbij de
+   club-cel als 2 losse regels binnenkomt (logo-alt + naam) en alleen de
+   cijfers nog tab-gescheiden zijn. Wij gebruiken Ptn/Wd/W/G/V (DV/DT/DS staan
+   niet op de graphic). */
+function parseStandPaste(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  const rijen = [];
+  let i = 0;
+  while (i < lines.length) {
+    while (i < lines.length && !/^\d+$/.test(lines[i])) i++;
+    if (i >= lines.length) break;
+    i++; // rangnummer zelf negeren, wij nummeren opnieuw op volgorde
+    while (i < lines.length && lines[i] === "") i++;
+    if (i >= lines.length) break;
+    const club = lines[i]; i++;
+    while (i < lines.length && (lines[i] === "" || lines[i] === club)) i++;
+    if (i >= lines.length) break;
+    const cijfers = splitCijfers(lines[i]); i++;
+    if (cijfers.length < 5 || cijfers.slice(0, 5).some((c) => !/^-?\d+$/.test(c))) continue;
+    const [ptn, wd, w, g, v] = cijfers.map(Number);
+    rijen.push({ pos: rijen.length + 1, club, gs: wd, w, g, v, pt: ptn, logo: vindClubLogo(club) });
+  }
+  return rijen;
+}
+
+/* Wielrennen-uitslag/klassement-widget: "Rg  Nr.  Land  Naam  Team  Resultaat".
+   De land-cel komt als (lege vlag-regel,) volledige naam, 3-letter code; de
+   team-cel als 2 losse regels (logo-alt + naam), net als bij de voetbalstand. */
+function parsePersonenPaste(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  const rijen = [];
+  let i = 0;
+  const volgende = () => {
+    while (i < lines.length && lines[i] === "") i++;
+    return i < lines.length ? lines[i++] : "";
+  };
+  while (i < lines.length) {
+    const m = lines[i].match(/^(\d+)[\t ]+(\d+)\b/);
+    if (!m) { i++; continue; }
+    i++;
+    const landNaam = volgende();
+    volgende(); // 3-letter landcode uit de widget, niet nodig
+    const naam = volgende();
+    let team = volgende();
+    if (i < lines.length && lines[i] === team) i++; // gedupliceerde team-regel
+    const tijd = volgende();
+    if (!naam) continue;
+    rijen.push({ pos: rijen.length + 1, naam, land: landcode(landNaam) || "", team, tijd });
+  }
+  return rijen;
+}
+
 /* 4x3 vlag als <image>, met dunne rand zodat witte vlaggen zichtbaar blijven. */
 function Vlag({ code, x, y, h = 32 }) {
   const w = (h * 4) / 3;
@@ -2039,6 +2142,293 @@ function Keuzeknop({ label, onClick, actief }) {
   );
 }
 
+/* ============================================================================
+   DATAPANEEL: redacteur plakt een tabel uit een bestaande NOS-widget, of past
+   waardes met de hand aan. Werkt op een kopie van de mock-data (editData in
+   App); de templates hierboven raken hier niets van, ze krijgen gewoon een
+   ander data-object aangereikt.
+   ========================================================================== */
+const dpVeld = {
+  width: "100%", padding: "8px 10px", borderRadius: 8, border: "2px solid #e5e7eb",
+  fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8,
+};
+const dpLabel = {
+  fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase",
+  letterSpacing: ".02em", marginBottom: 6,
+};
+const dpKnop = {
+  padding: "7px 12px", borderRadius: 7, border: "2px solid #e5e7eb", background: "#fff",
+  color: "#374151", fontSize: 12, fontWeight: 700, cursor: "pointer",
+};
+const dpKnopRood = { ...dpKnop, border: "none", background: NOS.rood, color: "#fff", width: "100%", padding: "9px 0" };
+const dpX = {
+  width: 26, height: 26, borderRadius: 6, border: "none", background: "#f3f4f6",
+  color: "#9ca3af", fontSize: 14, cursor: "pointer", flexShrink: 0,
+};
+
+function PlakBox({ label, placeholder, onParse }) {
+  const [tekst, setTekst] = useState("");
+  const [status, setStatus] = useState(null);
+  const verwerk = () => {
+    const rijen = onParse(tekst);
+    setStatus(!rijen || rijen.length === 0
+      ? { ok: false, msg: "Geen rijen herkend — controleer of je de hele tabel (incl. kolomkoppen) hebt gekopieerd." }
+      : { ok: true, msg: `${rijen.length} rijen verwerkt.` });
+  };
+  return (
+    <div style={{ marginBottom: 16, padding: 10, background: "#f9fafb", borderRadius: 10 }}>
+      <div style={dpLabel}>{label}</div>
+      <textarea value={tekst} onChange={(e) => setTekst(e.target.value)}
+        placeholder={placeholder} rows={4}
+        style={{ ...dpVeld, fontFamily: "monospace", fontSize: 11, resize: "vertical" }} />
+      <button onClick={verwerk} disabled={!tekst.trim()}
+        style={{ ...dpKnopRood, opacity: tekst.trim() ? 1 : 0.4, cursor: tekst.trim() ? "pointer" : "not-allowed" }}>
+        Verwerk plakdata
+      </button>
+      {status && (
+        <div style={{ fontSize: 12, marginTop: 6, color: status.ok ? "#15803d" : "#b91c1c" }}>{status.msg}</div>
+      )}
+    </div>
+  );
+}
+
+function StandDataEditor({ data, setData }) {
+  const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
+  const zetClub = (i, naam) => zetRij(i, { club: naam, logo: vindClubLogo(naam) });
+  const verwijderRij = (i) => setData((d) => ({
+    ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })),
+  }));
+  const voegRijToe = () => setData((d) => ({
+    ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, club: "", gs: 0, w: 0, g: 0, v: 0, pt: 0, logo: null }],
+  }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+
+      <PlakBox label="Plak de standen-tabel (incl. kolomkoppen Rg/Team/Ptn/Wd/W/G/V/…)"
+        placeholder={"Rg\tTeam\tPtn\tWd\tW\tG\tV\tDV\tDT\tDS\n1\n\nAZ\nAZ\n12\t4\t4\t0\t0\t13\t3\t10\n2\n…"}
+        onParse={(tekst) => {
+          const rijen = parseStandPaste(tekst);
+          if (rijen.length) setData((d) => ({ ...d, rijen }));
+          return rijen;
+        }} />
+
+      <div style={dpLabel}>Rijen ({data.rijen.length})</div>
+      <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
+        {data.rijen.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+            <span style={{ width: 18, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.pos}</span>
+            <input value={r.club} onChange={(e) => zetClub(i, e.target.value)}
+              placeholder="Club" style={{ ...dpVeld, marginBottom: 0, flex: 1 }} />
+            {["gs", "w", "g", "v", "pt"].map((k) => (
+              <input key={k} type="number" value={r[k]}
+                onChange={(e) => zetRij(i, { [k]: e.target.value === "" ? "" : Number(e.target.value) })}
+                title={{ gs: "Gespeeld", w: "Winst", g: "Gelijk", v: "Verlies", pt: "Punten" }[k]}
+                style={{ ...dpVeld, marginBottom: 0, width: 40, padding: "8px 2px", textAlign: "center" }} />
+            ))}
+            <button onClick={() => verwijderRij(i)} style={dpX} title="Rij verwijderen">×</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={voegRijToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Rij toevoegen</button>
+    </div>
+  );
+}
+
+function ProgrammaDataEditor({ data, setData }) {
+  const zetDag = (di, patch) => setData((d) => ({ ...d, dagen: d.dagen.map((dag, j) => (j === di ? { ...dag, ...patch } : dag)) }));
+  const zetDuel = (di, wi, patch) => setData((d) => ({
+    ...d, dagen: d.dagen.map((dag, j) => (j !== di ? dag : { ...dag, duels: dag.duels.map((w, k) => (k === wi ? { ...w, ...patch } : w)) })),
+  }));
+  const zetThuis = (di, wi, naam) => zetDuel(di, wi, { thuis: naam, thuisLogo: vindClubLogo(naam) });
+  const zetUit = (di, wi, naam) => zetDuel(di, wi, { uit: naam, uitLogo: vindClubLogo(naam) });
+  const verwijderDuel = (di, wi) => setData((d) => ({
+    ...d, dagen: d.dagen.map((dag, j) => (j !== di ? dag : { ...dag, duels: dag.duels.filter((_, k) => k !== wi) })),
+  }));
+  const voegDuelToe = (di) => setData((d) => ({
+    ...d, dagen: d.dagen.map((dag, j) => (j !== di ? dag : { ...dag, duels: [...dag.duels, { thuis: "", uit: "", tijd: "", thuisLogo: null, uitLogo: null }] })),
+  }));
+  const verwijderDag = (di) => setData((d) => ({ ...d, dagen: d.dagen.filter((_, j) => j !== di) }));
+  const voegDagToe = () => setData((d) => ({ ...d, dagen: [...d.dagen, { dag: "", duels: [] }] }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 12px" }}>
+        Plakken vanuit de widget kan hier nog niet — vul de wedstrijden met de hand in.
+      </p>
+      <div style={{ maxHeight: 540, overflowY: "auto", paddingRight: 4 }}>
+        {data.dagen.map((dag, di) => (
+          <div key={di} style={{ marginBottom: 14, border: "1px solid #e5e7eb", borderRadius: 10, padding: 10 }}>
+            <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+              <input value={dag.dag} onChange={(e) => zetDag(di, { dag: e.target.value })}
+                placeholder="bv. zaterdag 4 april" style={{ ...dpVeld, marginBottom: 0, flex: 1 }} />
+              <button onClick={() => verwijderDag(di)} style={dpX} title="Dag verwijderen">×</button>
+            </div>
+            {dag.duels.map((duel, wi) => (
+              <div key={wi} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+                <input value={duel.thuis} onChange={(e) => zetThuis(di, wi, e.target.value)}
+                  placeholder="Thuis" style={{ ...dpVeld, marginBottom: 0, flex: 1 }} />
+                <input value={duel.tijd} onChange={(e) => zetDuel(di, wi, { tijd: e.target.value })}
+                  placeholder="20:00" style={{ ...dpVeld, marginBottom: 0, width: 54, textAlign: "center" }} />
+                <input value={duel.uit} onChange={(e) => zetUit(di, wi, e.target.value)}
+                  placeholder="Uit" style={{ ...dpVeld, marginBottom: 0, flex: 1 }} />
+                <button onClick={() => verwijderDuel(di, wi)} style={dpX} title="Wedstrijd verwijderen">×</button>
+              </div>
+            ))}
+            <button onClick={() => voegDuelToe(di)} style={{ ...dpKnop, width: "100%" }}>+ Wedstrijd</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={voegDagToe} style={{ ...dpKnop, width: "100%", marginTop: 4 }}>+ Dag toevoegen</button>
+    </div>
+  );
+}
+
+/* Generieke rijen-editor voor "positie/land/naam/team/tijd"-tabellen, gebruikt
+   door zowel de wielrennen-uitslag als het algemeen klassement. */
+function PersonenRijenEditor({ rijen, setRijen, toonLeider }) {
+  const zetRij = (i, patch) => setRijen(rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const zetLand = (i, naam) => zetRij(i, { land: landcode(naam) || naam });
+  const verwijder = (i) => setRijen(rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })));
+  const voegToe = () => setRijen([...rijen, { pos: rijen.length + 1, naam: "", land: "", team: "", tijd: "", leider: false }]);
+  return (
+    <div>
+      <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
+        {rijen.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+            <span style={{ width: 16, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.pos}</span>
+            <input value={r.land} onChange={(e) => zetLand(i, e.target.value)}
+              placeholder="land" title="Landnaam (NL) of vlagcode, bv. 'Frankrijk' of 'fr'"
+              style={{ ...dpVeld, marginBottom: 0, width: 40, textAlign: "center" }} />
+            <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
+              placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.3 }} />
+            <input value={r.team} onChange={(e) => zetRij(i, { team: e.target.value })}
+              placeholder="Team" style={{ ...dpVeld, marginBottom: 0, flex: 1 }} />
+            <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
+              placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+            {toonLeider && (
+              <input type="checkbox" checked={!!r.leider} title="Klassementsleider (geel truitje-icoon)"
+                onChange={(e) => zetRij(i, { leider: e.target.checked })} style={{ flexShrink: 0 }} />
+            )}
+            <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={voegToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Rij toevoegen</button>
+    </div>
+  );
+}
+
+function WielrenUitslagDataEditor({ data, setData }) {
+  const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
+  const zetLeider = (i, patch) => setData((d) => ({ ...d, leiders: d.leiders.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
+  const truiLabel = { geel: "Geel · algemeen", groen: "Groen · punten", bol: "Bol · berg", wit: "Wit · jongeren" };
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          <div style={dpLabel}>Route</div>
+          <input value={data.route} onChange={(e) => setData((d) => ({ ...d, route: e.target.value }))} style={dpVeld} />
+        </div>
+        <div style={{ width: 96 }}>
+          <div style={dpLabel}>Km</div>
+          <input value={data.km} onChange={(e) => setData((d) => ({ ...d, km: e.target.value }))} style={dpVeld} />
+        </div>
+      </div>
+
+      <PlakBox label="Plak de etappe-uitslag (top 10, incl. kolomkoppen Rg/Nr./Land/Naam/Team/Resultaat)"
+        placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tResultaat\n1\t98\t\nFrankrijk\nFRA\nBastien Tronchon\nGroupama - FDJ United\nGroupama - FDJ United\n4:07:41\n2\t131\t…"}
+        onParse={(tekst) => {
+          const rijen = parsePersonenPaste(tekst);
+          if (rijen.length) zetRijen(rijen);
+          return rijen;
+        }} />
+
+      <div style={dpLabel}>Top 10 ({data.rijen.length})</div>
+      <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} />
+
+      <div style={{ ...dpLabel, marginTop: 16 }}>Leiders klassementen</div>
+      {data.leiders.map((l, i) => (
+        <div key={l.trui} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+          <span style={{ width: 84, fontSize: 11, color: "#6b7280", flexShrink: 0 }}>{truiLabel[l.trui] || l.trui}</span>
+          <input value={l.land} onChange={(e) => zetLeider(i, { land: landcode(e.target.value) || e.target.value })}
+            placeholder="land" style={{ ...dpVeld, marginBottom: 0, width: 38, textAlign: "center" }} />
+          <input value={l.naam} onChange={(e) => zetLeider(i, { naam: e.target.value })}
+            placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
+          <input value={l.team} onChange={(e) => zetLeider(i, { team: e.target.value })}
+            placeholder="Team" style={{ ...dpVeld, marginBottom: 0, width: 52 }} />
+          <input value={l.waarde} onChange={(e) => zetLeider(i, { waarde: e.target.value })}
+            placeholder="waarde" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function WielrenKlassementDataEditor({ data, setData }) {
+  const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
+  const zetExtra = (patch) => setData((d) => ({ ...d, extra: { ...d.extra, ...patch } }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Subkop (bv. "na etappe 21")</div>
+      <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
+
+      <PlakBox label="Plak het algemeen klassement (incl. kolomkoppen Rg/Nr./Land/Naam/Team/Resultaat)"
+        placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tResultaat\n1\t21\t\nSpanje\nSPA\nEnric Mas\nMovistar Team\nMovistar Team\n32:41:44\n2\t1\t…"}
+        onParse={(tekst) => {
+          const rijen = parsePersonenPaste(tekst).map((r) => ({ ...r, leider: false }));
+          if (rijen.length) zetRijen(rijen);
+          return rijen;
+        }} />
+
+      <div style={dpLabel}>Klassement ({data.rijen.length}) — vink aan wie het truitje-icoon krijgt</div>
+      <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} toonLeider />
+
+      <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. laatste Nederlander)</div>
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
+          style={{ ...dpVeld, marginBottom: 0, width: 40, textAlign: "center" }} />
+        <input value={data.extra.land} onChange={(e) => zetExtra({ land: landcode(e.target.value) || e.target.value })}
+          placeholder="land" style={{ ...dpVeld, marginBottom: 0, width: 38, textAlign: "center" }} />
+        <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
+          placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
+        <input value={data.extra.team} onChange={(e) => zetExtra({ team: e.target.value })}
+          placeholder="Team" style={{ ...dpVeld, marginBottom: 0, width: 52 }} />
+        <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
+          placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+      </div>
+    </div>
+  );
+}
+
+function DataPanel({ sport, type, editData, setEditData }) {
+  if (!editData) return null;
+  if (sport === "voetbal" && type === "stand") return <StandDataEditor data={editData} setData={setEditData} />;
+  if (sport === "voetbal" && type === "programma") return <ProgrammaDataEditor data={editData} setData={setEditData} />;
+  if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
+  if (sport === "wielrennen" && type === "klassement") return <WielrenKlassementDataEditor data={editData} setData={setEditData} />;
+  return (
+    <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.5 }}>
+      Voor deze graphic staat de handmatige editor er nog niet — hij toont voorbeelddata. Voetbal (stand/programma)
+      en wielrennen (uitslag/klassement) kun je hiernaast al plakken en bewerken.
+    </p>
+  );
+}
+
 function App() {
   const [sport, setSport] = useState(null);
   const [competitie, setCompetitie] = useState(null);
@@ -2083,14 +2473,27 @@ function App() {
   // editor ernaast.
   const isOpstelling = sport === "voetbal" && competitie === "opstelling";
   const isDeelnemers = sport === "wielrennen" && type === "deelnemers";
-  const data = type && klaarVoorType && !isOpstelling && !isDeelnemers
-    ? getMock(sport, competitie, type, race) : null;
+  const heeftData = type && klaarVoorType && !isOpstelling && !isDeelnemers;
+
+  // editData is een bewerkbare kopie van de mock-data: de redacteur kan hier
+  // waardes in aanpassen of een tabel uit een bestaande widget in plakken
+  // (zie DataPanel). Bij een nieuwe sport/competitie/race/type-combinatie
+  // beginnen we opnieuw bij de voorbeelddata.
+  const [editData, setEditData] = useState(null);
+  const comboKey = `${sport}|${competitie}|${race}|${type}`;
+  const vorigeComboKey = useRef(null);
+  useEffect(() => {
+    if (comboKey === vorigeComboKey.current) return;
+    vorigeComboKey.current = comboKey;
+    setEditData(heeftData ? getMock(sport, competitie, type, race) : null);
+  }, [comboKey, heeftData, sport, competitie, type, race]);
+
   const deelnemersData = isDeelnemers ? {
     titel: "Tour de France 2026", ondertitel: "deelnemende teams",
     theme: THEMES.tourdefrance,
     teams: WIELER_LIJST.filter((t) => gekozenTeams.includes(t.id)),
   } : null;
-  const toonPreview = !!data || (isOpstelling && !!type) ||
+  const toonPreview = !!editData || (isOpstelling && !!type) ||
     (isDeelnemers && deelnemersData.teams.length > 0);
   const wijzigPloeg = (zijde) => (patch) =>
     setOpst((o) => ({ ...o, [zijde]: { ...o[zijde], ...patch } }));
@@ -2183,7 +2586,7 @@ function App() {
           <Stap n={heeftRace ? 4 : 3} label="Type" actief={klaarVoorType && !type} gedaan={!!type} />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "460px 1fr", gap: 28, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "380px 1fr 420px", gap: 24, alignItems: "start" }}>
           {/* keuzepaneel */}
           <div style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 3px #0001" }}>
             {!sport && (
@@ -2318,7 +2721,7 @@ function App() {
           </div>
 
           {/* preview */}
-          <div style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 3px #0001", maxWidth: 720 }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 3px #0001" }}>
             {!toonPreview && (
               <div style={{ height: 500, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: 15 }}>
                 Preview verschijnt hier zodra je een type kiest
@@ -2328,17 +2731,36 @@ function App() {
               <div ref={svgWrap} style={{ width: "100%" }}>
                 <PreviewGrens sleutel={`${sport}-${competitie}-${race}-${type}`}>
                 <div style={{ width: "100%", maxWidth: 640, margin: "0 auto" }}>
-                  {sport === "formule1" && type === "uitslag" && <UitslagTemplate data={data} />}
-                  {sport === "formule1" && type === "grid" && <GridTemplate data={data} />}
-                  {sport === "voetbal" && type === "stand" && <StandTemplate data={data} />}
-                  {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={data} />}
-                  {sport === "wielrennen" && type === "uitslag" && <TdFUitslagTemplate data={data} />}
-                  {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={data} />}
+                  {sport === "formule1" && type === "uitslag" && <UitslagTemplate data={editData} />}
+                  {sport === "formule1" && type === "grid" && <GridTemplate data={editData} />}
+                  {sport === "voetbal" && type === "stand" && <StandTemplate data={editData} />}
+                  {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={editData} />}
+                  {sport === "wielrennen" && type === "uitslag" && <TdFUitslagTemplate data={editData} />}
+                  {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} />}
                   {isDeelnemers && <DeelnemersTemplate data={deelnemersData} />}
                 </div>
                 </PreviewGrens>
+              </div>
+            )}
+          </div>
+
+          {/* datapaneel: plakken/bewerken van de waardes achter de preview */}
+          <div style={{
+            background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 3px #0001",
+            maxHeight: "calc(100vh - 48px)", overflowY: "auto", position: "sticky", top: 24,
+          }}>
+            {heeftData && editData ? (
+              <>
+                <h3 style={secTitel}>Data</h3>
+                <DataPanel sport={sport} type={type} editData={editData} setEditData={setEditData} />
+              </>
+            ) : (
+              <div style={{ color: "#9ca3af", fontSize: 14 }}>
+                {isOpstelling || isDeelnemers
+                  ? "Deze graphic heeft zijn eigen editor in het linkerpaneel."
+                  : "Kies eerst een sport, competitie en type."}
               </div>
             )}
           </div>
