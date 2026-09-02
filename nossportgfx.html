@@ -633,7 +633,10 @@ function parsePersonenPaste(text) {
     return i < lines.length ? lines[i++] : "";
   };
   while (i < lines.length) {
-    const m = lines[i].match(/^(\d+)[\t ]+(\d+)\b/);
+    // Strikt geankerd (…$) zodat een cijfer-tab-cijfer regel verderop in de
+    // rij (zoals "72\t2" bij rondes/pitstops) niet per ongeluk als nieuwe
+    // rang-regel wordt gelezen.
+    const m = lines[i].match(/^(\d+)[\t ]+(\d+)[\t ]*$/);
     if (!m) { i++; continue; }
     i++;
     const landNaam = volgende();
@@ -644,6 +647,77 @@ function parsePersonenPaste(text) {
     const tijd = volgende();
     if (!naam) continue;
     rijen.push({ pos: rijen.length + 1, naam, land: landcode(landNaam) || "", team, tijd });
+  }
+  return rijen;
+}
+
+// F1-widgets tonen vaak alleen de 3-letter afkorting (GBR) i.p.v. de volle NL
+// naam; deze tabel dekt de afkortingen die in de NOS-widgets voorkomen.
+const LANDCODE3_NAAR_CODE = {
+  gbr: "gb", ita: "it", mon: "mc", ned: "nl", aus: "au", fra: "fr", bra: "br",
+  arg: "ar", esp: "es", spa: "es", can: "ca", fin: "fi", mex: "mx", jap: "jp",
+  jpn: "jp", ger: "de", deu: "de", dui: "de", nzl: "nz", usa: "us", den: "dk",
+  bel: "be", sui: "ch", che: "ch", nor: "no", ecu: "ec", tha: "th", chn: "cn",
+  chi: "cl", col: "co", por: "pt", pol: "pl", aut: "at", swe: "se", irl: "ie",
+  cro: "hr", cze: "cz", svk: "sk", hun: "hu", gre: "gr", tur: "tr", rus: "ru",
+  ukr: "ua", rsa: "za", mar: "ma", isr: "il", uru: "uy", per: "pe", crc: "cr",
+  lux: "lu", isl: "is", srb: "rs", bul: "bg", rou: "ro", kor: "kr", ind: "in",
+  qat: "qa", bah: "bh", ksa: "sa", uae: "ae", egy: "eg", tun: "tn", sen: "sn",
+  cmr: "cm", gha: "gh", nga: "ng", ven: "ve", slo: "si",
+};
+
+// Afgeleide korte naam (achternaam) voor het podiumvak, bv. "Lando Norris"
+// -> "Norris". "Jr."/"Sr."/"II"/"III" als laatste woord wordt overgeslagen.
+function kortenaam(naam) {
+  const delen = (naam || "").trim().split(/\s+/);
+  const laatste = delen[delen.length - 1];
+  if (delen.length > 1 && /^(jr\.?|sr\.?|ii|iii)$/i.test(laatste)) return delen[delen.length - 2];
+  return laatste || naam;
+}
+
+/* Formule 1-widget (race-uitslag/kwalificatie): "Rg  Nr.  Land  Naam  Team
+   [Rondes] [Pitstops] Resultaat [Pnt]". De land-cel komt hier als losse
+   3-letter code binnen (i.p.v. de volledige NL naam bij wielrennen) — we zijn
+   coulant voor allebei. De staart (rondes/pitstops/resultaat/punten) leest
+   flexibel door tot de volgende rang-regel: het laatste zuivere getal daarin
+   is de puntentelling (alleen bij een race-uitslag), de rest is de tijd.*/
+function parseF1PersonenPaste(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  const rijen = [];
+  let i = 0;
+  const peek = () => { let j = i; while (j < lines.length && lines[j] === "") j++; return j < lines.length ? lines[j] : ""; };
+  const volgende = () => { while (i < lines.length && lines[i] === "") i++; return i < lines.length ? lines[i++] : ""; };
+  const isKorteCode = (s) => /^[A-Za-z]{2,4}$/.test(s);
+
+  while (i < lines.length) {
+    // Strikt geankerd (…$) zodat de rondes/pitstops-regel verderop (ook
+    // "cijfer-tab-cijfer", bv. "72\t2") niet als nieuwe rang-regel wordt gelezen.
+    const m = lines[i].match(/^(\d+)[\t ]+(\d+)[\t ]*$/);
+    if (!m) { i++; continue; }
+    i++;
+    const landRegel = volgende();
+    let land;
+    if (isKorteCode(landRegel)) {
+      land = LANDCODE3_NAAR_CODE[landRegel.toLowerCase()] || landRegel.toLowerCase();
+    } else {
+      land = landcode(landRegel) || "";
+      if (isKorteCode(peek())) volgende(); // aparte code-regel overslaan
+    }
+    const naam = volgende();
+    let team = volgende();
+    if (peek() === team) volgende(); // gedupliceerde team-regel (logo-alt)
+    // rest van de rij tot de volgende rang-regel: rondes/pitstops/resultaat/pnt
+    const restRegels = [];
+    while (i < lines.length && !/^\d+[\t ]+\d+[\t ]*$/.test(lines[i])) {
+      if (lines[i] !== "") restRegels.push(lines[i]);
+      i++;
+    }
+    const tokens = restRegels.flatMap((r) => splitCijfers(r));
+    let punten = null;
+    if (tokens.length && /^-?\d+$/.test(tokens[tokens.length - 1])) punten = Number(tokens.pop());
+    const tijd = tokens.length ? tokens[tokens.length - 1] : "";
+    if (!naam) continue;
+    rijen.push({ pos: rijen.length + 1, naam, land, team, tijd, punten });
   }
   return rijen;
 }
@@ -2292,11 +2366,11 @@ function ProgrammaDataEditor({ data, setData }) {
 
 /* Generieke rijen-editor voor "positie/land/naam/team/tijd"-tabellen, gebruikt
    door zowel de wielrennen-uitslag als het algemeen klassement. */
-function PersonenRijenEditor({ rijen, setRijen, toonLeider }) {
+function PersonenRijenEditor({ rijen, setRijen, toonLeider, toonTijd = true, toonPunten = false }) {
   const zetRij = (i, patch) => setRijen(rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const zetLand = (i, naam) => zetRij(i, { land: landcode(naam) || naam });
   const verwijder = (i) => setRijen(rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })));
-  const voegToe = () => setRijen([...rijen, { pos: rijen.length + 1, naam: "", land: "", team: "", tijd: "", leider: false }]);
+  const voegToe = () => setRijen([...rijen, { pos: rijen.length + 1, naam: "", land: "", team: "", tijd: "", punten: "", leider: false }]);
   return (
     <div>
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
@@ -2310,8 +2384,15 @@ function PersonenRijenEditor({ rijen, setRijen, toonLeider }) {
               placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.3 }} />
             <input value={r.team} onChange={(e) => zetRij(i, { team: e.target.value })}
               placeholder="Team" style={{ ...dpVeld, marginBottom: 0, flex: 1 }} />
-            <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
-              placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+            {toonTijd && (
+              <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
+                placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+            )}
+            {toonPunten && (
+              <input type="number" value={r.punten === null || r.punten === undefined ? "" : r.punten}
+                onChange={(e) => zetRij(i, { punten: e.target.value === "" ? "" : Number(e.target.value) })}
+                placeholder="pnt" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+            )}
             {toonLeider && (
               <input type="checkbox" checked={!!r.leider} title="Klassementsleider (geel truitje-icoon)"
                 onChange={(e) => zetRij(i, { leider: e.target.checked })} style={{ flexShrink: 0 }} />
@@ -2415,16 +2496,104 @@ function WielrenKlassementDataEditor({ data, setData }) {
   );
 }
 
+/* Formule 1-uitslag bewaart intern een podium (volgorde 2,1,3) + losse lijst
+   4-10 — voor de redacteur tonen we dat als één doorlopende top 10 en zetten
+   we 'm bij elke wijziging weer om naar die vorm, zodat UitslagTemplate
+   ongewijzigd blijft. */
+function vanF1Uitslag(data) {
+  const [p2, p1, p3] = data.podium;
+  const top = [
+    { pos: 1, naam: p1.vol || p1.naam, land: p1.land, team: p1.team, punten: p1.punten },
+    { pos: 2, naam: p2.vol || p2.naam, land: p2.land, team: p2.team, punten: p2.punten },
+    { pos: 3, naam: p3.vol || p3.naam, land: p3.land, team: p3.team, punten: p3.punten },
+    ...data.rijen.map((r) => ({ pos: r.pos, naam: r.naam, land: r.land, team: r.team, punten: r.punten })),
+  ];
+  return top;
+}
+function naarF1Uitslag(top10) {
+  const t = [...top10].sort((a, b) => a.pos - b.pos).slice(0, 10);
+  const mk = (r, i) => {
+    const kort = kortenaam(r.naam);
+    return {
+      pos: r.pos, vol: r.naam, kort, land: r.land, team: r.team,
+      punten: r.punten !== "" && r.punten != null ? Number(r.punten) : (PUNTEN[i] || 0),
+      foto: FOTO_URI[kort] || null,
+    };
+  };
+  const t10 = t.map(mk);
+  return {
+    podium: [
+      { ...t10[1], naam: t10[1].kort },
+      { ...t10[0], naam: t10[0].kort },
+      { ...t10[2], naam: t10[2].kort },
+    ],
+    rijen: t10.slice(3).map((r) => ({ ...r, naam: r.vol })),
+  };
+}
+
+function F1UitslagDataEditor({ data, setData }) {
+  const top10 = vanF1Uitslag(data);
+  // podium (plek 1-3) moet altijd blijven bestaan en past niet meer dan 10 -
+  // vandaar de grens hier i.p.v. in de generieke rijen-editor.
+  const zetTop10 = (nieuw) => {
+    if (nieuw.length < 3) return;
+    setData((d) => ({ ...d, ...naarF1Uitslag(nieuw.slice(0, 10)) }));
+  };
+  return (
+    <div>
+      <div style={dpLabel}>Titel (Grand Prix)</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+
+      <PlakBox label="Plak de race-uitslag (top 10, incl. kolomkoppen Rg/Nr./Land/Naam/Team/…/Resultaat/Pnt)"
+        placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tRondes\tPitstops\tResultaat\tPnt\n1\t1\t\nGBR\nGBR\nLando Norris\nMcLaren\nMcLaren\n72\t2\t2:04:44.859\t25\n2\t12\t…"}
+        onParse={(tekst) => {
+          const rijen = parseF1PersonenPaste(tekst).slice(0, 10)
+            .map((r, i) => ({ pos: i + 1, naam: r.naam, land: r.land, team: r.team, punten: r.punten }));
+          if (rijen.length >= 3) zetTop10(rijen);
+          return rijen.length >= 3 ? rijen : [];
+        }} />
+
+      <div style={dpLabel}>Top 10 ({top10.length}) — plek 1, 2 en 3 vormen het podium</div>
+      <PersonenRijenEditor rijen={top10} setRijen={zetTop10} toonTijd={false} toonPunten />
+    </div>
+  );
+}
+
+function F1GridDataEditor({ data, setData }) {
+  const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel (Grand Prix)</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+
+      <PlakBox label="Plak de kwalificatie-uitslag/startopstelling (incl. kolomkoppen Rg/Nr./Land/Naam/Team/…/Resultaat)"
+        placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tRondes\tResultaat\n1\t1\t\nGBR\nGBR\nLando Norris\nMcLaren\nMcLaren\n21\t1:11.163\n2\t63\t…"}
+        onParse={(tekst) => {
+          // Startopstelling toont net als het referentie-ontwerp alleen de
+          // achternaam (kort), niet de volledige naam.
+          const rijen = parseF1PersonenPaste(tekst)
+            .map((r, i) => ({ pos: i + 1, naam: kortenaam(r.naam), land: r.land, team: r.team }));
+          if (rijen.length) zetRijen(rijen);
+          return rijen;
+        }} />
+
+      <div style={dpLabel}>Startopstelling ({data.rijen.length})</div>
+      <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} toonTijd={false} />
+    </div>
+  );
+}
+
 function DataPanel({ sport, type, editData, setEditData }) {
   if (!editData) return null;
+  if (sport === "formule1" && type === "uitslag") return <F1UitslagDataEditor data={editData} setData={setEditData} />;
+  if (sport === "formule1" && type === "grid") return <F1GridDataEditor data={editData} setData={setEditData} />;
   if (sport === "voetbal" && type === "stand") return <StandDataEditor data={editData} setData={setEditData} />;
   if (sport === "voetbal" && type === "programma") return <ProgrammaDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "klassement") return <WielrenKlassementDataEditor data={editData} setData={setEditData} />;
   return (
     <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.5 }}>
-      Voor deze graphic staat de handmatige editor er nog niet — hij toont voorbeelddata. Voetbal (stand/programma)
-      en wielrennen (uitslag/klassement) kun je hiernaast al plakken en bewerken.
+      Voor deze graphic staat de handmatige editor er nog niet — hij toont voorbeelddata.
     </p>
   );
 }
@@ -2479,14 +2648,21 @@ function App() {
   // waardes in aanpassen of een tabel uit een bestaande widget in plakken
   // (zie DataPanel). Bij een nieuwe sport/competitie/race/type-combinatie
   // beginnen we opnieuw bij de voorbeelddata.
+  // Let op: dit synchroniseren gebeurt TIJDENS het renderen, niet in een
+  // useEffect. Een effect draait pas ná de commit, dus voor die ene render
+  // zou editData nog de vorige (verkeerde) vorm hebben — bv. Programma dat
+  // ineens data.rijen krijgt i.p.v. data.dagen — en dat gaf een crash
+  // (witte pagina) zodra je van graphic wisselde. React ondersteunt dit
+  // "state afleiden tijdens render"-patroon expliciet: de setState hieronder
+  // gooit de huidige render weg en rendert meteen opnieuw, vóór er iets naar
+  // het scherm gaat.
   const [editData, setEditData] = useState(null);
   const comboKey = `${sport}|${competitie}|${race}|${type}`;
-  const vorigeComboKey = useRef(null);
-  useEffect(() => {
-    if (comboKey === vorigeComboKey.current) return;
-    vorigeComboKey.current = comboKey;
+  const [editDataKey, setEditDataKey] = useState(null);
+  if (comboKey !== editDataKey) {
+    setEditDataKey(comboKey);
     setEditData(heeftData ? getMock(sport, competitie, type, race) : null);
-  }, [comboKey, heeftData, sport, competitie, type, race]);
+  }
 
   const deelnemersData = isDeelnemers ? {
     titel: "Tour de France 2026", ondertitel: "deelnemende teams",
