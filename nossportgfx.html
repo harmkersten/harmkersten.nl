@@ -764,14 +764,12 @@ const EENDAAGSE_UITSLAG = {
   extra: ["Fabio Jakobsen", "nl", "DAT", "+6:15"],
 };
 
-// Competities zonder klassement/etappes — één doorlopende uitslag. Icon
-// stuurt het icoontje op de route-infobalk: kasseien is Parijs-Roubaix-
-// eigen, de blanco variant gebruikt het neutrale bergicoontje (ook gebruikt
-// bij de etappekoersen), zodat er geen kasseien gesuggereerd worden voor een
-// wedstrijd die de redacteur zelf invult.
+// Competities zonder klassement/etappes — één doorlopende uitslag. Geen
+// etappetype bij een eendagskoers, dus (i.t.t. de etappe-uitslag) standaard
+// geen icoontje op de route-infobalk.
 const EENDAAGSE_RONDE = {
-  parijsroubaix: { titel: "Parijs - Roubaix", theme: THEMES.parijsroubaix, icon: "kasseien" },
-  eendagskoers: { titel: "Naam wedstrijd 2026", theme: THEMES.blanco, icon: "berg" },
+  parijsroubaix: { titel: "Parijs - Roubaix", theme: THEMES.parijsroubaix },
+  eendagskoers: { titel: "Naam wedstrijd 2026", theme: THEMES.blanco },
 };
 const EENDAAGSE_COMPETITIES = new Set(Object.keys(EENDAAGSE_RONDE));
 
@@ -781,7 +779,7 @@ function getMockEendagskoers(competitie, type) {
   const d = EENDAAGSE_UITSLAG;
   return {
     sport: "Wielrennen", titel: ronde.titel, ondertitel: "uitslag", type: "uitslag",
-    theme: ronde.theme, icon: ronde.icon,
+    theme: ronde.theme,
     route: d.route, km: d.km,
     rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
     extra: { pos: 23, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
@@ -3559,12 +3557,11 @@ function ParijsRoubaixTemplate({ data }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
-      {/* route-infobalk */}
+      {/* route-infobalk: bij een eendagskoers is er geen etappetype, dus
+          standaard geen icoontje (i.t.t. de etappe-uitslag) — tekst begint
+          op dezelfde inspringing als waar het icoontje anders zou staan. */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
-      {data.icon === "berg"
-        ? <BergIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />
-        : <KasseienIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />}
-      <text x={xL + 68} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
+      <text x={xL + 18} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
         fontSize="32" fill={NOS.wit}>{data.route}</text>
       <text x={xR - 18} y={infoBarY + infoBarH / 2 + 11} textAnchor="end" fontFamily={FONT}
         fontWeight="700" fontSize="32" fill={NOS.wit}>{data.km}</text>
