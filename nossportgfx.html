@@ -619,7 +619,7 @@ function getMockVoetbal(competitie, type) {
 
 /* ---- Mock wielrennen: Tour de France uitslag + algemeen klassement -------- */
 const TDF_UITSLAG = {
-  etappe: 14, route: "Mulhouse - Le Markstein", km: "155,3 km",
+  etappe: 14, route: "Mulhouse - Le Markstein", km: "155,3 km", soort: "berg",
   rijen: [
     ["Tadej Pogacar", "si", "UAX", "4:00:07"], ["Isaac Del Toro", "mx", "UAX", "+38"],
     ["Paul Seixas", "fr", "DCT", "+38"], ["Jonas Vingegaard", "dk", "TVL", "+44"],
@@ -726,7 +726,7 @@ function getMockWielrennen(competitie, type) {
     const d = TDF_UITSLAG;
     return {
       sport: "Wielrennen", titel, ondertitel: `etappe ${d.etappe}`, type: "uitslag", theme,
-      route: d.route, km: d.km,
+      route: d.route, km: d.km, soort: d.soort,
       rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
       leiders: d.leiders,
       achtergrond: "verloop", foto: null,
@@ -3375,7 +3375,7 @@ function TdFUitslagTemplate({ data }) {
 
       {/* etappe-infobalk */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
-      <BergIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />
+      <EtappeIcon soort={data.soort || "berg"} x={xL + 34} y={infoBarY + infoBarH / 2} size={32} kleur={NOS.wit} />
       <text x={xL + 68} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
         fontSize="32" fill={NOS.wit}>{data.route}</text>
       <text x={xR - 18} y={infoBarY + infoBarH / 2 + 11} textAnchor="end" fontFamily={FONT}
@@ -4039,6 +4039,12 @@ function WielrenUitslagDataEditor({ data, setData }) {
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
       <AchtergrondKiezer data={data} setData={setData} />
       <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ width: 108 }}>
+          <div style={dpLabel}>Type</div>
+          <select value={data.soort || "berg"} onChange={(e) => setData((d) => ({ ...d, soort: e.target.value }))} style={dpVeld}>
+            {Object.entries(ETAPPE_SOORT_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          </select>
+        </div>
         <div style={{ flex: 1 }}>
           <div style={dpLabel}>Route</div>
           <input value={data.route} onChange={(e) => setData((d) => ({ ...d, route: e.target.value }))} style={dpVeld} />
