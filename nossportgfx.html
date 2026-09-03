@@ -177,6 +177,24 @@ const THEMES = {
       [0, "#91C76C"], [50, "#618642"], [100, "#91C76C"],
     ] },
   },
+  // Neutraal thema voor de blanco etappekoers/eendagskoers-templates: geen
+  // wedstrijd-eigen merkkleur (dat verzint de redacteur zelf), dus een
+  // grijstint i.p.v. geel/roze/rood/groen. Truien-kleuren blijven het
+  // gangbare geel/groen/bol/wit, herkenbaar voor vrijwel elke rittenkoers.
+  blanco: {
+    titel: "#1F1F1F",
+    tekst: NOS.tekst,
+    zebra: "#E9EDF9",
+    gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
+      [0, "#9CA3AF"], [50, "#4B5563"], [100, "#9CA3AF"],
+    ] },
+    truien: [
+      { label: "Geel · algemeen", kleur: "#FFC828" },
+      { label: "Groen · punten", kleur: "#469B78" },
+      { label: "Bol · berg", kleur: "#ffffff", stip: true, stipKleur: NOS.rood },
+      { label: "Wit · jongeren", kleur: "#ffffff" },
+    ],
+  },
 };
 
 /* ---- Font: Effra (NOS-huisstijl), volledige Regular + Bold TTF ------------- */
@@ -278,6 +296,20 @@ const CONFIG = {
       },
       parijsroubaix: {
         label: "Parijs-Roubaix",
+        types: {
+          uitslag: { label: "Uitslag" },
+        },
+      },
+      etappekoers: {
+        label: "Etappekoers (zelf invullen)",
+        types: {
+          programma: { label: "Programma" },
+          uitslag: { label: "Uitslag" },
+          klassement: { label: "Algemeen klassement" },
+        },
+      },
+      eendagskoers: {
+        label: "Eendagskoers (zelf invullen)",
         types: {
           uitslag: { label: "Uitslag" },
         },
@@ -673,10 +705,14 @@ const WIELREN_RONDE = {
   tourdefrance: { titel: "Tour de France 2026", theme: THEMES.tourdefrance, etappes: TDF_ETAPPES },
   giro: { titel: "Giro 2026", theme: THEMES.giro, etappes: GIRO_ETAPPES },
   vuelta: { titel: "La Vuelta 2026", theme: THEMES.vuelta, etappes: VUELTA_ETAPPES },
+  // Blanco etappekoers: geen echte ronde, de redacteur vult zelf naam en
+  // etappes in (bv. Tirreno-Adriatico) — start met de TdF-etappelijst als
+  // invulbaar voorbeeld, net als Giro/Vuelta zonder een écht eigen etappenset.
+  etappekoers: { titel: "Naam wedstrijd 2026", theme: THEMES.blanco, etappes: TDF_ETAPPES },
 };
 
 function getMockWielrennen(competitie, type) {
-  if (competitie === "parijsroubaix") return getMockParijsRoubaix(type);
+  if (EENDAAGSE_COMPETITIES.has(competitie)) return getMockEendagskoers(competitie, type);
   const ronde = WIELREN_RONDE[competitie] || WIELREN_RONDE.tourdefrance;
   const { titel, theme, etappes } = ronde;
   if (type === "programma") {
@@ -709,8 +745,11 @@ function getMockWielrennen(competitie, type) {
   return null;
 }
 
-/* ---- Mock Parijs-Roubaix: eendaagse klassieker, geen klassement/etappes --- */
-const PARIJS_ROUBAIX_UITSLAG = {
+/* ---- Mock eendagskoers: klassieker zonder klassement/etappes ------------- */
+/* Zelfde placeholder-rijders voor elke eendaagse competitie (net als Giro/
+   Vuelta hun etappe-uitslag delen met de TdF) — alleen naam/thema/icoontje
+   op de route-balk veranderen per competitie. */
+const EENDAAGSE_UITSLAG = {
   route: "Compiègne - Roubaix", km: "253,3 km",
   rijen: [
     ["Mathieu van der Poel", "nl", "APT", "5:52:23"], ["Wout van Aert", "be", "TVL", "+38"],
@@ -725,11 +764,24 @@ const PARIJS_ROUBAIX_UITSLAG = {
   extra: ["Fabio Jakobsen", "nl", "DAT", "+6:15"],
 };
 
-function getMockParijsRoubaix(type) {
+// Competities zonder klassement/etappes — één doorlopende uitslag. Icon
+// stuurt het icoontje op de route-infobalk: kasseien is Parijs-Roubaix-
+// eigen, de blanco variant gebruikt het neutrale bergicoontje (ook gebruikt
+// bij de etappekoersen), zodat er geen kasseien gesuggereerd worden voor een
+// wedstrijd die de redacteur zelf invult.
+const EENDAAGSE_RONDE = {
+  parijsroubaix: { titel: "Parijs - Roubaix", theme: THEMES.parijsroubaix, icon: "kasseien" },
+  eendagskoers: { titel: "Naam wedstrijd 2026", theme: THEMES.blanco, icon: "berg" },
+};
+const EENDAAGSE_COMPETITIES = new Set(Object.keys(EENDAAGSE_RONDE));
+
+function getMockEendagskoers(competitie, type) {
   if (type !== "uitslag") return null;
-  const d = PARIJS_ROUBAIX_UITSLAG;
+  const ronde = EENDAAGSE_RONDE[competitie] || EENDAAGSE_RONDE.parijsroubaix;
+  const d = EENDAAGSE_UITSLAG;
   return {
-    sport: "Wielrennen", titel: "Parijs - Roubaix", ondertitel: "uitslag", type: "uitslag", theme: THEMES.parijsroubaix,
+    sport: "Wielrennen", titel: ronde.titel, ondertitel: "uitslag", type: "uitslag",
+    theme: ronde.theme, icon: ronde.icon,
     route: d.route, km: d.km,
     rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
     extra: { pos: 23, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
@@ -3509,7 +3561,9 @@ function ParijsRoubaixTemplate({ data }) {
 
       {/* route-infobalk */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
-      <KasseienIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />
+      {data.icon === "berg"
+        ? <BergIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />
+        : <KasseienIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />}
       <text x={xL + 68} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
         fontSize="32" fill={NOS.wit}>{data.route}</text>
       <text x={xR - 18} y={infoBarY + infoBarH / 2 + 11} textAnchor="end" fontFamily={FONT}
@@ -4268,7 +4322,7 @@ function DataPanel({ sport, competitie, type, editData, setEditData }) {
   if (sport === "voetbal" && type === "stand") return <StandDataEditor data={editData} setData={setEditData} />;
   if (sport === "voetbal" && type === "programma") return <ProgrammaDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "programma") return <WielrenProgrammaDataEditor data={editData} setData={setEditData} />;
-  if (sport === "wielrennen" && type === "uitslag" && competitie === "parijsroubaix") return <ParijsRoubaixDataEditor data={editData} setData={setEditData} />;
+  if (sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie)) return <ParijsRoubaixDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "klassement") return <WielrenKlassementDataEditor data={editData} setData={setEditData} />;
   return (
@@ -4613,8 +4667,8 @@ function App() {
                   {sport === "voetbal" && type === "stand" && <StandTemplate data={editData} />}
                   {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={editData} />}
                   {sport === "wielrennen" && type === "programma" && <WielrenProgrammaTemplate data={editData} />}
-                  {sport === "wielrennen" && type === "uitslag" && competitie === "parijsroubaix" && <ParijsRoubaixTemplate data={editData} />}
-                  {sport === "wielrennen" && type === "uitslag" && competitie !== "parijsroubaix" && <TdFUitslagTemplate data={editData} />}
+                  {sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie) && <ParijsRoubaixTemplate data={editData} />}
+                  {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={editData} />}
                   {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} />}
