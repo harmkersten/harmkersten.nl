@@ -683,6 +683,7 @@ function getMockWielrennen(competitie, type) {
     return {
       sport: "Wielrennen", titel, ondertitel: "etappeoverzicht", type: "programma", theme,
       rijen: etappes.map(([route, soort, km], i) => ({ nr: i + 1, route, soort, km })),
+      achtergrond: "verloop", foto: null,
     };
   }
   if (type === "uitslag") {
@@ -692,6 +693,7 @@ function getMockWielrennen(competitie, type) {
       route: d.route, km: d.km,
       rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
       leiders: d.leiders,
+      achtergrond: "verloop", foto: null,
     };
   }
   if (type === "klassement") {
@@ -701,6 +703,7 @@ function getMockWielrennen(competitie, type) {
       subkop: `na etappe ${d.etappe}`,
       rijen: d.rijen.map(([naam, land, team, tijd, leider], i) => ({ pos: i + 1, naam, land, team, tijd, leider })),
       extra: { pos: 22, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
+      achtergrond: "verloop", foto: null,
     };
   }
   return null;
@@ -730,6 +733,7 @@ function getMockParijsRoubaix(type) {
     route: d.route, km: d.km,
     rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
     extra: { pos: 23, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
+    achtergrond: "verloop", foto: null,
   };
 }
 
@@ -1863,7 +1867,18 @@ const TS = {
   gridTeam: 24,  // teamnaam onder grid-vak
 };
 
-function Achtergrond({ theme }) {
+function Achtergrond({ theme, foto }) {
+  if (foto) {
+    // Foto-variant: geen kleurverloop, de eigen (geüploade) foto vult het hele
+    // canvas. object-fit:cover-gedrag via preserveAspectRatio="...slice".
+    return (
+      <>
+        <defs><style>{fontFaceCss()}</style></defs>
+        <rect width={W} height={H} fill="#1e1e1e" />
+        <image href={foto} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" />
+      </>
+    );
+  }
   const th = theme || THEMES.formule1;
   const g = th.gradient;
   const laatsteStop = g.stops[g.stops.length - 1][1];
@@ -1883,6 +1898,14 @@ function Achtergrond({ theme }) {
     </>
   );
 }
+
+// Vaste blauwe balkstijl voor de "foto"-achtergrondvariant (wielrennen): een
+// eigen foto botst met het fel wedstrijdthema (geel/roze/rood/groen), en
+// blauw leest goed over vrijwel elke buitenfoto. Overschrijft alleen de
+// balk-/tekstkleuren van het thema, niet bv. de leiderstruitjes — die
+// blijven race-eigen.
+const FOTO_ACCENT = { titel: "#284bbe", tekst: "#101e4c", zebra: "#E9EDF9" };
+const metFotoStijl = (theme, actief) => (actief ? { ...theme, ...FOTO_ACCENT } : theme);
 
 // barY/barH/titelOffset verschillen licht per sport (afgemeten op de
 // referentie-svg's): F1 heeft een iets hogere/kortere balk dan voetbal en
@@ -3231,16 +3254,18 @@ function WielrenProgrammaTemplate({ data }) {
   const iconMidX = iconX + iconW / 2;
   const y0 = 298.3;
   const rowH = 44.76;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 11;
         const zebra = i % 2 === 1;
-        const fill = zebra ? data.theme.zebra : NOS.wit;
+        const fill = zebra ? themeEff.zebra : NOS.wit;
         const rankFill = zebra ? "#4b4b4b" : "#1e1e1e";
         return (
           <g key={r.nr}>
@@ -3287,14 +3312,16 @@ function TdFUitslagTemplate({ data }) {
   const leiderIconW = rankR - xL;
   const leiderNaamX = xL + leiderIconW + 48 + 30;
   const truien = data.theme.truien;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
       {/* etappe-infobalk */}
-      <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={data.theme.titel} />
+      <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
       <BergIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />
       <text x={xL + 68} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
         fontSize="32" fill={NOS.wit}>{data.route}</text>
@@ -3305,7 +3332,7 @@ function TdFUitslagTemplate({ data }) {
       {data.rijen.map((r, i) => {
         const y = tableY0 + i * rowH;
         const midY = y + rowH / 2 + 11;
-        const fill = i % 2 === 0 ? NOS.wit : data.theme.zebra;
+        const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
         return (
           <g key={r.pos}>
             <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
@@ -3326,13 +3353,13 @@ function TdFUitslagTemplate({ data }) {
       })}
 
       {/* leiders klassementen */}
-      <rect x={xL} y={leidersBarY} width={xR - xL} height={leidersBarH} fill={data.theme.titel} />
+      <rect x={xL} y={leidersBarY} width={xR - xL} height={leidersBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={leidersBarY + leidersBarH / 2 + 10} fontFamily={FONT}
         fontWeight="700" fontSize="28" fill={NOS.wit}>leiders klassementen</text>
       {data.leiders.map((l, i) => {
         const y = leidersY0 + i * leiderRowH;
         const midY = y + leiderRowH / 2 + 11;
-        const fill = i % 2 === 0 ? NOS.wit : data.theme.zebra;
+        const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
         return (
           <g key={i}>
             <rect x={xL} y={y} width={xR - xL} height={leiderRowH} fill={fill} />
@@ -3371,10 +3398,12 @@ function TdFKlassementTemplate({ data }) {
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 40; // ruimte voor trui-icoon bij de leider
   const teamMidX = (teamL + teamR) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
 
   const rij = (r, y, i) => {
     const midY = y + rowH / 2 + 11;
-    const fill = i % 2 === 0 ? NOS.wit : data.theme.zebra;
+    const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
     return (
       <g key={r.pos}>
         <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
@@ -3399,10 +3428,10 @@ function TdFKlassementTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
-      <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
+      <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
         fontWeight="700" fontSize="28" fill={NOS.wit}>{data.subkop}</text>
 
@@ -3447,10 +3476,12 @@ function ParijsRoubaixTemplate({ data }) {
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
 
   const rij = (r, y, i) => {
     const midY = y + rowH / 2 + 11;
-    const fill = i % 2 === 0 ? NOS.wit : data.theme.zebra;
+    const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
     return (
       <g key={r.pos}>
         <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
@@ -3472,11 +3503,11 @@ function ParijsRoubaixTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
       {/* route-infobalk */}
-      <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={data.theme.titel} />
+      <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
       <KasseienIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />
       <text x={xL + 68} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
         fontSize="32" fill={NOS.wit}>{data.route}</text>
@@ -3861,6 +3892,47 @@ function PersonenRijenEditor({ rijen, setRijen, toonLeider, toonTijd = true, too
 }
 
 const ETAPPE_SOORT_LABEL = { vlak: "Vlak", heuvel: "Heuvel", berg: "Berg", tijdrit: "Tijdrit" };
+/* Achtergrond-variant voor wielrennen-graphics: het kleurverloop van het
+   thema (standaard), of een eigen geüploade foto — dan wisselen alle balken
+   (Kop + info-/leiders-/subbalk) automatisch naar de vaste blauwe stijl, zie
+   FOTO_ACCENT/metFotoStijl bij Achtergrond(). */
+function AchtergrondKiezer({ data, setData }) {
+  const modus = data.achtergrond || "verloop";
+  const zetFoto = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setData((d) => ({ ...d, foto: reader.result, achtergrond: "foto" }));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={dpLabel}>Achtergrond</div>
+      <div style={{ display: "flex", gap: 8, marginBottom: modus === "foto" ? 8 : 0 }}>
+        {[["verloop", "Kleurverloop"], ["foto", "Foto"]].map(([k, label]) => (
+          <button key={k} onClick={() => setData((d) => ({ ...d, achtergrond: k }))} style={{
+            flex: 1, padding: "9px 0", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer",
+            border: modus === k ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
+            background: modus === k ? "#fef2f2" : "#fff", color: "#111",
+          }}>{label}</button>
+        ))}
+      </div>
+      {modus === "foto" && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {data.foto && (
+            <img src={data.foto} alt="" style={{ width: 40, height: 50, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+          )}
+          <input type="file" accept="image/*" onChange={zetFoto} style={{ fontSize: 12, flex: 1, minWidth: 0 }} />
+          {data.foto && (
+            <button onClick={() => setData((d) => ({ ...d, foto: null }))} style={dpX} title="Foto verwijderen">×</button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WielrenProgrammaDataEditor({ data, setData }) {
   const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
   const verwijder = (i) => setData((d) => ({
@@ -3875,6 +3947,7 @@ function WielrenProgrammaDataEditor({ data, setData }) {
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
       <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 12px" }}>
         Plakken kan hier nog niet — vul het etappeoverzicht met de hand in.
       </p>
@@ -3909,6 +3982,7 @@ function WielrenUitslagDataEditor({ data, setData }) {
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ flex: 1 }}>
           <div style={dpLabel}>Route</div>
@@ -3958,6 +4032,7 @@ function WielrenKlassementDataEditor({ data, setData }) {
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Subkop (bv. "na etappe 21")</div>
       <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
 
       <PlakBox label="Plak het algemeen klassement (incl. kolomkoppen Rg/Nr./Land/Naam/Team/Resultaat)"
         placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tResultaat\n1\t21\t\nSpanje\nSPA\nEnric Mas\nMovistar Team\nMovistar Team\n32:41:44\n2\t1\t…"}
@@ -3996,6 +4071,7 @@ function ParijsRoubaixDataEditor({ data, setData }) {
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ flex: 1 }}>
           <div style={dpLabel}>Route</div>
