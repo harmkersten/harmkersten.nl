@@ -1918,15 +1918,41 @@ const TS = {
   gridTeam: 24,  // teamnaam onder grid-vak
 };
 
-function Achtergrond({ theme, foto }) {
+function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep }) {
   if (foto) {
     // Foto-variant: geen kleurverloop, de eigen (geüploade) foto vult het hele
-    // canvas. object-fit:cover-gedrag via preserveAspectRatio="...slice".
+    // canvas. Zonder bekende beeldmaten (bv. oudere data) blijft het simpele
+    // object-fit:cover-gedrag via preserveAspectRatio="...slice" overeind —
+    // pas mét fotoDim (opgehaald bij het uploaden) berekenen we de cover-fit
+    // zelf, zodat de foto versleept/uitvergroot kan worden.
+    if (!fotoDim || !fotoDim.w || !fotoDim.h) {
+      return (
+        <>
+          <defs><style>{fontFaceCss()}</style></defs>
+          <rect width={W} height={H} fill="#1e1e1e" />
+          <image href={foto} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" />
+        </>
+      );
+    }
+    const pos = fotoPos || { x: 0, y: 0 };
+    const dekkend = Math.max(W / fotoDim.w, H / fotoDim.h);
+    const schaal = dekkend * Math.max(1, fotoZoom || 1);
+    const w = fotoDim.w * schaal;
+    const h = fotoDim.h * schaal;
+    const x = (W - w) / 2 + pos.x;
+    const y = (H - h) / 2 + pos.y;
     return (
       <>
-        <defs><style>{fontFaceCss()}</style></defs>
+        <defs>
+          <style>{fontFaceCss()}</style>
+          <clipPath id="fotoClip"><rect width={W} height={H} /></clipPath>
+        </defs>
         <rect width={W} height={H} fill="#1e1e1e" />
-        <image href={foto} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" />
+        <g clipPath="url(#fotoClip)">
+          <image href={foto} x={x} y={y} width={w} height={h}
+            style={fotoSleep ? { cursor: "grab" } : undefined}
+            onPointerDown={fotoSleep ? (e) => fotoSleep.start(e, pos) : undefined} />
+        </g>
       </>
     );
   }
@@ -3095,6 +3121,48 @@ function useSleep(zetPositie) {
   return { start, beweeg, stop };
 }
 
+/* Zelfde scherm->viewBox-aanpak als useSleep, maar voor het slepen van de
+   achtergrondfoto: één sleepbaar element i.p.v. een speler-index, en de
+   startpositie komt uit de aanroep i.p.v. uit de state (zodat de hook zelf
+   niets over "foto" hoeft te weten). */
+function useFotoSleep(zetPositie) {
+  const bezig = useRef(null);
+
+  const naarViewBox = (svg, clientX, clientY) => {
+    const kader = svg.getBoundingClientRect();
+    if (!kader.width || !kader.height) return null;
+    return {
+      x: ((clientX - kader.left) / kader.width) * W,
+      y: ((clientY - kader.top) / kader.height) * H,
+    };
+  };
+
+  const start = useCallback((e, huidigePos) => {
+    const svg = e.currentTarget.ownerSVGElement || e.currentTarget;
+    if (!svg) return;
+    const p = naarViewBox(svg, e.clientX, e.clientY);
+    if (!p) return;
+    bezig.current = { svg, grijpX: p.x - huidigePos.x, grijpY: p.y - huidigePos.y };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  }, []);
+
+  const beweeg = useCallback((e) => {
+    const b = bezig.current;
+    if (!b) return;
+    const p = naarViewBox(b.svg, e.clientX, e.clientY);
+    if (!p) return;
+    const x = p.x - b.grijpX;
+    const y = p.y - b.grijpY;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    zetPositie({ x, y });
+  }, [zetPositie]);
+
+  const stop = useCallback(() => { bezig.current = null; }, []);
+
+  return { start, beweeg, stop };
+}
+
 function OpstellingDuelTemplate({ opst, sleep }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
@@ -3289,7 +3357,7 @@ function EtappeIcon({ soort, x, y, size, kleur }) {
 
 /* ============================ WIELRENNEN: PROGRAMMA (ETAPPES) ================ */
 
-function WielrenProgrammaTemplate({ data }) {
+function WielrenProgrammaTemplate({ data, setData }) {
   // Maten afgemeten op het referentie-ontwerp. 21 doorlopende rijen zonder
   // tussenruimte (i.t.t. de uitslag/klassement-tabellen, die wél een gap
   // tussen de kolommen hebben) — rang-vak wisselt donker/donkerder i.p.v.
@@ -3307,10 +3375,15 @@ function WielrenProgrammaTemplate({ data }) {
   const rowH = 44.76;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
@@ -3340,7 +3413,7 @@ function WielrenProgrammaTemplate({ data }) {
 
 /* ============================ WIELRENNEN: UITSLAG ============================ */
 
-function TdFUitslagTemplate({ data }) {
+function TdFUitslagTemplate({ data, setData }) {
   // Maten afgemeten op het referentie-ontwerp.
   const xL = 109.3, xR = 970.71;
   const infoBarY = 337.06, infoBarH = 53.65;
@@ -3365,10 +3438,15 @@ function TdFUitslagTemplate({ data }) {
   const truien = data.theme.truien;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
       {/* etappe-infobalk */}
@@ -3433,7 +3511,7 @@ function TdFUitslagTemplate({ data }) {
 
 /* ============================ WIELRENNEN: KLASSEMENT ========================= */
 
-function TdFKlassementTemplate({ data }) {
+function TdFKlassementTemplate({ data, setData }) {
   // Maten afgemeten op het referentie-ontwerp. Zelfde kolomindeling als de
   // etappe-uitslag (beide gecentreerd op het canvas).
   const xL = 118.2, xR = 979.61;
@@ -3476,10 +3554,15 @@ function TdFKlassementTemplate({ data }) {
   };
 
   const extraY = 1186.92;
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
@@ -3512,7 +3595,7 @@ function KasseienIcon({ x, y, size, kleur = "#fff" }) {
 /* Parijs-Roubaix: geen etappes/klassement, alleen een uitslag met (voorlopig)  */
 /* 15 doorlopende rijen + 1 losse extra rij — geen "leiders klassementen".      */
 
-function ParijsRoubaixTemplate({ data }) {
+function ParijsRoubaixTemplate({ data, setData }) {
   const xL = 109.3, xR = 970.71;
   const infoBarY = 337.06, infoBarH = 53.65;
   const rowH = 50;
@@ -3551,10 +3634,15 @@ function ParijsRoubaixTemplate({ data }) {
       </g>
     );
   };
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null} />
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
       {/* route-infobalk: bij een eendagskoers is er geen etappetype, dus
@@ -3954,10 +4042,24 @@ function AchtergrondKiezer({ data, setData }) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setData((d) => ({ ...d, foto: reader.result, achtergrond: "foto" }));
+    reader.onload = () => {
+      const uri = reader.result;
+      // Natuurlijke afmetingen ophalen zodat Achtergrond() de cover-fit zelf
+      // kan berekenen (nodig om de foto te kunnen slepen/uitvergroten) —
+      // zoom/positie resetten bij een nieuwe upload.
+      const img = new Image();
+      img.onload = () => setData((d) => ({
+        ...d, foto: uri, achtergrond: "foto",
+        fotoDim: { w: img.naturalWidth, h: img.naturalHeight },
+        fotoZoom: 1, fotoPos: { x: 0, y: 0 },
+      }));
+      img.src = uri;
+    };
     reader.readAsDataURL(file);
     e.target.value = "";
   };
+  const zetZoom = (v) => setData((d) => ({ ...d, fotoZoom: v }));
+  const resetPositie = () => setData((d) => ({ ...d, fotoZoom: 1, fotoPos: { x: 0, y: 0 } }));
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={dpLabel}>Achtergrond</div>
@@ -3971,15 +4073,30 @@ function AchtergrondKiezer({ data, setData }) {
         ))}
       </div>
       {modus === "foto" && (
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {data.foto && (
-            <img src={data.foto} alt="" style={{ width: 40, height: 50, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+        <>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {data.foto && (
+              <img src={data.foto} alt="" style={{ width: 40, height: 50, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+            )}
+            <input type="file" accept="image/*" onChange={zetFoto} style={{ fontSize: 12, flex: 1, minWidth: 0 }} />
+            {data.foto && (
+              <button onClick={() => setData((d) => ({ ...d, foto: null }))} style={dpX} title="Foto verwijderen">×</button>
+            )}
+          </div>
+          {data.foto && data.fotoDim && (
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+              <span style={{ fontSize: 12, color: "#6b7280", flexShrink: 0 }}>Uitvergroten</span>
+              <input type="range" min="1" max="3" step="0.05" value={data.fotoZoom || 1}
+                onChange={(e) => zetZoom(Number(e.target.value))} style={{ flex: 1 }} />
+              <button onClick={resetPositie} style={{ ...dpKnop, padding: "4px 10px", fontSize: 12 }}>Reset</button>
+            </div>
           )}
-          <input type="file" accept="image/*" onChange={zetFoto} style={{ fontSize: 12, flex: 1, minWidth: 0 }} />
-          {data.foto && (
-            <button onClick={() => setData((d) => ({ ...d, foto: null }))} style={dpX} title="Foto verwijderen">×</button>
+          {data.foto && data.fotoDim && (
+            <p style={{ fontSize: 12, color: "#9ca3af", margin: "6px 0 0" }}>
+              Sleep de foto in de preview om 'm te verschuiven.
+            </p>
           )}
-        </div>
+        </>
       )}
     </div>
   );
@@ -4669,10 +4786,10 @@ function App() {
                   {sport === "formule1" && type === "wkstandteams" && <WKStandTeamsTemplate data={editData} />}
                   {sport === "voetbal" && type === "stand" && <StandTemplate data={editData} />}
                   {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={editData} />}
-                  {sport === "wielrennen" && type === "programma" && <WielrenProgrammaTemplate data={editData} />}
-                  {sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie) && <ParijsRoubaixTemplate data={editData} />}
-                  {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={editData} />}
-                  {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} />}
+                  {sport === "wielrennen" && type === "programma" && <WielrenProgrammaTemplate data={editData} setData={setEditData} />}
+                  {sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie) && <ParijsRoubaixTemplate data={editData} setData={setEditData} />}
+                  {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={editData} setData={setEditData} />}
+                  {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} setData={setEditData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} />}
                   {isDeelnemers && <DeelnemersTemplate data={deelnemersData} />}
