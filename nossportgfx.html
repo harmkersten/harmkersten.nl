@@ -42,6 +42,15 @@ const NOS = {
   tekst: "#1a1a1a",
 };
 
+/* ---- Kiesbare achtergrondkleuren voor de opstelling-maker ------------------ */
+/* Aangeleverde kleurenkaart: 13 kleuren op een rij, plus een losstaande        */
+/* dertiende/veertiende (donkerblauw), die als standaard blijft dienen omdat    */
+/* hij het dichtst bij het oorspronkelijke veldblauw (#284bbe) ligt.            */
+const ACHTERGROND_KLEUREN = [
+  "#a1150e", "#ac470f", "#b37813", "#b39421", "#98943f", "#648a45", "#7a9871",
+  "#4c8493", "#2a70b3", "#553d82", "#6f2f51", "#881f30", "#5f5f5f", "#1c357f",
+];
+
 /* ---- Teamkleuren (2026): kleurvlak achter de coureur op het podium --------- */
 const TEAM_KLEUR = {
   MCL: "#F07C31", // McLaren
@@ -122,6 +131,50 @@ const THEMES = {
     zebra: "#E9EDF9",
     gradient: { x1: 0, y1: 0, x2: 1, y2: 1, stops: [
       [0, "#FFD119"], [50, "#FEE068"], [100, "#FFD119"],
+    ] },
+    // 4 leiderstruitjes (algemeen/punten/berg/jongeren), afgemeten op het
+    // referentie-ontwerp — volgorde is vast, ongeacht de ronde.
+    truien: [
+      { label: "Geel · algemeen", kleur: "#FFC828" },
+      { label: "Groen · punten", kleur: "#469B78" },
+      { label: "Bol · berg", kleur: "#ffffff", stip: true, stipKleur: NOS.rood },
+      { label: "Wit · jongeren", kleur: "#ffffff" },
+    ],
+  },
+  vuelta: {
+    titel: "#1F1F1F",
+    tekst: NOS.tekst,
+    zebra: "#E9EDF9",
+    gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
+      [0, "#E61E14"], [50, "#9D140E"], [100, "#E61E14"],
+    ] },
+    truien: [
+      { label: "Rood · algemeen", kleur: NOS.rood },
+      { label: "Groen · punten", kleur: "#469B78" },
+      { label: "Bol · berg", kleur: "#ffffff", stip: true, stipKleur: "#284BBE" },
+      { label: "Wit · jongeren", kleur: "#ffffff" },
+    ],
+  },
+  giro: {
+    titel: "#1F1F1F",
+    tekst: NOS.tekst,
+    zebra: "#E9EDF9",
+    gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
+      [0, "#E6B2B8"], [50, "#D46F7D"], [100, "#E6B2B8"],
+    ] },
+    truien: [
+      { label: "Roze · algemeen", kleur: "#D46F7D" },
+      { label: "Ciclamino · punten", kleur: "#6F2F51" },
+      { label: "Blauw · berg", kleur: "#3DA0FF" },
+      { label: "Wit · jongeren", kleur: "#ffffff" },
+    ],
+  },
+  parijsroubaix: {
+    titel: "#1F1F1F",
+    tekst: NOS.tekst,
+    zebra: "#E9EDF9",
+    gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
+      [0, "#91C76C"], [50, "#618642"], [100, "#91C76C"],
     ] },
   },
 };
@@ -206,6 +259,28 @@ const CONFIG = {
           uitslag: { label: "Uitslag" },
           klassement: { label: "Algemeen klassement" },
           deelnemers: { label: "Deelnemende teams" },
+        },
+      },
+      giro: {
+        label: "Giro d'Italia",
+        types: {
+          programma: { label: "Programma" },
+          uitslag: { label: "Uitslag" },
+          klassement: { label: "Algemeen klassement" },
+        },
+      },
+      vuelta: {
+        label: "Vuelta a España",
+        types: {
+          programma: { label: "Programma" },
+          uitslag: { label: "Uitslag" },
+          klassement: { label: "Algemeen klassement" },
+        },
+      },
+      parijsroubaix: {
+        label: "Parijs-Roubaix",
+        types: {
+          uitslag: { label: "Uitslag" },
         },
       },
     },
@@ -559,18 +634,62 @@ const TDF_ETAPPES = [
   ["Thoiry - Parijs", "vlak", "133,0 km"],
 ];
 
+// Etappeoverzicht Giro d'Italia 2026 — overgenomen van giroditalia.it/en/the-route
+// (plaatsnamen ingekort, sponsor-toevoegingen als "TUDOR ITT" weggelaten).
+const GIRO_ETAPPES = [
+  ["Nessebar - Burgas", "vlak", "147 km"], ["Burgas - Veliko Tarnovo", "heuvel", "221 km"],
+  ["Plovdiv - Sofia", "vlak", "175 km"], ["Catanzaro - Cosenza", "vlak", "138 km"],
+  ["Praia a Mare - Potenza", "heuvel", "203 km"], ["Paestum - Napoli", "vlak", "142 km"],
+  ["Formia - Blockhaus", "berg", "245 km"], ["Chieti - Fermo", "heuvel", "156 km"],
+  ["Cervia - Corno alle Scale", "heuvel", "184 km"], ["Viareggio - Massa", "tijdrit", "42,0 km"],
+  ["Porcari - Chiavari", "heuvel", "195 km"], ["Imperia - Novi Ligure", "vlak", "175 km"],
+  ["Alessandria - Verbania", "vlak", "189 km"], ["Aosta - Pila", "berg", "133 km"],
+  ["Voghera - Milano", "vlak", "157 km"], ["Bellinzona - Cari", "berg", "113 km"],
+  ["Cassano d'Adda - Andalo", "heuvel", "202 km"], ["Fai della Paganella - Pieve di Soligo", "vlak", "171 km"],
+  ["Feltre - Alleghe", "berg", "151 km"], ["Gemona del Friuli - Piancavallo", "berg", "200 km"],
+  ["Roma - Roma", "vlak", "131 km"],
+];
+
+// Etappeoverzicht La Vuelta 2026 — overgenomen van lavuelta.es/en/overall-route
+// (de 2 rustdagen tellen niet mee als etappe; "medium mountains" en "mountain"
+// vallen in de graphic allebei onder "berg", er zijn maar 4 icoontypes).
+const VUELTA_ETAPPES = [
+  ["Monaco - Monaco", "tijdrit", "9,4 km"], ["Monaco - Manosque", "heuvel", "214,3 km"],
+  ["Gruissan - Font Romeu", "berg", "174 km"], ["Andorra la Vella - Andorra la Vella", "berg", "104,8 km"],
+  ["Falset - Roquetes", "heuvel", "173,3 km"], ["Alcossebre - Castello", "berg", "177,5 km"],
+  ["Vall d'Alba - Valdelinares", "berg", "149,8 km"], ["Pucol - Xeraco", "vlak", "171 km"],
+  ["Villajoyosa - Alto de Aitana", "berg", "187,4 km"], ["Alcaraz - Elche de la Sierra", "heuvel", "184,7 km"],
+  ["Cartagena - Lorca", "vlak", "153,8 km"], ["Vera - Calar Alto", "berg", "166,6 km"],
+  ["Almunecar - Loja", "berg", "192,8 km"], ["Jaen - Sierra de la Pandera", "berg", "154,5 km"],
+  ["Palma del Rio - Cordoba", "berg", "189,7 km"], ["Cortegana - La Rabida", "heuvel", "181,1 km"],
+  ["Dos Hermanas - Sevilla", "vlak", "185 km"], ["El Puerto de Santa Maria - Jerez de la Frontera", "tijdrit", "32,1 km"],
+  ["Velez-Malaga - Penas Blancas", "heuvel", "210,8 km"], ["La Calahorra - Collado del Alguacil", "berg", "186,8 km"],
+  ["Granada - Granada", "vlak", "112 km"],
+];
+
+// Ronde-info per wielren-competitie: naam + thema + eigen etappeoverzicht.
+// Uitslag/klassement-mockdata is (voorlopig) nog wel gedeeld tussen de rondes —
+// alleen naam en thema (incl. leiderstruitjes) veranderen daar.
+const WIELREN_RONDE = {
+  tourdefrance: { titel: "Tour de France 2026", theme: THEMES.tourdefrance, etappes: TDF_ETAPPES },
+  giro: { titel: "Giro 2026", theme: THEMES.giro, etappes: GIRO_ETAPPES },
+  vuelta: { titel: "La Vuelta 2026", theme: THEMES.vuelta, etappes: VUELTA_ETAPPES },
+};
+
 function getMockWielrennen(competitie, type) {
-  const theme = THEMES.tourdefrance;
+  if (competitie === "parijsroubaix") return getMockParijsRoubaix(type);
+  const ronde = WIELREN_RONDE[competitie] || WIELREN_RONDE.tourdefrance;
+  const { titel, theme, etappes } = ronde;
   if (type === "programma") {
     return {
-      sport: "Wielrennen", titel: "Tour de France 2026", ondertitel: "etappeoverzicht", type: "programma", theme,
-      rijen: TDF_ETAPPES.map(([route, soort, km], i) => ({ nr: i + 1, route, soort, km })),
+      sport: "Wielrennen", titel, ondertitel: "etappeoverzicht", type: "programma", theme,
+      rijen: etappes.map(([route, soort, km], i) => ({ nr: i + 1, route, soort, km })),
     };
   }
   if (type === "uitslag") {
     const d = TDF_UITSLAG;
     return {
-      sport: "Wielrennen", titel: "Tour de France 2026", ondertitel: `etappe ${d.etappe}`, type: "uitslag", theme,
+      sport: "Wielrennen", titel, ondertitel: `etappe ${d.etappe}`, type: "uitslag", theme,
       route: d.route, km: d.km,
       rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
       leiders: d.leiders,
@@ -579,13 +698,40 @@ function getMockWielrennen(competitie, type) {
   if (type === "klassement") {
     const d = TDF_KLASSEMENT;
     return {
-      sport: "Wielrennen", titel: "Tour de France 2026", ondertitel: "algemeen klassement", type: "klassement", theme,
+      sport: "Wielrennen", titel, ondertitel: "algemeen klassement", type: "klassement", theme,
       subkop: `na etappe ${d.etappe}`,
       rijen: d.rijen.map(([naam, land, team, tijd, leider], i) => ({ pos: i + 1, naam, land, team, tijd, leider })),
       extra: { pos: 22, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
     };
   }
   return null;
+}
+
+/* ---- Mock Parijs-Roubaix: eendaagse klassieker, geen klassement/etappes --- */
+const PARIJS_ROUBAIX_UITSLAG = {
+  route: "Compiègne - Roubaix", km: "253,3 km",
+  rijen: [
+    ["Mathieu van der Poel", "nl", "APT", "5:52:23"], ["Wout van Aert", "be", "TVL", "+38"],
+    ["Tadej Pogacar", "si", "UAX", "+1:02"], ["Jasper Philipsen", "be", "APT", "+1:15"],
+    ["Stefan Küng", "ch", "GFC", "+1:40"], ["Mads Pedersen", "dk", "LTK", "+1:52"],
+    ["Filippo Ganna", "it", "IGD", "+2:10"], ["Dylan van Baarle", "nl", "TVL", "+2:25"],
+    ["Jasper Stuyven", "be", "TEN", "+2:48"], ["Nils Politt", "de", "UAX", "+3:05"],
+    ["Alexander Kristoff", "no", "UXM", "+3:22"], ["Jhonatan Narváez", "ec", "UAX", "+3:40"],
+    ["Biniam Girmay", "er", "IGD", "+3:58"], ["Yves Lampaert", "be", "SOQ", "+4:12"],
+    ["Mike Teunissen", "nl", "IGD", "+4:30"],
+  ],
+  extra: ["Fabio Jakobsen", "nl", "DAT", "+6:15"],
+};
+
+function getMockParijsRoubaix(type) {
+  if (type !== "uitslag") return null;
+  const d = PARIJS_ROUBAIX_UITSLAG;
+  return {
+    sport: "Wielrennen", titel: "Parijs - Roubaix", ondertitel: "uitslag", type: "uitslag", theme: THEMES.parijsroubaix,
+    route: d.route, km: d.km,
+    rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
+    extra: { pos: 23, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
+  };
 }
 
 /* ---- Mock-datalaag: bouwt exact de shape die de backend moet leveren ------- */
@@ -1732,7 +1878,12 @@ function Achtergrond({ theme }) {
   );
 }
 
-function Kop({ sport, titel, theme }) {
+// barY/barH/titelOffset verschillen licht per sport (afgemeten op de
+// referentie-svg's): F1 heeft een iets hogere/kortere balk dan voetbal en
+// wielrennen. De ondertitel-balk (36pt) is voor alle sporten gelijk: hij
+// sluit direct aan op de sport-balk (barY+barH), hoogte 53.65, tekst-offset
+// 37.3 vanaf de bovenkant.
+function Kop({ sport, titel, theme, barY = 96.39, barH = 89.67, titelOffset = 64.77 }) {
   const th = theme || THEMES.formule1;
   // Logo op ware verhouding (384x135 -> ~2.84:1), afgemeten op het referentie-ontwerp.
   const logoH = 39;
@@ -1789,12 +1940,12 @@ function Kop({ sport, titel, theme }) {
       <image href={NOS_LOGO} x="52" y="44" width={logoW} height={logoH}
         preserveAspectRatio="xMidYMid meet" />
       {/* Sport-balk (titel 60pt) */}
-      <rect x={balkX} y="64" width={balkW} height="89" fill={th.titel} />
-      <text ref={sportRef} x={balkMidX} y="126" textAnchor="middle" fontFamily={FONT}
+      <rect x={balkX} y={barY} width={balkW} height={barH} fill={th.titel} />
+      <text ref={sportRef} x={balkMidX} y={barY + titelOffset} textAnchor="middle" fontFamily={FONT}
         fontWeight="700" fontSize={TS.titel} fill={NOS.wit}>{sport}</text>
       {/* Titel-balk (ondertitel 36pt), direct aansluitend op de sport-balk */}
-      <rect x={balkX} y="153" width={balkW} height="52" fill={NOS.wit} />
-      <text ref={titelRef} x={balkMidX} y="194" textAnchor="middle" fontFamily={FONT}
+      <rect x={balkX} y={barY + barH} width={balkW} height="53.65" fill={NOS.wit} />
+      <text ref={titelRef} x={balkMidX} y={barY + barH + 37.3} textAnchor="middle" fontFamily={FONT}
         fontWeight="700" fontSize={TS.ondertitel} fill={th.tekst}>{titel}</text>
     </>
   );
@@ -1830,12 +1981,12 @@ function FitText({ x, y, maxW, size, weight = "700", fill, anchor = "start", opa
 /* De naambalk steekt links iets uit voorbij het fotovlak (zoals in het NOS-   */
 /* ontwerp), zodat lange namen als 'Verstappen' ruim binnen de balk passen.    */
 function PodiumBlok({ p, x, y, w, h }) {
-  const badgeH = 58;
-  const badgeW = 78;
-  const badgeGap = 10;   // ruimte tussen positie-badge en naambalk
-  const naamH = 60;      // naambalk
-  const teamH = 62;      // onderbalk (team + punten)
-  const puntenW = 150;
+  const badgeH = 50;
+  const badgeW = 69.94;
+  const badgeGap = 7.25;   // ruimte tussen positie-badge en naambalk
+  const naamH = 50;      // naambalk
+  const teamH = 50;      // onderbalk (team + punten)
+  const puntenW = 99.89;
   const naamX = x;
   const naamW = w;
   const vlagX = naamX + 14;                    // iets kleinere linkermarge
@@ -2124,14 +2275,14 @@ function StandTemplate({ data }) {
   // De tabel (header + rijen) staat verticaal gecentreerd rond een vast
   // ankerpunt, afgemeten op het Eredivisie-ontwerp (18 rijen: y0=325) en
   // geverifieerd op het Premier League-ontwerp (20 rijen: y0≈271-275).
-  const tableCenterY = 775;
+  const tableCenterY = 805;
   const y0 = tableCenterY - (data.rijen.length * rowH) / 2;
-  const headerY = y0 - 30;
+  const headerY = y0 - 13;
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={101.84} barH={87.87} titelOffset={62.01} />
       {kolommen.map((k, i) => (
         <text key={k} x={colX(i) + numW / 2} y={headerY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize="30" fill={NOS.wit}>{k}</text>
@@ -2171,13 +2322,13 @@ function StandTemplate({ data }) {
 function ProgrammaTemplate({ data }) {
   // Maten afgemeten op het referentie-ontwerp. Zebra-kleur wisselt doorlopend
   // over de hele lijst (niet per dag-groep opnieuw begonnen bij wit).
-  const xL = 60, xR = 1015;
-  const dayBarH = 72;
-  const rowH = 72;
+  const xL = 58.31, xR = 1017.18;
+  const dayBarH = 72.28;
+  const rowH = 72.28;
   const dagGap = 32;
   const logoW = 42;
 
-  let y = 305;
+  let y = 340.51;
   let matchIndex = 0;
   const blokken = [];
   data.dagen.forEach((d) => {
@@ -2198,7 +2349,7 @@ function ProgrammaTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={101.84} barH={87.87} titelOffset={62.01} />
       {blokken.map((b, i) => {
         if (b.soort === "dag") {
           return (
@@ -2843,7 +2994,7 @@ function OpstellingDuelTemplate({ opst, sleep }) {
       onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
       onPointerCancel={sleep && sleep.stop}>
       <defs><style>{fontFaceCss()}</style></defs>
-      <rect id="achtergrond" width={W} height={H} fill={VELD.kleur} />
+      <rect id="achtergrond" width={W} height={H} fill={opst.achtergrond || VELD.kleur} />
       <Veld />
       <Opstelling ploeg={opst.a} anker={ANKER_DUEL_BOVEN} basisMaat={MAAT_DUEL} zijde="a"
         opSleep={sleep && sleep.start} />
@@ -2853,13 +3004,13 @@ function OpstellingDuelTemplate({ opst, sleep }) {
   );
 }
 
-function OpstellingEnkelTemplate({ ploeg, sleep }) {
+function OpstellingEnkelTemplate({ ploeg, sleep, kleur }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
       onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
       onPointerCancel={sleep && sleep.stop}>
       <defs><style>{fontFaceCss()}</style></defs>
-      <rect id="achtergrond" width={W} height={H} fill={VELD.kleur} />
+      <rect id="achtergrond" width={W} height={H} fill={kleur || VELD.kleur} />
       <Veld />
       <Opstelling ploeg={ploeg} anker={ANKER_ENKEL} basisMaat={MAAT_ENKEL} zijde="a" laag="e"
         opSleep={sleep && sleep.start} />
@@ -2967,7 +3118,7 @@ const legePloeg = (keeperKleur) => ({
 
 /* ============================ WIELRENNEN: iconen ============================= */
 
-function Shirt({ x, y, size, kleur, stip }) {
+function Shirt({ x, y, size, kleur, stip, stipKleur = "#D32E22" }) {
   const s = size / 36;
   return (
     <g transform={`translate(${x},${y}) scale(${s})`}>
@@ -2975,12 +3126,12 @@ function Shirt({ x, y, size, kleur, stip }) {
         fill={kleur} stroke="#00000030" strokeWidth="1" />
       {stip && (
         <>
-          <circle cx="13" cy="11" r="2.2" fill="#D32E22" />
-          <circle cx="21" cy="9" r="2.2" fill="#D32E22" />
-          <circle cx="16" cy="18" r="2.2" fill="#D32E22" />
-          <circle cx="24" cy="19" r="2.2" fill="#D32E22" />
-          <circle cx="12" cy="25" r="2.2" fill="#D32E22" />
-          <circle cx="20" cy="27" r="2.2" fill="#D32E22" />
+          <circle cx="13" cy="11" r="2.2" fill={stipKleur} />
+          <circle cx="21" cy="9" r="2.2" fill={stipKleur} />
+          <circle cx="16" cy="18" r="2.2" fill={stipKleur} />
+          <circle cx="24" cy="19" r="2.2" fill={stipKleur} />
+          <circle cx="12" cy="25" r="2.2" fill={stipKleur} />
+          <circle cx="20" cy="27" r="2.2" fill={stipKleur} />
         </>
       )}
     </g>
@@ -3045,13 +3196,13 @@ function WielrenProgrammaTemplate({ data }) {
   const mainW = iconX - gap - mainX;
   const rankMidX = (xL + rankR) / 2;
   const iconMidX = iconX + iconW / 2;
-  const y0 = 250.75;
+  const y0 = 298.3;
   const rowH = 44.76;
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 11;
@@ -3082,12 +3233,12 @@ function WielrenProgrammaTemplate({ data }) {
 
 function TdFUitslagTemplate({ data }) {
   // Maten afgemeten op het referentie-ontwerp.
-  const xL = 110, xR = 969;
-  const infoBarY = 291, infoBarH = 53;
+  const xL = 109.3, xR = 970.71;
+  const infoBarY = 337.06, infoBarH = 53.65;
   const rowH = 50;
-  const tableY0 = infoBarY + infoBarH;
+  const tableY0 = 401.25; // sluit niet direct aan op de infobalk, ~10.5px gat
 
-  const rankR = 179, teamL = 681, teamR = 782;
+  const rankR = 179.24, teamL = 680.78, teamR = 782.29;
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
@@ -3096,18 +3247,18 @@ function TdFUitslagTemplate({ data }) {
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
 
-  const leidersBarY = tableY0 + data.rijen.length * rowH + 101;
-  const leidersBarH = 50;
-  const leiderRowH = 60;
-  const leidersY0 = leidersBarY + leidersBarH;
+  const leidersBarY = 990.92;
+  const leidersBarH = 53.65;
+  const leiderRowH = 50;
+  const leidersY0 = 1054.09; // sluit niet direct aan op de leiders-balk, ~9.5px gat
   const leiderIconW = rankR - xL;
   const leiderNaamX = xL + leiderIconW + 48 + 30;
-  const TRUI_KLEUR = { geel: "#FFD119", groen: "#1E8A4C", bol: "#ffffff", wit: "#ffffff" };
+  const truien = data.theme.truien;
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
 
       {/* etappe-infobalk */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={data.theme.titel} />
@@ -3153,7 +3304,8 @@ function TdFUitslagTemplate({ data }) {
           <g key={i}>
             <rect x={xL} y={y} width={xR - xL} height={leiderRowH} fill={fill} />
             <rect x={xL} y={y} width={leiderIconW} height={leiderRowH} fill={NOS.zwart} />
-            <Shirt x={xL + 16} y={y + leiderRowH / 2 - 19} size={38} kleur={TRUI_KLEUR[l.trui]} stip={l.trui === "bol"} />
+            <Shirt x={xL + 16} y={y + leiderRowH / 2 - 19} size={38}
+              kleur={truien[i].kleur} stip={!!truien[i].stip} stipKleur={truien[i].stipKleur} />
             <Vlag code={l.land} x={xL + leiderIconW + 8} y={y + leiderRowH / 2 - 18} h={36} />
             <FitText x={leiderNaamX} y={midY} maxW={teamL - leiderNaamX - 12}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{l.naam}</FitText>
@@ -3173,12 +3325,12 @@ function TdFUitslagTemplate({ data }) {
 function TdFKlassementTemplate({ data }) {
   // Maten afgemeten op het referentie-ontwerp. Zelfde kolomindeling als de
   // etappe-uitslag (beide gecentreerd op het canvas).
-  const xL = 110, xR = 969;
-  const subBarY = 274, subBarH = 53;
+  const xL = 118.2, xR = 979.61;
+  const subBarY = 321.54, subBarH = 53.65;
   const rowH = 50;
-  const tableY0 = subBarY + subBarH;
+  const tableY0 = 385.04; // sluit niet direct aan op de subbalk, ~10px gat
 
-  const rankR = 179, teamL = 681, teamR = 782;
+  const rankR = 188.14, teamL = 689.68, teamR = 791.19;
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
@@ -3210,12 +3362,12 @@ function TdFKlassementTemplate({ data }) {
     );
   };
 
-  const extraY = tableY0 + data.rijen.length * rowH + 62;
+  const extraY = 1186.92;
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
@@ -3227,6 +3379,82 @@ function TdFKlassementTemplate({ data }) {
   );
 }
 
+/* Kasseien-icoontje (Parijs-Roubaix): 4 kleine afgeronde blokjes, staggered —
+   representeert de kasseistroken i.p.v. een klim. */
+function KasseienIcon({ x, y, size, kleur = "#fff" }) {
+  const s = size / 32;
+  const sq = 12 * s;
+  const r = 1.2 * s;
+  return (
+    <g>
+      <rect x={x} y={y} width={sq} height={sq} rx={r} fill={kleur} />
+      <rect x={x} y={y + sq + 3 * s} width={sq} height={sq} rx={r} fill={kleur} />
+      <rect x={x + sq + 3 * s} y={y + 5 * s} width={sq} height={sq} rx={r} fill={kleur} />
+      <rect x={x + sq + 3 * s} y={y + sq + 8 * s} width={sq} height={sq} rx={r} fill={kleur} />
+    </g>
+  );
+}
+
+/* ============================ WIELRENNEN: EENDAAGSE KLASSIEKER =============== */
+/* Parijs-Roubaix: geen etappes/klassement, alleen een uitslag met (voorlopig)  */
+/* 15 doorlopende rijen + 1 losse extra rij — geen "leiders klassementen".      */
+
+function ParijsRoubaixTemplate({ data }) {
+  const xL = 109.3, xR = 970.71;
+  const infoBarY = 337.06, infoBarH = 53.65;
+  const rowH = 50;
+  const tableY0 = 401.25;
+  const extraY = 1196.71; // ~45.5px gat na de 15e rij
+
+  const rankR = 179.24, teamL = 680.78, teamR = 782.29;
+  const divW = 8;
+  const rankMidX = (xL + rankR) / 2;
+  const vlagX = rankR + divW + 16;
+  const vlagW = 36 * 4 / 3;
+  const naamTekstX = vlagX + vlagW + 14;
+  const naamMaxW = teamL - divW - naamTekstX - 12;
+  const teamMidX = (teamL + teamR) / 2;
+
+  const rij = (r, y, i) => {
+    const midY = y + rowH / 2 + 11;
+    const fill = i % 2 === 0 ? NOS.wit : data.theme.zebra;
+    return (
+      <g key={r.pos}>
+        <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
+        <rect x={rankR + divW} y={y} width={teamL - divW - (rankR + divW)} height={rowH} fill={fill} />
+        <rect x={teamL} y={y} width={teamR - teamL} height={rowH} fill={fill} />
+        <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={rowH} fill={fill} />
+        <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+          fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+        <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
+          weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
+        <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+          fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{r.team}</text>
+        <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
+          fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{r.tijd}</text>
+      </g>
+    );
+  };
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+      <Achtergrond theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
+
+      {/* route-infobalk */}
+      <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={data.theme.titel} />
+      <KasseienIcon x={xL + 18} y={infoBarY + infoBarH / 2 - 16} size={32} />
+      <text x={xL + 68} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
+        fontSize="32" fill={NOS.wit}>{data.route}</text>
+      <text x={xR - 18} y={infoBarY + infoBarH / 2 + 11} textAnchor="end" fontFamily={FONT}
+        fontWeight="700" fontSize="32" fill={NOS.wit}>{data.km}</text>
+
+      {data.rijen.map((r, i) => rij(r, tableY0 + i * rowH, i))}
+      {rij(data.extra, extraY, 1)}
+    </svg>
+  );
+}
 
 /* ======================= WIELRENNEN: DEELNEMENDE TEAMS ===================== */
 /* Raster van tenues met ploegnaam en UCI-code + land. Het aantal kolommen en  */
@@ -3253,7 +3481,7 @@ function DeelnemersTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
       <g id="deelnemers">
         {teams.map((t, i) => {
           const r = Math.floor(i / kol), c = i % kol;
@@ -3642,7 +3870,6 @@ function WielrenProgrammaDataEditor({ data, setData }) {
 function WielrenUitslagDataEditor({ data, setData }) {
   const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
   const zetLeider = (i, patch) => setData((d) => ({ ...d, leiders: d.leiders.map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
-  const truiLabel = { geel: "Geel · algemeen", groen: "Groen · punten", bol: "Bol · berg", wit: "Wit · jongeren" };
   return (
     <div>
       <div style={dpLabel}>Titel</div>
@@ -3674,7 +3901,7 @@ function WielrenUitslagDataEditor({ data, setData }) {
       <div style={{ ...dpLabel, marginTop: 16 }}>Leiders klassementen</div>
       {data.leiders.map((l, i) => (
         <div key={l.trui} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-          <span style={{ width: 84, fontSize: 11, color: "#6b7280", flexShrink: 0 }}>{truiLabel[l.trui] || l.trui}</span>
+          <span style={{ width: 84, fontSize: 11, color: "#6b7280", flexShrink: 0 }}>{(data.theme.truien[i] && data.theme.truien[i].label) || l.trui}</span>
           <LandSelect value={l.land} onChange={(v) => zetLeider(i, { land: v })} />
           <input value={l.naam} onChange={(e) => zetLeider(i, { naam: e.target.value })}
             placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
@@ -3709,6 +3936,54 @@ function WielrenKlassementDataEditor({ data, setData }) {
 
       <div style={dpLabel}>Klassement ({data.rijen.length}) — vink aan wie het truitje-icoon krijgt</div>
       <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} toonLeider teamSoort="wielrennen" />
+
+      <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. laatste Nederlander)</div>
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
+          style={{ ...dpVeld, marginBottom: 0, width: 40, textAlign: "center" }} />
+        <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
+        <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
+          placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
+        <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
+        <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
+          placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+      </div>
+    </div>
+  );
+}
+
+/* Eendaagse klassieker (Parijs-Roubaix): geen etappes/klassement/leiders,
+   alleen een langere uitslag (15 rijen) + 1 losse extra rij. */
+function ParijsRoubaixDataEditor({ data, setData }) {
+  const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
+  const zetExtra = (patch) => setData((d) => ({ ...d, extra: { ...d.extra, ...patch } }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          <div style={dpLabel}>Route</div>
+          <input value={data.route} onChange={(e) => setData((d) => ({ ...d, route: e.target.value }))} style={dpVeld} />
+        </div>
+        <div style={{ width: 96 }}>
+          <div style={dpLabel}>Km</div>
+          <input value={data.km} onChange={(e) => setData((d) => ({ ...d, km: e.target.value }))} style={dpVeld} />
+        </div>
+      </div>
+
+      <PlakBox label="Plak de uitslag (incl. kolomkoppen Rg/Nr./Land/Naam/Team/Resultaat)"
+        placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tResultaat\n1\t98\t\nNederland\nNED\nMathieu van der Poel\nAlpecin - Premier Tech\nAlpecin - Premier Tech\n5:52:23\n2\t131\t…"}
+        onParse={(tekst) => {
+          const rijen = parsePersonenPaste(tekst);
+          if (rijen.length) zetRijen(rijen);
+          return rijen;
+        }} />
+
+      <div style={dpLabel}>Uitslag ({data.rijen.length})</div>
+      <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} teamSoort="wielrennen" />
 
       <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. laatste Nederlander)</div>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -3868,7 +4143,7 @@ function F1WKStandTeamsDataEditor({ data, setData }) {
   );
 }
 
-function DataPanel({ sport, type, editData, setEditData }) {
+function DataPanel({ sport, competitie, type, editData, setEditData }) {
   if (!editData) return null;
   if (sport === "formule1" && type === "uitslag") return <F1UitslagDataEditor data={editData} setData={setEditData} />;
   if (sport === "formule1" && type === "grid") return <F1GridDataEditor data={editData} setData={setEditData} />;
@@ -3877,6 +4152,7 @@ function DataPanel({ sport, type, editData, setEditData }) {
   if (sport === "voetbal" && type === "stand") return <StandDataEditor data={editData} setData={setEditData} />;
   if (sport === "voetbal" && type === "programma") return <ProgrammaDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "programma") return <WielrenProgrammaDataEditor data={editData} setData={setEditData} />;
+  if (sport === "wielrennen" && type === "uitslag" && competitie === "parijsroubaix") return <ParijsRoubaixDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "klassement") return <WielrenKlassementDataEditor data={editData} setData={setEditData} />;
   return (
@@ -3894,6 +4170,7 @@ function App() {
   const [opst, setOpst] = useState({
     a: legePloeg("#FFF000"),
     b: legePloeg("#39B54A"),
+    achtergrond: ACHTERGROND_KLEUREN[ACHTERGROND_KLEUREN.length - 1],
   });
   const svgWrap = useRef(null);
   // Aangevinkte ploegen voor de wielrennen-deelnemerslijst.
@@ -4159,6 +4436,21 @@ function App() {
                     <p style={{ fontSize: 13, color: "#6b7280", margin: "14px 0 0" }}>
                       Sleep een shirt in de preview om het los van de formatie neer te zetten.
                     </p>
+                    <div style={{ marginTop: 14 }}>
+                      <h3 style={secTitel}>Achtergrondkleur</h3>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {ACHTERGROND_KLEUREN.map((kleur) => (
+                          <button key={kleur} onClick={() => setOpst((o) => ({ ...o, achtergrond: kleur }))}
+                            title={kleur}
+                            style={{
+                              width: 32, height: 32, borderRadius: "50%", background: kleur,
+                              cursor: "pointer", padding: 0,
+                              border: opst.achtergrond === kleur ? `3px solid ${NOS.rood}` : "2px solid #e5e7eb",
+                              boxShadow: opst.achtergrond === kleur ? "0 0 0 2px #fff inset" : "none",
+                            }} />
+                        ))}
+                      </div>
+                    </div>
                     <div style={{ marginTop: 12, maxHeight: 520, overflowY: "auto", paddingRight: 4 }}>
                       <PloegEditor titel={type === "duel" ? "Team boven" : null}
                         ploeg={opst.a} wijzig={wijzigPloeg("a")} herstel={() => herstelPosities("a")} />
@@ -4205,10 +4497,11 @@ function App() {
                   {sport === "voetbal" && type === "stand" && <StandTemplate data={editData} />}
                   {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={editData} />}
                   {sport === "wielrennen" && type === "programma" && <WielrenProgrammaTemplate data={editData} />}
-                  {sport === "wielrennen" && type === "uitslag" && <TdFUitslagTemplate data={editData} />}
+                  {sport === "wielrennen" && type === "uitslag" && competitie === "parijsroubaix" && <ParijsRoubaixTemplate data={editData} />}
+                  {sport === "wielrennen" && type === "uitslag" && competitie !== "parijsroubaix" && <TdFUitslagTemplate data={editData} />}
                   {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
-                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} />}
+                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} />}
                   {isDeelnemers && <DeelnemersTemplate data={deelnemersData} />}
                 </div>
                 </PreviewGrens>
@@ -4224,7 +4517,7 @@ function App() {
             {heeftData && editData ? (
               <>
                 <h3 style={secTitel}>Data</h3>
-                <DataPanel sport={sport} type={type} editData={editData} setEditData={setEditData} />
+                <DataPanel sport={sport} competitie={competitie} type={type} editData={editData} setEditData={setEditData} />
               </>
             ) : (
               <div style={{ color: "#9ca3af", fontSize: 14 }}>
