@@ -4043,17 +4043,30 @@ function AchtergrondKiezer({ data, setData }) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const uri = reader.result;
-      // Natuurlijke afmetingen ophalen zodat Achtergrond() de cover-fit zelf
-      // kan berekenen (nodig om de foto te kunnen slepen/uitvergroten) —
-      // zoom/positie resetten bij een nieuwe upload.
+      // Rechtstreeks van een camera/telefoon kan een foto tientallen MB's
+      // zijn — dat komt letterlijk in de export terecht (SVG bewaart 'm als
+      // data-URI, en elke editor-wijziging stuurt de hele state rond). Voor
+      // een achtergrond die toch nooit scherper dan het canvas te zien is,
+      // schalen we terug naar maximaal 2400px op de langste zijde en
+      // comprimeren we naar JPEG — ruim genoeg voor de 2x-supersampled PNG-
+      // export (2160x2700) en het maximale zoomniveau (3x), maar typisch een
+      // fractie van het origineel.
       const img = new Image();
-      img.onload = () => setData((d) => ({
-        ...d, foto: uri, achtergrond: "foto",
-        fotoDim: { w: img.naturalWidth, h: img.naturalHeight },
-        fotoZoom: 1, fotoPos: { x: 0, y: 0 },
-      }));
-      img.src = uri;
+      img.onload = () => {
+        const MAX_ZIJDE = 2400;
+        const schaal = Math.min(1, MAX_ZIJDE / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * schaal);
+        const h = Math.round(img.naturalHeight * schaal);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const uri = canvas.toDataURL("image/jpeg", 0.85);
+        setData((d) => ({
+          ...d, foto: uri, achtergrond: "foto",
+          fotoDim: { w, h }, fotoZoom: 1, fotoPos: { x: 0, y: 0 },
+        }));
+      };
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
     e.target.value = "";
