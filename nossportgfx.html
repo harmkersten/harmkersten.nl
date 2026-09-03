@@ -733,6 +733,7 @@ function getMockParijsRoubaix(type) {
     route: d.route, km: d.km,
     rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
     extra: { pos: 23, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
+    toonExtra: true,
     achtergrond: "verloop", foto: null,
   };
 }
@@ -3515,7 +3516,7 @@ function ParijsRoubaixTemplate({ data }) {
         fontWeight="700" fontSize="32" fill={NOS.wit}>{data.km}</text>
 
       {data.rijen.map((r, i) => rij(r, tableY0 + i * rowH, i))}
-      {rij(data.extra, extraY, 1)}
+      {data.toonExtra !== false && rij(data.extra, extraY, 1)}
     </svg>
   );
 }
@@ -4094,17 +4095,23 @@ function ParijsRoubaixDataEditor({ data, setData }) {
       <div style={dpLabel}>Uitslag ({data.rijen.length})</div>
       <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} teamSoort="wielrennen" />
 
-      <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. laatste Nederlander)</div>
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
-          style={{ ...dpVeld, marginBottom: 0, width: 40, textAlign: "center" }} />
-        <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
-        <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
-          placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
-        <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
-        <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
-          placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
-      </div>
+      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }}>
+        <input type="checkbox" checked={data.toonExtra !== false}
+          onChange={(e) => setData((d) => ({ ...d, toonExtra: e.target.checked }))} />
+        Extra rij tonen (met tussenruimte, bv. laatste Nederlander)
+      </label>
+      {data.toonExtra !== false && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 8 }}>
+          <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
+            style={{ ...dpVeld, marginBottom: 0, width: 40, textAlign: "center" }} />
+          <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
+          <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
+            placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
+          <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
+          <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
+            placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+        </div>
+      )}
     </div>
   );
 }
