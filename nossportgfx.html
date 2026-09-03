@@ -1699,7 +1699,10 @@ function parsePersonenPaste(text) {
     if (i < lines.length && lines[i] === team) i++; // gedupliceerde team-regel
     const tijd = volgende();
     if (!naam) continue;
-    rijen.push({ pos: rijen.length + 1, naam, land: landcode(landNaam) || "", team, tijd });
+    rijen.push({
+      pos: rijen.length + 1, naam, land: landcode(landNaam) || "",
+      team: wielerteamcode(team) || team, tijd,
+    });
   }
   return rijen;
 }
@@ -2681,6 +2684,33 @@ Object.entries(WIELER_DB).forEach(([klasse, ploegen]) => {
 const WIELER_INDEX = {};
 WIELER_LIJST.forEach((t) => { WIELER_INDEX[t.id] = t; });
 const WIELER_KLASSEN = Object.keys(WIELER_DB);
+
+/* Volle ploegnaam (zoals in een widget geplakt) -> 3-letter code, afgeleid
+   uit WIELER_DB zelf i.p.v. een met de hand bijgehouden lijst — die database
+   kent immers al elke naam. Komt eenzelfde naam in meerdere klassen voor
+   (bv. "Movistar Team" bij zowel de mannen als de vrouwen), dan wint de
+   eerst genoemde klasse (WIELER_KLASSEN-volgorde: UCI WorldTeams eerst),
+   zodat een geplakte mannenkoers-uitslag altijd de mannencode krijgt. */
+const WIELER_NAAM_NAAR_CODE = {};
+WIELER_LIJST.forEach((t) => {
+  const key = normSpace(t.naam);
+  if (!(key in WIELER_NAAM_NAAR_CODE)) WIELER_NAAM_NAAR_CODE[key] = t.code;
+});
+function wielerteamcode(naam) {
+  const n = normSpace(naam);
+  if (!n) return null;
+  if (WIELER_NAAM_NAAR_CODE[n]) return WIELER_NAAM_NAAR_CODE[n];
+  // Fuzzy: de widget-tekst wijkt weleens iets af (afgekapt, net andere
+  // spelling van een sponsornaam). Pak de langste bekende teamnaam die als
+  // substring matcht, in beide richtingen.
+  let beste = null, besteLen = 0;
+  for (const [key, code] of Object.entries(WIELER_NAAM_NAAR_CODE)) {
+    if (key.length > besteLen && (n.includes(key) || key.includes(n))) {
+      beste = code; besteLen = key.length;
+    }
+  }
+  return beste;
+}
 
 /* ---- Teamlijst afgeleid uit de database ----------------------------------- */
 /* De database bewaart landen in twee bakken (WK 2026 en UEFA overig), wat
