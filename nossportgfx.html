@@ -195,6 +195,18 @@ const THEMES = {
       { label: "Wit · jongeren", kleur: "#ffffff" },
     ],
   },
+  // Voor Algemeen (bv. medaillespiegel): eigen donkerblauw-groen i.p.v. een
+  // sport-eigen kleur, afgemeten op het referentie-ontwerp (#2c4c54). Blijft
+  // ook de balkkleur in foto-modus (i.t.t. wielrennen's FOTO_ACCENT-blauw) —
+  // #2c4c54 leest zelf al goed over vrijwel elke foto.
+  algemeen: {
+    titel: "#2c4c54",
+    tekst: NOS.tekst,
+    zebra: "#E9EDF9",
+    gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
+      [0, "#5A7B84"], [50, "#2c4c54"], [100, "#5A7B84"],
+    ] },
+  },
 };
 
 /* ---- Font: Effra (NOS-huisstijl), volledige Regular + Bold TTF ------------- */
@@ -310,6 +322,17 @@ const CONFIG = {
         label: "Eendagskoers (zelf invullen)",
         types: {
           uitslag: { label: "Uitslag" },
+        },
+      },
+    },
+  },
+  algemeen: {
+    label: "Algemeen",
+    competities: {
+      medaillespiegel: {
+        label: "Medaillespiegel",
+        types: {
+          medaillespiegel: { label: "Medaillespiegel" },
         },
       },
     },
@@ -786,12 +809,47 @@ function getMockEendagskoers(competitie, type) {
   };
 }
 
+/* ---- Mock medaillespiegel: rang + land + goud/zilver/brons ---------------- */
+/* "highlight" markeert de rij die oranje/wit i.p.v. de gewone zebra krijgt
+   (bij NOS altijd het eigen land) — een los veld i.p.v. een vast "nl"-check,
+   zodat de redacteur het bij een ander land net zo goed kan aanvinken.      */
+const MEDAILLESPIEGEL_MOCK = {
+  subkop: "eindstand op 22 februari",
+  rijen: [
+    { land: "no", goud: 18, zilver: 12, brons: 11 },
+    { land: "us", goud: 12, zilver: 12, brons: 9 },
+    { land: "nl", goud: 10, zilver: 7, brons: 3, highlight: true },
+    { land: "it", goud: 10, zilver: 6, brons: 14 },
+    { land: "de", goud: 8, zilver: 10, brons: 8 },
+    { land: "fr", goud: 8, zilver: 9, brons: 6 },
+    { land: "se", goud: 8, zilver: 6, brons: 4 },
+    { land: "ch", goud: 6, zilver: 9, brons: 8 },
+    { land: "at", goud: 5, zilver: 8, brons: 5 },
+    { land: "jp", goud: 5, zilver: 7, brons: 12 },
+  ],
+};
+
+function getMockAlgemeen(competitie, type) {
+  if (competitie !== "medaillespiegel" || type !== "medaillespiegel") return null;
+  const d = MEDAILLESPIEGEL_MOCK;
+  return {
+    // "medaillespiegel" is de vaste 60pt-koptekst (net als "Uitslag" bij F1,
+    // hardcoded in het template zelf) — data.titel is de 36pt-ondertitel,
+    // hier het evenement, en dus het enige titelveld dat de redacteur ziet.
+    sport: "Algemeen", titel: "Olympische Winterspelen", type: "medaillespiegel",
+    theme: THEMES.algemeen, subkop: d.subkop,
+    rijen: d.rijen.map((r, i) => ({ pos: i + 1, ...r })),
+    achtergrond: "verloop", foto: null,
+  };
+}
+
 /* ---- Mock-datalaag: bouwt exact de shape die de backend moet leveren ------- */
 /* Backend endpoint bv: GET /formule1/wk2026/uitslag?event=hongarije            */
 function getMock(sport, competitie, type, raceSlug) {
   if (sport === "formule1") return getMockF1(competitie, type, raceSlug);
   if (sport === "voetbal") return getMockVoetbal(competitie, type);
   if (sport === "wielrennen") return getMockWielrennen(competitie, type);
+  if (sport === "algemeen") return getMockAlgemeen(competitie, type);
   return null;
 }
 
@@ -3713,6 +3771,132 @@ function DeelnemersTemplate({ data }) {
   );
 }
 
+/* ============================ ALGEMEEN: MEDAILLESPIEGEL ====================== */
+/* Rang + land + goud/zilver/brons. Het eigen land (bij NOS altijd Nederland)
+   krijgt oranje/wit i.p.v. de gewone wit/lichtblauw-zebra — een los
+   "highlight"-veld per rij i.p.v. een vaste taal-check, zodat het bij een
+   ander land net zo goed werkt. Balkkleur (#2c4c54) blijft vast, ook in
+   foto-modus: leest zelf al goed over vrijwel elke foto (zie THEMES.algemeen). */
+
+function MedaljeBadge({ cx, cy, buiten, binnen, tekst, cijfer }) {
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r="20.4" fill={buiten} />
+      <circle cx={cx} cy={cy} r="16.4" fill={binnen} />
+      <text x={cx} y={cy + 10} textAnchor="middle" fontFamily={FONT}
+        fontWeight="700" fontSize="28.8" fill={tekst}>{cijfer}</text>
+    </g>
+  );
+}
+
+function MedaillespiegelTemplate({ data, setData }) {
+  // Maten afgemeten op het referentie-ontwerp.
+  const xL = 124.3, xR = 965.7;
+  const rankR = 185.4, countryL = 193.4, countryR = 758.4;
+  const goudL = 766.4, goudR = 827.5, zilverL = 835.5, zilverR = 896.6, bronsL = 904.6, bronsR = 965.7;
+  const subBarY = 380.7, subBarH = 61.1;
+  const rowH = 61.1;
+  const tableY0 = 449.1;
+  const rankMidX = (xL + rankR) / 2;
+  const goudMidX = (goudL + goudR) / 2, zilverMidX = (zilverL + zilverR) / 2, bronsMidX = (bronsL + bronsR) / 2;
+  const vlagX = countryL + 16;
+  const vlagW = 36 * 4 / 3;
+  const naamTekstX = vlagX + vlagW + 14;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
+      {/* Kop-tekst omgedraaid, net als bij F1: "medaillespiegel" is de grote
+          60pt-titel, het evenement (data.titel) de 36pt-ondertitel. */}
+      <Kop sport="medaillespiegel" titel={data.titel} theme={data.theme} barY={143.9} barH={89.7} titelOffset={64.8} />
+
+      {/* subkop-balk + goud/zilver/brons kolomkoppen met medaille-badges */}
+      <rect x={xL} y={subBarY} width={countryR - xL} height={subBarH} fill={data.theme.titel} />
+      <rect x={goudL} y={subBarY} width={goudR - goudL} height={subBarH} fill={data.theme.titel} />
+      <rect x={zilverL} y={subBarY} width={zilverR - zilverL} height={subBarH} fill={data.theme.titel} />
+      <rect x={bronsL} y={subBarY} width={bronsR - bronsL} height={subBarH} fill={data.theme.titel} />
+      <text x={xL + 19} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
+        fontWeight="700" fontSize="36" fill={NOS.wit}>{data.subkop}</text>
+      <MedaljeBadge cx={goudMidX} cy={subBarY + subBarH / 2} buiten="#ffac1b" binnen="#ffd21e" tekst="#b37812" cijfer="1" />
+      <MedaljeBadge cx={zilverMidX} cy={subBarY + subBarH / 2} buiten="#a6a6a6" binnen="#c3c3c3" tekst="#888" cijfer="2" />
+      <MedaljeBadge cx={bronsMidX} cy={subBarY + subBarH / 2} buiten="#f66618" binnen="#f8925c" tekst="#ac470f" cijfer="3" />
+
+      {data.rijen.map((r, i) => {
+        const y = tableY0 + i * rowH;
+        const midY = y + rowH / 2 + 13;
+        const zebra = i % 2 === 1;
+        const fill = r.highlight ? "#f66618" : (zebra ? data.theme.zebra : NOS.wit);
+        const tekstKleur = r.highlight ? NOS.wit : data.theme.titel;
+        return (
+          <g key={r.pos}>
+            <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
+            <rect x={countryL} y={y} width={countryR - countryL} height={rowH} fill={fill} />
+            <rect x={goudL} y={y} width={goudR - goudL} height={rowH} fill={fill} />
+            <rect x={zilverL} y={y} width={zilverR - zilverL} height={rowH} fill={fill} />
+            <rect x={bronsL} y={y} width={bronsR - bronsL} height={rowH} fill={fill} />
+            <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize="40" fill={tekstKleur}>{r.pos}</text>
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+            <FitText x={naamTekstX} y={midY} maxW={countryR - naamTekstX - 12}
+              weight="700" size={40} fill={tekstKleur}>{landnaam(r.land)}</FitText>
+            <text x={goudMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize="40" fill={tekstKleur}>{r.goud}</text>
+            <text x={zilverMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize="40" fill={tekstKleur}>{r.zilver}</text>
+            <text x={bronsMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize="40" fill={tekstKleur}>{r.brons}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function MedaillespiegelDataEditor({ data, setData }) {
+  const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
+  const verwijder = (i) => setData((d) => ({
+    ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })),
+  }));
+  const voegToe = () => setData((d) => ({
+    ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, land: "", goud: 0, zilver: 0, brons: 0, highlight: false }],
+  }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel (evenement)</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Subkop (bv. "eindstand op 22 februari")</div>
+      <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
+
+      <div style={dpLabel}>Landen ({data.rijen.length}) — vink aan welk land wordt uitgelicht</div>
+      <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
+        {data.rijen.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+            <span style={{ width: 16, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.pos}</span>
+            <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
+            <input type="number" value={r.goud} onChange={(e) => zetRij(i, { goud: Number(e.target.value) })}
+              placeholder="G" title="Goud" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+            <input type="number" value={r.zilver} onChange={(e) => zetRij(i, { zilver: Number(e.target.value) })}
+              placeholder="Z" title="Zilver" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+            <input type="number" value={r.brons} onChange={(e) => zetRij(i, { brons: Number(e.target.value) })}
+              placeholder="B" title="Brons" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+            <input type="checkbox" checked={!!r.highlight} title="Uitlichten (eigen land)"
+              onChange={(e) => zetRij(i, { highlight: e.target.checked })} style={{ flexShrink: 0 }} />
+            <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={voegToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Land toevoegen</button>
+    </div>
+  );
+}
+
 /* ============================ WIZARD + APP ================================= */
 
 /* Vangnet om de preview. Een fout tijdens het renderen haalt in React anders de
@@ -3837,6 +4021,11 @@ const LANDEN_UITSLUITEN = new Set(["asean", "arab", "cefta", "un"]);
 const LANDEN_LIJST = LANDEN_LIJST_RAW
   .filter(([code]) => !LANDEN_UITSLUITEN.has(code))
   .sort((a, b) => a[1].localeCompare(b[1], "nl"));
+
+// Omgekeerde lookup (code -> NL naam), bv. voor de medaillespiegel die per
+// rij alleen een land toont, geen los naamveld zoals bij personen.
+const LANDNAAM_BIJ_CODE = Object.fromEntries(LANDEN_LIJST_RAW.map(([code, naam]) => [code, naam]));
+const landnaam = (code) => LANDNAAM_BIJ_CODE[code] || code;
 
 function LandSelect({ value, onChange }) {
   return (
@@ -4456,6 +4645,7 @@ function DataPanel({ sport, competitie, type, editData, setEditData }) {
   if (sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie)) return <ParijsRoubaixDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "klassement") return <WielrenKlassementDataEditor data={editData} setData={setEditData} />;
+  if (sport === "algemeen" && type === "medaillespiegel") return <MedaillespiegelDataEditor data={editData} setData={setEditData} />;
   return (
     <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.5 }}>
       Voor deze graphic staat de handmatige editor er nog niet — hij toont voorbeelddata.
@@ -4801,6 +4991,7 @@ function App() {
                   {sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie) && <ParijsRoubaixTemplate data={editData} setData={setEditData} />}
                   {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={editData} setData={setEditData} />}
                   {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} setData={setEditData} />}
+                  {sport === "algemeen" && type === "medaillespiegel" && <MedaillespiegelTemplate data={editData} setData={setEditData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} />}
                   {isDeelnemers && <DeelnemersTemplate data={deelnemersData} />}
