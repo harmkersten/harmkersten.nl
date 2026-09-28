@@ -3454,6 +3454,8 @@ function WielrenProgrammaTemplate({ data, setData }) {
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      {/* Witte onderlaag achter de hele tabel in foto-modus, zie TdFUitslagTemplate. */}
+      {isFoto && <rect x={xL} y={y0} width={xR - xL} height={data.rijen.length * rowH} fill="#fff" />}
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 11;
@@ -3517,6 +3519,12 @@ function TdFUitslagTemplate({ data, setData }) {
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+
+      {/* Witte onderlaag achter de hele tabel in foto-modus: de smalle
+          tussenruimtes tussen de kolommen (divW=8) laten normaal het thema
+          doorschemeren — mooi bij een kleurverloop, maar een rauwe foto geeft
+          daar een onvoorspelbare, storende "naad" tussen de vakken. */}
+      {isFoto && <rect x={xL} y={infoBarY} width={xR - xL} height={leidersY0 + 4 * leiderRowH - infoBarY} fill="#fff" />}
 
       {/* etappe-infobalk */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
@@ -3634,6 +3642,9 @@ function TdFKlassementTemplate({ data, setData }) {
         fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
 
+      {/* Witte onderlaag achter de hele tabel in foto-modus, zie TdFUitslagTemplate. */}
+      {isFoto && <rect x={xL} y={subBarY} width={xR - xL} height={extraY + rowH - subBarY} fill="#fff" />}
+
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
         fontWeight="700" fontSize="28" fill={NOS.wit}>{data.subkop}</text>
@@ -3713,6 +3724,9 @@ function ParijsRoubaixTemplate({ data, setData }) {
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+
+      {/* Witte onderlaag achter de hele tabel in foto-modus, zie TdFUitslagTemplate. */}
+      {isFoto && <rect x={xL} y={infoBarY} width={xR - xL} height={extraY + rowH - infoBarY} fill="#fff" />}
 
       {/* route-infobalk: bij een eendagskoers is er geen etappetype, dus
           standaard geen icoontje (i.t.t. de etappe-uitslag) — tekst begint
@@ -3828,6 +3842,9 @@ function MedaillespiegelTemplate({ data, setData }) {
       {/* Kop-tekst omgedraaid, net als bij F1: "medaillespiegel" is de grote
           60pt-titel, het evenement (data.titel) de 36pt-ondertitel. */}
       <Kop sport="medaillespiegel" titel={data.titel} theme={data.theme} barY={143.9} barH={89.7} titelOffset={64.8} />
+
+      {/* Witte onderlaag achter de hele tabel in foto-modus, zie TdFUitslagTemplate. */}
+      {isFoto && <rect x={xL} y={subBarY} width={xR - xL} height={tableY0 + data.rijen.length * rowH - subBarY} fill="#fff" />}
 
       {/* subkop-balk + goud/zilver/brons kolomkoppen met medaille-badges */}
       <rect x={xL} y={subBarY} width={countryR - xL} height={subBarH} fill={data.theme.titel} />
