@@ -2247,7 +2247,7 @@ function UitslagTemplate({ data }) {
   const puntL = teamR + divW;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       {/* Kop-tekst omgedraaid t.o.v. de andere sporten: hier is "Uitslag" de
           grote 60pt-titel en de Grand Prix de 36pt-ondertitel (referentie-svg). */}
@@ -2331,7 +2331,7 @@ function GridTemplate({ data }) {
   const even = data.rijen.filter((r) => r.pos % 2 === 0);   // rechts
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       <Kop sport="Startopstelling" titel={data.titel} theme={data.theme} />
       {oneven.map((r, i) => vak(r, xLinks, y0 + i * rowGap))}
@@ -2363,7 +2363,7 @@ function WKStandCoureursTemplate({ data }) {
   const rowH = Math.max(38, Math.min(50, Math.floor((1310 - y0) / rijen.length)));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       <Kop sport={data.sport} titel={data.titel} theme={data.theme} />
       {rijen.map((r, i) => {
@@ -2406,7 +2406,7 @@ function WKStandTeamsTemplate({ data }) {
   const rowH = Math.max(46, Math.min(70, Math.floor((1310 - y0) / rijen.length)));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       <Kop sport={data.sport} titel={data.titel} theme={data.theme} />
       {rijen.map((r, i) => {
@@ -2455,7 +2455,7 @@ function StandTemplate({ data }) {
   const headerY = y0 - 13;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={101.84} barH={87.87} titelOffset={62.01} />
       {kolommen.map((k, i) => (
@@ -2522,7 +2522,7 @@ function ProgrammaTemplate({ data }) {
   const uitLogoX = midX + 70;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={101.84} barH={87.87} titelOffset={62.01} />
       {blokken.map((b, i) => {
@@ -3234,7 +3234,7 @@ function useFotoSleep(zetPositie) {
 
 function OpstellingDuelTemplate({ opst, sleep }) {
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
       onPointerCancel={sleep && sleep.stop}>
       <defs><style>{fontFaceCss()}</style></defs>
@@ -3250,7 +3250,7 @@ function OpstellingDuelTemplate({ opst, sleep }) {
 
 function OpstellingEnkelTemplate({ ploeg, sleep, kleur }) {
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
       onPointerCancel={sleep && sleep.stop}>
       <defs><style>{fontFaceCss()}</style></defs>
@@ -3447,7 +3447,7 @@ function WielrenProgrammaTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
@@ -3512,7 +3512,7 @@ function TdFUitslagTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
@@ -3634,7 +3634,7 @@ function TdFKlassementTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
@@ -3717,7 +3717,7 @@ function ParijsRoubaixTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
@@ -3766,7 +3766,7 @@ function DeelnemersTemplate({ data }) {
   const tenueB = tenueH * WIELER_SCHAAL;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
       <g id="deelnemers">
@@ -3833,7 +3833,7 @@ function MedaillespiegelTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg"
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
