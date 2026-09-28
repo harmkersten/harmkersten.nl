@@ -3891,14 +3891,14 @@ function MedaillespiegelDataEditor({ data, setData }) {
       <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ width: 16, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 16 }}>{r.pos}</span>
             <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
             <input type="number" value={r.goud} onChange={(e) => zetRij(i, { goud: Number(e.target.value) })}
-              placeholder="G" title="Goud" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+              placeholder="G" title="Goud" style={{ ...dpCijfer, marginBottom: 0, width: 46 }} />
             <input type="number" value={r.zilver} onChange={(e) => zetRij(i, { zilver: Number(e.target.value) })}
-              placeholder="Z" title="Zilver" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+              placeholder="Z" title="Zilver" style={{ ...dpCijfer, marginBottom: 0, width: 46 }} />
             <input type="number" value={r.brons} onChange={(e) => zetRij(i, { brons: Number(e.target.value) })}
-              placeholder="B" title="Brons" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+              placeholder="B" title="Brons" style={{ ...dpCijfer, marginBottom: 0, width: 46 }} />
             <input type="checkbox" checked={!!r.highlight} title="Uitlichten (eigen land)"
               onChange={(e) => zetRij(i, { highlight: e.target.checked })} style={{ flexShrink: 0 }} />
             <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
@@ -3983,22 +3983,34 @@ function Keuzeknop({ label, onClick, actief }) {
    App); de templates hierboven raken hier niets van, ze krijgen gewoon een
    ander data-object aangereikt.
    ========================================================================== */
+// Tabel-achtige, "spreadsheet"-stijl velden (i.p.v. losse omkaderde vakjes):
+// platte onderrand i.p.v. een volle box, cijfers in monospace + blauw en
+// rechts uitgelijnd, de rijpositie in monospace + groen — zelfde kleurlogica
+// als een Datawrapper-achtige tabel (index/sleutel groen, waarde blauw).
+// Dropdowns/tekstvelden delen dezelfde dpVeld-basis, dus dit geldt overal.
+const MONO = "'SF Mono', 'Menlo', 'Consolas', monospace";
 const dpVeld = {
-  width: "100%", padding: "8px 10px", borderRadius: 8, border: "2px solid #e5e7eb",
-  fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8,
+  width: "100%", padding: "7px 6px", borderRadius: 0, border: "none",
+  borderBottom: "1px solid #e2e4e8", fontSize: 13, fontFamily: "inherit",
+  background: "transparent", marginBottom: 8, color: "#1f2328",
+};
+const dpCijfer = { ...dpVeld, fontFamily: MONO, color: "#1d4ed8", textAlign: "right" };
+const dpPos = {
+  width: 22, fontSize: 12, color: "#0f8a5f", textAlign: "right", flexShrink: 0,
+  fontFamily: MONO, fontWeight: 700,
 };
 const dpLabel = {
   fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase",
   letterSpacing: ".02em", marginBottom: 6,
 };
 const dpKnop = {
-  padding: "7px 12px", borderRadius: 7, border: "2px solid #e5e7eb", background: "#fff",
+  padding: "7px 12px", borderRadius: 7, border: "1px solid #e2e4e8", background: "#fff",
   color: "#374151", fontSize: 12, fontWeight: 700, cursor: "pointer",
 };
 const dpKnopRood = { ...dpKnop, border: "none", background: NOS.rood, color: "#fff", width: "100%", padding: "9px 0" };
 const dpX = {
-  width: 26, height: 26, borderRadius: 6, border: "none", background: "#f3f4f6",
-  color: "#9ca3af", fontSize: 14, cursor: "pointer", flexShrink: 0,
+  width: 24, height: 24, borderRadius: 6, border: "none", background: "transparent",
+  color: "#9ca3af", fontSize: 15, cursor: "pointer", flexShrink: 0,
 };
 
 function PlakBox({ label, placeholder, onParse }) {
@@ -4125,13 +4137,13 @@ function StandDataEditor({ data, setData }) {
       <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ width: 18, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 18 }}>{r.pos}</span>
             <ClubSelect value={r.club} onChange={(v) => zetClub(i, v)} />
             {["gs", "w", "g", "v", "pt"].map((k) => (
               <input key={k} type="number" value={r[k]}
                 onChange={(e) => zetRij(i, { [k]: e.target.value === "" ? "" : Number(e.target.value) })}
                 title={{ gs: "Gespeeld", w: "Winst", g: "Gelijk", v: "Verlies", pt: "Punten" }[k]}
-                style={{ ...dpVeld, marginBottom: 0, width: 40, padding: "8px 2px", textAlign: "center" }} />
+                style={{ ...dpCijfer, marginBottom: 0, width: 40, padding: "7px 2px" }} />
             ))}
             <button onClick={() => verwijderRij(i)} style={dpX} title="Rij verwijderen">×</button>
           </div>
@@ -4178,7 +4190,7 @@ function ProgrammaDataEditor({ data, setData }) {
               <div key={wi} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
                 <ClubSelect value={duel.thuis} onChange={(v) => zetThuis(di, wi, v)} placeholder="thuis" />
                 <input value={duel.tijd} onChange={(e) => zetDuel(di, wi, { tijd: e.target.value })}
-                  placeholder="20:00" style={{ ...dpVeld, marginBottom: 0, width: 54, textAlign: "center" }} />
+                  placeholder="20:00" style={{ ...dpCijfer, marginBottom: 0, width: 54 }} />
                 <ClubSelect value={duel.uit} onChange={(v) => zetUit(di, wi, v)} placeholder="uit" />
                 <button onClick={() => verwijderDuel(di, wi)} style={dpX} title="Wedstrijd verwijderen">×</button>
               </div>
@@ -4204,19 +4216,19 @@ function PersonenRijenEditor({ rijen, setRijen, toonLeider, toonTijd = true, too
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
         {rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ width: 16, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 16 }}>{r.pos}</span>
             <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
             <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
               placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.3 }} />
             <TeamVeld value={r.team} onChange={(v) => zetRij(i, { team: v })} />
             {toonTijd && (
               <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
-                placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+                placeholder="tijd" style={{ ...dpCijfer, marginBottom: 0, width: 72 }} />
             )}
             {toonPunten && (
               <input type="number" value={r.punten === null || r.punten === undefined ? "" : r.punten}
                 onChange={(e) => zetRij(i, { punten: e.target.value === "" ? "" : Number(e.target.value) })}
-                placeholder="pnt" style={{ ...dpVeld, marginBottom: 0, width: 46, textAlign: "center" }} />
+                placeholder="pnt" style={{ ...dpCijfer, marginBottom: 0, width: 46 }} />
             )}
             {toonLeider && (
               <input type="checkbox" checked={!!r.leider} title="Klassementsleider (geel truitje-icoon)"
@@ -4337,7 +4349,7 @@ function WielrenProgrammaDataEditor({ data, setData }) {
       <div style={{ maxHeight: 560, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ width: 20, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.nr}</span>
+            <span style={{ ...dpPos, width: 20 }}>{r.nr}</span>
             <input value={r.route} onChange={(e) => zetRij(i, { route: e.target.value })}
               placeholder="Start - finish" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
             <select value={r.soort} onChange={(e) => zetRij(i, { soort: e.target.value })}
@@ -4345,7 +4357,7 @@ function WielrenProgrammaDataEditor({ data, setData }) {
               {Object.entries(ETAPPE_SOORT_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
             </select>
             <input value={r.km} onChange={(e) => zetRij(i, { km: e.target.value })}
-              placeholder="km" style={{ ...dpVeld, marginBottom: 0, width: 76 }} />
+              placeholder="km" style={{ ...dpCijfer, marginBottom: 0, width: 76 }} />
             <button onClick={() => verwijder(i)} style={dpX} title="Etappe verwijderen">×</button>
           </div>
         ))}
@@ -4436,13 +4448,13 @@ function WielrenKlassementDataEditor({ data, setData }) {
       <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. laatste Nederlander)</div>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
-          style={{ ...dpVeld, marginBottom: 0, width: 40, textAlign: "center" }} />
+          style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
         <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
         <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
           placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
         <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
         <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
-          placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+          placeholder="tijd" style={{ ...dpCijfer, marginBottom: 0, width: 72 }} />
       </div>
     </div>
   );
@@ -4490,13 +4502,13 @@ function ParijsRoubaixDataEditor({ data, setData }) {
       {data.toonExtra !== false && (
         <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 8 }}>
           <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
-            style={{ ...dpVeld, marginBottom: 0, width: 40, textAlign: "center" }} />
+            style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
           <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
           <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
             placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
           <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
           <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
-            placeholder="tijd" style={{ ...dpVeld, marginBottom: 0, width: 72 }} />
+            placeholder="tijd" style={{ ...dpCijfer, marginBottom: 0, width: 72 }} />
         </div>
       )}
     </div>
@@ -4633,10 +4645,10 @@ function F1WKStandTeamsDataEditor({ data, setData }) {
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ width: 16, fontSize: 12, color: "#9ca3af", textAlign: "right", flexShrink: 0 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 16 }}>{r.pos}</span>
             <F1TeamSelect value={r.code} onChange={(v) => zetTeam(i, v)} />
             <input type="number" value={r.punten} onChange={(e) => zetRij(i, { punten: Number(e.target.value) })}
-              style={{ ...dpVeld, marginBottom: 0, width: 64, textAlign: "center" }} />
+              style={{ ...dpCijfer, marginBottom: 0, width: 64 }} />
             <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
           </div>
         ))}
