@@ -3983,21 +3983,24 @@ function Keuzeknop({ label, onClick, actief }) {
    App); de templates hierboven raken hier niets van, ze krijgen gewoon een
    ander data-object aangereikt.
    ========================================================================== */
-// Tabel-achtige, "spreadsheet"-stijl velden (i.p.v. losse omkaderde vakjes):
-// platte onderrand i.p.v. een volle box, cijfers in monospace + blauw en
-// rechts uitgelijnd, de rijpositie in monospace + groen — zelfde kleurlogica
-// als een Datawrapper-achtige tabel (index/sleutel groen, waarde blauw).
+// Tabel-achtige, "spreadsheet"-stijl velden (i.p.v. losse omkaderde
+// pil-vakjes): rechte hoeken met een dunne, volledige rand om elke cel —
+// duidelijk zichtbaar als cel, zoals in Excel, i.p.v. alleen een onderrand.
+// Cijfers in monospace + blauw en rechts uitgelijnd, de rijpositie in
+// monospace + groen op een lichtgrijze cel — zelfde kleurlogica als een
+// Datawrapper-achtige tabel (index/sleutel groen, waarde blauw).
 // Dropdowns/tekstvelden delen dezelfde dpVeld-basis, dus dit geldt overal.
 const MONO = "'SF Mono', 'Menlo', 'Consolas', monospace";
 const dpVeld = {
-  width: "100%", padding: "7px 6px", borderRadius: 0, border: "none",
-  borderBottom: "1px solid #e2e4e8", fontSize: 13, fontFamily: "inherit",
-  background: "transparent", marginBottom: 8, color: "#1f2328",
+  width: "100%", padding: "6px 6px", borderRadius: 0, border: "1px solid #d1d5db",
+  fontSize: 13, fontFamily: "inherit", background: "#fff", marginBottom: 8,
+  color: "#1f2328",
 };
 const dpCijfer = { ...dpVeld, fontFamily: MONO, color: "#1d4ed8", textAlign: "right" };
 const dpPos = {
   width: 22, fontSize: 12, color: "#0f8a5f", textAlign: "right", flexShrink: 0,
-  fontFamily: MONO, fontWeight: 700,
+  fontFamily: MONO, fontWeight: 700, padding: "6px 6px", border: "1px solid #d1d5db",
+  background: "#f3f4f6",
 };
 const dpLabel = {
   fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase",
