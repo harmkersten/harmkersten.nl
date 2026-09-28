@@ -4066,11 +4066,19 @@ function LandSelect({ value, onChange }) {
 }
 
 const VOETBAL_CLUBS_LIJST = Object.keys(CLUB_LOGO).sort((a, b) => a.localeCompare(b));
-function ClubSelect({ value, onChange, placeholder }) {
+// Per competitie alleen de eigen clubs in de dropdown — anders staan alle
+// Eredivisie- én Premier League-clubs door elkaar in één lijst. Afgeleid uit
+// VOETBAL_STAND (die kent de indeling al), niet met de hand bijgehouden.
+const VOETBAL_CLUBS_PER_COMPETITIE = Object.fromEntries(
+  Object.entries(VOETBAL_STAND).map(([competitie, rijen]) => [competitie, rijen.map(([club]) => club).sort((a, b) => a.localeCompare(b))])
+);
+function ClubSelect({ value, onChange, placeholder, competitie }) {
+  const opties = VOETBAL_CLUBS_PER_COMPETITIE[competitie] || VOETBAL_CLUBS_LIJST;
   return (
-    <select value={value || ""} onChange={(e) => onChange(e.target.value)} style={{ ...dpVeld, marginBottom: 0, flex: 1 }}>
+    <select value={value || ""} onChange={(e) => onChange(e.target.value)}
+      style={{ ...dpVeld, marginBottom: 0, flex: 1, textOverflow: "ellipsis" }}>
       <option value="">– {placeholder || "club"} –</option>
-      {VOETBAL_CLUBS_LIJST.map((naam) => <option key={naam} value={naam}>{naam}</option>)}
+      {opties.map((naam) => <option key={naam} value={naam}>{naam}</option>)}
     </select>
   );
 }
@@ -4112,7 +4120,7 @@ function WielerTeamSelect({ value, onChange }) {
   );
 }
 
-function StandDataEditor({ data, setData }) {
+function StandDataEditor({ data, setData, competitie }) {
   const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
   const zetClub = (i, naam) => zetRij(i, { club: naam, logo: vindClubLogo(naam) });
   const verwijderRij = (i) => setData((d) => ({
@@ -4137,18 +4145,30 @@ function StandDataEditor({ data, setData }) {
         }} />
 
       <div style={dpLabel}>Rijen ({data.rijen.length})</div>
+      {/* Club en de 5 cijferkolommen staan op aparte regels: bij een smal
+          paneel liep de clubnaam anders in de verdrukking, samengeknepen
+          tussen de vaste rangcel en vijf vaste cijfercellen tot er soms maar
+          een handvol pixels overbleef om 'm te lezen. */}
       <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
-          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 18 }}>{r.pos}</span>
-            <ClubSelect value={r.club} onChange={(v) => zetClub(i, v)} />
-            {["gs", "w", "g", "v", "pt"].map((k) => (
-              <input key={k} type="number" value={r[k]}
-                onChange={(e) => zetRij(i, { [k]: e.target.value === "" ? "" : Number(e.target.value) })}
-                title={{ gs: "Gespeeld", w: "Winst", g: "Gelijk", v: "Verlies", pt: "Punten" }[k]}
-                style={{ ...dpCijfer, marginBottom: 0, width: 40, padding: "7px 2px" }} />
-            ))}
-            <button onClick={() => verwijderRij(i)} style={dpX} title="Rij verwijderen">×</button>
+          <div key={i} style={{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid #f1f2f4" }}>
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <span style={{ ...dpPos, width: 22, flexShrink: 0 }}>{r.pos}</span>
+              <ClubSelect value={r.club} onChange={(v) => zetClub(i, v)} competitie={competitie} />
+              <button onClick={() => verwijderRij(i)} style={{ ...dpX, flexShrink: 0 }} title="Rij verwijderen">×</button>
+            </div>
+            <div style={{ display: "flex", gap: 4, marginTop: 4, paddingLeft: 26 }}>
+              {["gs", "w", "g", "v", "pt"].map((k) => (
+                <div key={k} style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: "#9ca3af", textAlign: "center", textTransform: "uppercase" }}>
+                    {{ gs: "Gesp.", w: "Winst", g: "Gelijk", v: "Verl.", pt: "Ptn" }[k]}
+                  </div>
+                  <input type="number" value={r[k]}
+                    onChange={(e) => zetRij(i, { [k]: e.target.value === "" ? "" : Number(e.target.value) })}
+                    style={{ ...dpCijfer, marginBottom: 0, width: "100%", padding: "6px 2px" }} />
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -4157,7 +4177,7 @@ function StandDataEditor({ data, setData }) {
   );
 }
 
-function ProgrammaDataEditor({ data, setData }) {
+function ProgrammaDataEditor({ data, setData, competitie }) {
   const zetDag = (di, patch) => setData((d) => ({ ...d, dagen: d.dagen.map((dag, j) => (j === di ? { ...dag, ...patch } : dag)) }));
   const zetDuel = (di, wi, patch) => setData((d) => ({
     ...d, dagen: d.dagen.map((dag, j) => (j !== di ? dag : { ...dag, duels: dag.duels.map((w, k) => (k === wi ? { ...w, ...patch } : w)) })),
@@ -4191,10 +4211,10 @@ function ProgrammaDataEditor({ data, setData }) {
             </div>
             {dag.duels.map((duel, wi) => (
               <div key={wi} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-                <ClubSelect value={duel.thuis} onChange={(v) => zetThuis(di, wi, v)} placeholder="thuis" />
+                <ClubSelect value={duel.thuis} onChange={(v) => zetThuis(di, wi, v)} placeholder="thuis" competitie={competitie} />
                 <input value={duel.tijd} onChange={(e) => zetDuel(di, wi, { tijd: e.target.value })}
                   placeholder="20:00" style={{ ...dpCijfer, marginBottom: 0, width: 54 }} />
-                <ClubSelect value={duel.uit} onChange={(v) => zetUit(di, wi, v)} placeholder="uit" />
+                <ClubSelect value={duel.uit} onChange={(v) => zetUit(di, wi, v)} placeholder="uit" competitie={competitie} />
                 <button onClick={() => verwijderDuel(di, wi)} style={dpX} title="Wedstrijd verwijderen">×</button>
               </div>
             ))}
@@ -4667,8 +4687,8 @@ function DataPanel({ sport, competitie, type, editData, setEditData }) {
   if (sport === "formule1" && type === "grid") return <F1GridDataEditor data={editData} setData={setEditData} />;
   if (sport === "formule1" && type === "wkstandcoureurs") return <F1WKStandCoureursDataEditor data={editData} setData={setEditData} />;
   if (sport === "formule1" && type === "wkstandteams") return <F1WKStandTeamsDataEditor data={editData} setData={setEditData} />;
-  if (sport === "voetbal" && type === "stand") return <StandDataEditor data={editData} setData={setEditData} />;
-  if (sport === "voetbal" && type === "programma") return <ProgrammaDataEditor data={editData} setData={setEditData} />;
+  if (sport === "voetbal" && type === "stand") return <StandDataEditor data={editData} setData={setEditData} competitie={competitie} />;
+  if (sport === "voetbal" && type === "programma") return <ProgrammaDataEditor data={editData} setData={setEditData} competitie={competitie} />;
   if (sport === "wielrennen" && type === "programma") return <WielrenProgrammaDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie)) return <ParijsRoubaixDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
