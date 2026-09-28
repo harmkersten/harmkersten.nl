@@ -4018,6 +4018,12 @@ const dpPos = {
   width: 22, fontSize: 12, color: "#0f8a5f", textAlign: "right", flexShrink: 0,
   fontFamily: MONO, fontWeight: 700, padding: "6px 6px", border: "1px solid #d1d5db",
   background: "#f3f4f6",
+  // dpPos wordt ook op een <span> gebruikt (de rij-index, niet-bewerkbaar) —
+  // width/textAlign doen op een inline element niets, vandaar expliciet
+  // display:flex zodat het getal ook daar verticaal en rechts uitgelijnd
+  // in het vak staat. Op een <input> (de bewerkbare "extra rij"-positie)
+  // is dit een no-op: text-align regelt de uitlijning daar al.
+  display: "flex", alignItems: "center", justifyContent: "flex-end", boxSizing: "border-box",
 };
 const dpLabel = {
   fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase",
