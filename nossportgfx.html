@@ -886,18 +886,21 @@ const WK_STAND_COUREURS = {
     ["Liam Lawson", "nz", "RCB", 40], ["Pierre Gasly", "fr", "ALP", 30],
   ],
 };
+// Korte teamnamen: geen motorleverancier/sponsor erachter (dus "McLaren"
+// i.p.v. "McLaren - Mercedes", "Williams" i.p.v. "Atlassian Williams -
+// Mercedes") — zie ook TEAM_CODE_NAAM, dezelfde korte namen per teamcode.
 const WK_STAND_TEAMS = {
   wk2026: [
-    ["Mercedes", "MER", 425, "de"], ["Ferrari", "FER", 338, "it"], ["McLaren - Mercedes", "MCL", 263, "gb"],
-    ["Red Bull Racing - Red Bull Ford", "RBR", 186, "gb"], ["Racing Bulls - Red Bull Ford", "RCB", 66, "it"],
-    ["Alpine - Mercedes", "ALP", 63, "fr"], ["Haas - Ferrari", "HAA", 21, "us"], ["Audi", "AUD", 16, "de"],
-    ["Williams - Mercedes", "WIL", 11, "gb"], ["Aston Martin Aramco - Honda", "AMR", 3, "gb"],
-    ["Cadillac - Ferrari", "CAD", 0, "us"],
+    ["Mercedes", "MER", 425, "de"], ["Ferrari", "FER", 338, "it"], ["McLaren", "MCL", 263, "gb"],
+    ["Red Bull Racing", "RBR", 186, "gb"], ["Racing Bulls", "RCB", 66, "it"],
+    ["Alpine", "ALP", 63, "fr"], ["Haas", "HAA", 21, "us"], ["Audi", "AUD", 16, "de"],
+    ["Williams", "WIL", 11, "gb"], ["Aston Martin", "AMR", 3, "gb"],
+    ["Cadillac", "CAD", 0, "us"],
   ],
   wk2025: [
-    ["Mercedes", "MER", 380, "de"], ["McLaren - Mercedes", "MCL", 260, "gb"], ["Ferrari", "FER", 240, "it"],
-    ["Red Bull Racing - Red Bull Ford", "RBR", 195, "gb"], ["Racing Bulls - Red Bull Ford", "RCB", 70, "it"],
-    ["Alpine - Mercedes", "ALP", 40, "fr"],
+    ["Mercedes", "MER", 380, "de"], ["McLaren", "MCL", 260, "gb"], ["Ferrari", "FER", 240, "it"],
+    ["Red Bull Racing", "RBR", 195, "gb"], ["Racing Bulls", "RCB", 70, "it"],
+    ["Alpine", "ALP", 40, "fr"],
   ],
 };
 
@@ -2364,7 +2367,11 @@ function parseF1TeamsPaste(text) {
     const cijfers = splitCijfers(lines[i]); i++;
     const punten = cijfers.length ? Number(cijfers[0]) : NaN;
     if (!Number.isFinite(punten)) continue;
-    rijen.push({ pos: rijen.length + 1, team, code: teamcode(team) || "", punten });
+    // Widget plakt vaak de volle naam incl. motorleverancier/sponsor (bv.
+    // "Atlassian Williams - Mercedes") — met een herkende code gebruiken we
+    // de korte officiële naam (TEAM_CODE_NAAM) i.p.v. die volle naam.
+    const code = teamcode(team) || "";
+    rijen.push({ pos: rijen.length + 1, team: TEAM_CODE_NAAM[code] || team, code, punten });
   }
   return rijen;
 }
@@ -2590,7 +2597,7 @@ function PodiumBlok({ p, x, y, w, h }) {
   const naamX = x;
   const naamW = w;
   const vlagX = naamX + 14;                    // iets kleinere linkermarge
-  const vlagW = 42 * 4 / 3;
+  const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 10;       // krappere gap na de vlag
   const naamMaxW = naamX + naamW - naamTekstX - 12; // meer ruimte tot balkrand
   const fotoZoom = 1.3;  // ingezoomd op de foto i.p.v. het volledige vlak te tonen
@@ -2606,7 +2613,7 @@ function PodiumBlok({ p, x, y, w, h }) {
         fill={NOS.tekst}>{p.pos}</text>
       {/* naambalk: vlag + naam (bold), naam begrensd tot balkbreedte */}
       <rect x={naamX} y={y - naamH} width={naamW} height={naamH} fill={NOS.wit} />
-      <Vlag code={p.land} x={vlagX} y={y - naamH / 2 - 21} h={42} />
+      <Vlag code={p.land} x={vlagX} y={y - naamH / 2 - 16} h={32} />
       <FitText x={naamTekstX} y={y - naamH / 2 + 13} maxW={naamMaxW}
         weight="700" size={TS.tekst} fill={NOS.tekst}>{p.naam}</FitText>
       {/* foto-vlak: kleur op basis van team, toont door als p.foto ontbreekt */}
@@ -2665,7 +2672,7 @@ function UitslagTemplate({ data }) {
   const rankMidX = (xL + rankR) / 2;
   const naamL = rankR + divW;
   const vlagX = naamL + 16;
-  const vlagW = 42 * 4 / 3;
+  const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
@@ -2699,7 +2706,7 @@ function UitslagTemplate({ data }) {
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
             {/* naam: vlag + naam (bold), begrensd */}
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 16} h={32} />
             <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
             {/* team (regular) */}
@@ -2721,8 +2728,9 @@ function GridTemplate({ data }) {
   const naamW = 294;
   const naamH = 51;   // naambalk hoogte (36pt)
   const teamH = 41;   // teambalk hoogte (24pt)
+  const vlagW = 32 * 4 / 3;
   const vak = (r, x, y) => {
-    const naamTekstX = x + posW + 100;
+    const naamTekstX = x + posW + 26 + vlagW + 18;
     const naamMaxW = x + posW + 8 + naamW - naamTekstX - 16;
     return (
       <g key={r.pos}>
@@ -2732,7 +2740,7 @@ function GridTemplate({ data }) {
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
         {/* naambalk (vlag + naam, bold 36), naam begrensd tot balkbreedte */}
         <rect x={x + posW + 8} y={y} width={naamW} height={naamH} fill={NOS.wit} />
-        <Vlag code={r.land} x={x + posW + 26} y={y + naamH / 2 - 21} h={42} />
+        <Vlag code={r.land} x={x + posW + 26} y={y + naamH / 2 - 16} h={32} />
         <FitText x={naamTekstX} y={y + naamH / 2 + 13} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         {/* teambalk (regular 24) */}
@@ -3950,7 +3958,7 @@ function TdFUitslagTemplate({ data, setData }) {
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
-  const vlagW = 42 * 4 / 3;
+  const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
@@ -3996,7 +4004,7 @@ function TdFUitslagTemplate({ data, setData }) {
             <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={rowH} fill={fill} />
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 16} h={32} />
             <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
             <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -4021,7 +4029,7 @@ function TdFUitslagTemplate({ data, setData }) {
             <rect x={xL} y={y} width={leiderIconW} height={leiderRowH} fill={NOS.zwart} />
             <Shirt x={xL + 16} y={y + leiderRowH / 2 - 19} size={38}
               kleur={truien[i].kleur} stip={!!truien[i].stip} stipKleur={truien[i].stipKleur} />
-            <Vlag code={l.land} x={xL + leiderIconW + 8} y={y + leiderRowH / 2 - 21} h={42} />
+            <Vlag code={l.land} x={xL + leiderIconW + 8} y={y + leiderRowH / 2 - 16} h={32} />
             <FitText x={leiderNaamX} y={midY} maxW={teamL - leiderNaamX - 12}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{l.naam}</FitText>
             <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -4050,7 +4058,7 @@ function TdFKlassementTemplate({ data, setData }) {
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
-  const vlagW = 42 * 4 / 3;
+  const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 40; // ruimte voor trui-icoon bij de leider
   const teamMidX = (teamL + teamR) / 2;
@@ -4068,7 +4076,7 @@ function TdFKlassementTemplate({ data, setData }) {
         <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={rowH} fill={fill} />
         <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 16} h={32} />
         <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         {r.leider && <Shirt x={naamTekstX + naamMaxW + 8} y={y + rowH / 2 - 17} size={34} kleur="#FFD119" />}
@@ -4135,7 +4143,7 @@ function ParijsRoubaixTemplate({ data, setData }) {
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
-  const vlagW = 42 * 4 / 3;
+  const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
@@ -4153,7 +4161,7 @@ function ParijsRoubaixTemplate({ data, setData }) {
         <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={rowH} fill={fill} />
         <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 16} h={32} />
         <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -4390,7 +4398,7 @@ function SchaatsenResultatenTemplate({ data, setData }) {
   const naamR = xR - divW - tijdW;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = naamL + 16;
-  const vlagW = 42 * 4 / 3;
+  const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = naamR - naamTekstX - 12;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
@@ -4421,7 +4429,7 @@ function SchaatsenResultatenTemplate({ data, setData }) {
             <rect x={naamR + divW} y={y} width={xR - (naamR + divW)} height={rowH} fill={fill} />
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 16} h={32} />
             <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
             <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
@@ -4485,7 +4493,7 @@ function SchaatsenWereldbekerstandTemplate({ data, setData }) {
   const naamR = xR - divW - puntenW;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = naamL + 16;
-  const vlagW = 42 * 4 / 3;
+  const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = naamR - naamTekstX - 12;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
@@ -4501,7 +4509,7 @@ function SchaatsenWereldbekerstandTemplate({ data, setData }) {
         <rect x={naamR + divW} y={y} width={xR - (naamR + divW)} height={rowH} fill={fill} />
         <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 16} h={32} />
         <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
