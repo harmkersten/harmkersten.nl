@@ -4435,12 +4435,66 @@ const LANDEN_LIJST = LANDEN_LIJST_RAW
 const LANDNAAM_BIJ_CODE = Object.fromEntries(LANDEN_LIJST_RAW.map(([code, naam]) => [code, naam]));
 const landnaam = (code) => LANDNAAM_BIJ_CODE[code] || code;
 
-function LandSelect({ value, onChange }) {
+// Landcode -> 3-letterafkorting (IOC-stijl, bv. "ned" voor Nederland) voor
+// dropdowns in smalle tabellen — scheelt cel-breedte t.o.v. de volle naam,
+// zie LandSelect({kort}).
+const LAND_AFKORTING = {
+  "asean": "ASE", "af": "AFG", "al": "ALB", "dz": "ALG", "as": "ASA", "vi": "ISV",
+  "ad": "AND", "ao": "ANG", "ai": "AIA", "aq": "ANT", "ag": "ANT", "arab": "ARA",
+  "ar": "ARG", "am": "ARM", "aw": "ARU", "sh-ac": "ASC", "au": "AUS", "az": "AZE",
+  "bs": "BAH", "bh": "BRN", "bd": "BAN", "bb": "BAR", "es-pv": "BAS", "by": "BLR",
+  "be": "BEL", "bz": "BIZ", "bj": "BEN", "bm": "BER", "bt": "BHU", "bo": "BOL",
+  "ba": "BIH", "bw": "BOT", "bv": "BOU", "br": "BRA", "io": "IOT", "vg": "IVB",
+  "bn": "BRU", "bg": "BUL", "bf": "BUR", "bi": "BDI", "cefta": "CEF", "kh": "CAM",
+  "ca": "CAN", "ic": "ICA", "bq": "CAR", "es-ct": "CAT", "cf": "CAF", "cl": "CHI",
+  "cn": "CHN", "cx": "CHR", "cp": "CLI", "cc": "COC", "co": "COL", "km": "COM",
+  "cg": "CGO", "cd": "COD", "ck": "COK", "cr": "CRC", "cu": "CUB", "cw": "CUR",
+  "cy": "CYP", "dk": "DEN", "dg": "DIE", "dj": "DJI", "dm": "DMA", "do": "DOM",
+  "de": "GER", "ec": "ECU", "eg": "EGY", "sv": "ESA", "gb-eng": "ENG", "gq": "GEQ",
+  "er": "ERI", "ee": "EST", "sz": "ESW", "et": "ETH", "eu": "EUR", "fo": "FAE",
+  "fk": "FAL", "fj": "FIJ", "ph": "PHI", "fi": "FIN", "fr": "FRA", "gf": "FRA",
+  "pf": "FRA", "tf": "FRA", "ga": "GAB", "es-ga": "GAL", "gm": "GAM", "ge": "GEO",
+  "gh": "GHA", "gi": "GIB", "gd": "GRN", "gr": "GRE", "gl": "GRL", "gp": "GUD",
+  "gu": "GUM", "gt": "GUA", "gg": "GUE", "gn": "GUI", "gw": "GBS", "gy": "GUY",
+  "ht": "HAI", "hm": "HEA", "hn": "HON", "hu": "HUN", "hk": "HKG", "is": "ISL",
+  "ie": "IRL", "in": "IND", "id": "INA", "iq": "IRQ", "ir": "IRI", "il": "ISR",
+  "it": "ITA", "ci": "CIV", "jm": "JAM", "jp": "JPN", "ye": "YEM", "je": "JER",
+  "jo": "JOR", "ky": "CAY", "cv": "CPV", "cm": "CMR", "kz": "KAZ", "ke": "KEN",
+  "kg": "KGZ", "ki": "KIR", "um": "KLE", "kw": "KUW", "xk": "KOS", "hr": "CRO",
+  "la": "LAO", "ls": "LES", "lv": "LAT", "lb": "LIB", "lr": "LBR", "ly": "LBA",
+  "li": "LIE", "lt": "LTU", "lu": "LUX", "mo": "MAC", "mg": "MAD", "mw": "MAW",
+  "mv": "MDV", "my": "MAS", "ml": "MLI", "mt": "MLT", "im": "MAN", "ma": "MAR",
+  "mh": "MHL", "mq": "MAR", "mr": "MTN", "mu": "MRI", "yt": "MAY", "mx": "MEX",
+  "fm": "FSM", "md": "MDA", "mc": "MON", "mn": "MGL", "me": "MNE", "ms": "MON",
+  "mz": "MOZ", "mm": "MYA", "na": "NAM", "nr": "NRU", "nl": "NED", "np": "NEP",
+  "ni": "NCA", "nc": "NIE", "nz": "NZL", "ne": "NIG", "ng": "NGR", "nu": "NIU",
+  "gb-nir": "NIR", "kp": "PRK", "mk": "MKD", "mp": "NMI", "no": "NOR", "nf": "NFK",
+  "ug": "UGA", "ua": "UKR", "uz": "UZB", "om": "OMA", "xx": "ONB", "eac": "OOS",
+  "tl": "TLS", "at": "AUT", "pc": "PAC", "pk": "PAK", "pw": "PLW", "ps": "PLE",
+  "pa": "PAN", "pg": "PNG", "py": "PAR", "pe": "PER", "pn": "PIT", "pl": "POL",
+  "pt": "POR", "pr": "PUR", "qa": "QAT", "ro": "ROU", "ru": "RUS", "rw": "RWA",
+  "re": "REU", "kn": "SKN", "lc": "LCA", "vc": "VIN", "bl": "SAI", "mf": "SAI",
+  "pm": "SAI", "sb": "SOL", "ws": "SAM", "sm": "SMR", "st": "STP", "sa": "KSA",
+  "gb-sct": "SCO", "sn": "SEN", "rs": "SRB", "sc": "SEY", "sl": "SLE", "sg": "SIN",
+  "sx": "SIN", "sh-hl": "SIN", "sh": "SIN", "si": "SLO", "sk": "SVK", "sd": "SUD",
+  "so": "SOM", "es": "ESP", "sj": "SPI", "lk": "SRI", "sr": "SUR", "sy": "SYR",
+  "tj": "TJK", "tw": "TPE", "tz": "TAN", "th": "THA", "tg": "TOG", "tk": "TOK",
+  "to": "TGA", "tt": "TRI", "sh-ta": "TRI", "td": "CHA", "cz": "CZE", "tn": "TUN",
+  "tr": "TUR", "tm": "TKM", "tc": "TCA", "tv": "TUV", "uy": "URU", "vu": "VAN",
+  "va": "VAT", "ve": "VEN", "gb": "GBR", "ae": "UAE", "un": "VER", "us": "USA",
+  "vn": "VIE", "gb-wls": "WAL", "wf": "WAL", "eh": "SAH", "zm": "ZAM", "zw": "ZIM",
+  "za": "RSA", "gs": "ZUI", "kr": "KOR", "ss": "SSD", "se": "SWE", "ch": "SUI",
+  "ax": "ALA",
+};
+
+function LandSelect({ value, onChange, kort }) {
   return (
     <select value={value || ""} onChange={(e) => onChange(e.target.value)}
-      style={{ ...dpVeld, marginBottom: 0, width: 96, padding: "8px 4px" }}>
+      style={{ ...dpVeld, marginBottom: 0, width: kort ? 66 : 96, padding: "8px 4px" }}>
       <option value="">– land –</option>
-      {LANDEN_LIJST.map(([code, naam]) => <option key={code} value={code}>{naam}</option>)}
+      {LANDEN_LIJST.map(([code, naam]) => (
+        <option key={code} value={code}>{kort ? (LAND_AFKORTING[code] || naam.slice(0, 3).toUpperCase()) : naam}</option>
+      ))}
     </select>
   );
 }
@@ -4620,7 +4674,7 @@ function PersonenRijenEditor({ rijen, setRijen, toonLeider, toonTijd = true, too
         {rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
             <span style={{ ...dpPos, width: 30 }}>{r.pos}</span>
-            <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
+            <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} kort />
             <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
               placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.3 }} />
             <TeamVeld value={r.team} onChange={(v) => zetRij(i, { team: v })} />
