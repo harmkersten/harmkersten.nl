@@ -376,9 +376,11 @@ const TEAM_CODE_NAAM = {
   WIL: "Williams",
 };
 const TEAM_TRIGGERS = {
+  // Mercedes/Ferrari staan bewust als laatste: bij een constructeur die naar
+  // zijn motorleverancier is vernoemd (bv. "Cadillac - Ferrari", "Atlassian
+  // Williams - Mercedes", "Haas - Ferrari") zou "mercedes"/"ferrari" anders
+  // als eerste match de motorleverancier i.p.v. de echte ploeg opleveren.
   MCL: ["mclaren"],
-  MER: ["mercedes"],
-  FER: ["ferrari"],
   RCB: ["racing bulls", "vcarb", "alphatauri", "alpha tauri", "toro rosso", "rb f1"],
   RBR: ["red bull"],
   ALP: ["alpine"],
@@ -387,6 +389,8 @@ const TEAM_TRIGGERS = {
   AUD: ["audi"],
   CAD: ["cadillac"],
   HAA: ["haas"],
+  MER: ["mercedes"],
+  FER: ["ferrari"],
 };
 function teamcode(naam) {
   const n = normSpace(naam);
@@ -542,21 +546,36 @@ const CONFIG = {
     competities: {
       wk2026: {
         label: "Seizoen 2026",
-        heeftRace: true,
-        types: {
-          uitslag: { label: "Uitslag" },
-          grid: { label: "Starting grid" },
-          // WK-stand coureurs/teams: tijdelijk uit het menu tot er een beter
-          // ontwerp is (zie WKStandCoureursTemplate/WKStandTeamsTemplate
-          // hieronder — die code blijft staan voor als het ontwerp er is).
+        // De losse Grand Prix's vallen onder hun eigen categorie (die pas
+        // een race laat kiezen); WK-standen zijn seizoensbreed en hebben
+        // geen race nodig — vandaar geen "types" op dit niveau maar een
+        // categorie-keuze ertussen. Zie ook de Categorie-stap in App().
+        categorieen: {
+          grandprix: {
+            label: "Grand Prix's",
+            heeftRace: true,
+            types: {
+              uitslag: { label: "Uitslag" },
+              grid: { label: "Starting grid" },
+            },
+          },
+          wkstandcoureurs: { label: "WK-stand coureurs" },
+          wkstandteams: { label: "WK-stand constructeurs" },
         },
       },
       wk2025: {
         label: "Seizoen 2025",
-        heeftRace: true,
-        types: {
-          uitslag: { label: "Uitslag" },
-          grid: { label: "Starting grid" },
+        categorieen: {
+          grandprix: {
+            label: "Grand Prix's",
+            heeftRace: true,
+            types: {
+              uitslag: { label: "Uitslag" },
+              grid: { label: "Starting grid" },
+            },
+          },
+          wkstandcoureurs: { label: "WK-stand coureurs" },
+          wkstandteams: { label: "WK-stand constructeurs" },
         },
       },
     },
@@ -2279,7 +2298,10 @@ function parseF1PersonenPaste(text) {
 
 /* WK-standen-widget, coureurs: "Rg  Land  Naam  Team  Punten" — geen Nr.-kolom
    (en dus geen "cijfer cijfer"-rangregel zoals bij de race-uitslag), hier is
-   de rang gewoon een losse regel met één getal. */
+   de rang gewoon een losse regel met één getal. De echte widget plakt de
+   naam vóór de 3-letter landcode (niet erna), gevolgd door een gedupliceerde
+   naam-regel en een losse "logo"-placeholderregel vóór de teamnaam — beide
+   vormen worden hier verdragen, voor het geval de widget ooit verandert. */
 function parseF1StandCoureursPaste(text) {
   const lines = text.split(/\r?\n/).map((l) => l.trim());
   const rijen = [];
@@ -2290,18 +2312,25 @@ function parseF1StandCoureursPaste(text) {
 
   while (i < lines.length) {
     if (!/^\d+$/.test(lines[i])) { i++; continue; }
-    i++;
-    const landRegel = volgende();
-    let land;
-    if (isKorteCode(landRegel)) {
-      land = LANDCODE3_NAAR_CODE[landRegel.toLowerCase()] || landRegel.toLowerCase();
+    i++; // rangnummer, wij nummeren zelf opnieuw
+    const eerste = volgende();
+    let naam, landRegel;
+    if (isKorteCode(eerste)) {
+      // land-eerst (oudere/andere widget-vorm)
+      landRegel = eerste;
+      naam = volgende();
     } else {
-      land = landcode(landRegel) || "";
-      if (isKorteCode(peek())) volgende();
+      // naam-eerst, landcode volgt (huidige WK-stand-widget)
+      naam = eerste;
+      landRegel = isKorteCode(peek()) ? volgende() : "";
     }
-    const naam = volgende();
+    const land = isKorteCode(landRegel)
+      ? (LANDCODE3_NAAR_CODE[landRegel.toLowerCase()] || landRegel.toLowerCase())
+      : (landcode(landRegel) || "");
+    if (peek() === naam) volgende();          // gedupliceerde naam-regel (logo-alt)
+    if (/^logo$/i.test(peek())) volgende();    // losse "logo"-placeholderregel
     let team = volgende();
-    if (peek() === team) volgende();
+    if (peek() === team) volgende();           // eventuele gedupliceerde team-regel
     const punten = Number((volgende() || "").replace(/[^\d-]/g, ""));
     if (!naam) continue;
     rijen.push({ pos: rijen.length + 1, naam, land, team: teamcode(team) || team, punten: Number.isFinite(punten) ? punten : 0 });
@@ -5404,7 +5433,7 @@ function F1WKStandCoureursDataEditor({ data, setData }) {
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
 
       <PlakBox label="Plak de WK-stand coureurs (incl. kolomkoppen Rg/Land/Naam/Team/Punten)"
-        placeholder={"Rg\tLand\tNaam\tTeam\tPunten\n1\nITA\nKimi Antonelli\nMercedes\nMercedes\n242\n2\n…"}
+        placeholder={"Rg\tLand\tNaam\tTeam\tPunten\n1\nKimi Antonelli\nITA\n\nKimi Antonelli\nlogo\nMercedes\n302\n2\n…"}
         onParse={(tekst) => {
           const rijen = parseF1StandCoureursPaste(tekst);
           if (rijen.length) zetRijen(rijen);
@@ -5478,6 +5507,7 @@ function DataPanel({ sport, competitie, type, editData, setEditData }) {
 function App() {
   const [sport, setSport] = useState(null);
   const [competitie, setCompetitie] = useState(null);
+  const [categorie, setCategorie] = useState(null);
   const [race, setRace] = useState(null);
   const [type, setType] = useState(null);
   const [opst, setOpst] = useState({
@@ -5505,22 +5535,37 @@ function App() {
     return () => document.head.removeChild(styleEl);
   }, []);
 
-  const reset = (niveau) => {
-    if (niveau <= 0) setSport(null);
-    if (niveau <= 1) setCompetitie(null);
-    if (niveau <= 2) setRace(null);
-    if (niveau <= 3) setType(null);
-  };
+  // Losse reset-functies per stap i.p.v. één "niveau"-nummer — met de
+  // Categorie-stap erbij (alleen F1 Grand Prix's vs. WK-standen, zie CONFIG)
+  // is de stappenvolgorde niet meer overal even lang, dus een cascaderend
+  // niveau-nummer zou hier snel een off-by-one worden.
+  const resetSport = () => { setSport(null); setCompetitie(null); setCategorie(null); setRace(null); setType(null); };
+  const resetCompetitie = () => { setCompetitie(null); setCategorie(null); setRace(null); setType(null); };
+  const resetCategorie = () => { setCategorie(null); setRace(null); setType(null); };
+  const resetRace = () => { setRace(null); setType(null); };
 
-  // Niet elke competitie heeft een race/etappe-stap (alleen F1 tot nu toe);
-  // voetbal en wielrennen gaan direct van competitie naar type.
-  const heeftRace = !!(sport && competitie && CONFIG[sport].competities[competitie].heeftRace);
-  const klaarVoorType = heeftRace ? !!race : !!competitie;
+  // Sommige competities splitsen eerst in een categorie (tot nu toe alleen
+  // Formule 1: Grand Prix's — die wél een race-stap hebben — vs. de
+  // seizoensbrede WK-standen, die er meteen zijn zodra je de categorie kiest).
+  // Voetbal/wielrennen/schaatsen/algemeen gaan zoals voorheen rechtstreeks
+  // van competitie naar type.
+  const competitieCfg = sport && competitie ? CONFIG[sport].competities[competitie] : null;
+  const heeftCategorieen = !!(competitieCfg && competitieCfg.categorieen);
+  const categorieCfg = heeftCategorieen && categorie ? competitieCfg.categorieen[categorie] : null;
+  const heeftRace = heeftCategorieen
+    ? !!(categorieCfg && categorieCfg.heeftRace)
+    : !!(competitieCfg && competitieCfg.heeftRace);
+  const typesBron = heeftCategorieen ? (categorieCfg && categorieCfg.types) : (competitieCfg && competitieCfg.types);
+  // Een categorie zonder eigen "types" (WK-stand coureurs/constructeurs) ís
+  // zelf meteen het eindtype — daar volgt geen aparte type-stap op.
+  const categorieIsEindtype = heeftCategorieen && !!categorie && categorieCfg && !categorieCfg.types;
+  const klaarVoorCategorie = !heeftCategorieen || !!categorie;
+  const klaarVoorType = klaarVoorCategorie && !categorieIsEindtype && (heeftRace ? !!race : true);
   // Opstelling en deelnemerslijst komen niet uit de mock-datalaag maar uit de
   // editor ernaast.
   const isOpstelling = sport === "voetbal" && competitie === "opstelling";
   const isDeelnemers = sport === "wielrennen" && type === "deelnemers";
-  const heeftData = type && klaarVoorType && !isOpstelling && !isDeelnemers;
+  const heeftData = !!type && !isOpstelling && !isDeelnemers;
 
   // editData is een bewerkbare kopie van de mock-data: de redacteur kan hier
   // waardes in aanpassen of een tabel uit een bestaande widget in plakken
@@ -5632,12 +5677,17 @@ function App() {
           Kies sport, competitie en type. Data komt straks uit Gracenote.
         </p>
 
-        {/* stappen-indicator (Race-stap alleen als de competitie die heeft) */}
+        {/* stappen-indicator: het aantal stappen verschilt per pad (Categorie/
+            Race alleen waar van toepassing), dus opgebouwd als lijst i.p.v.
+            hardgecodeerde stapnummers. */}
         <div style={{ display: "flex", gap: 28, marginBottom: 24, flexWrap: "wrap" }}>
-          <Stap n={1} label="Sport" actief={!sport} gedaan={!!sport} />
-          <Stap n={2} label="Competitie" actief={!!sport && !competitie} gedaan={!!competitie} />
-          {heeftRace && <Stap n={3} label="Race" actief={!race} gedaan={!!race} />}
-          <Stap n={heeftRace ? 4 : 3} label="Type" actief={klaarVoorType && !type} gedaan={!!type} />
+          {[
+            { label: "Sport", actief: !sport, gedaan: !!sport },
+            { label: "Competitie", actief: !!sport && !competitie, gedaan: !!competitie },
+            ...(heeftCategorieen ? [{ label: "Categorie", actief: !!competitie && !categorie, gedaan: !!categorie }] : []),
+            ...(heeftRace ? [{ label: "Race", actief: klaarVoorCategorie && !race, gedaan: !!race }] : []),
+            ...(categorieIsEindtype ? [] : [{ label: "Type", actief: klaarVoorType && !type, gedaan: !!type }]),
+          ].map((s, i) => <Stap key={s.label} n={i + 1} label={s.label} actief={s.actief} gedaan={s.gedaan} />)}
         </div>
 
         <div style={{
@@ -5657,7 +5707,7 @@ function App() {
 
             {sport && !competitie && (
               <>
-                <button onClick={() => reset(0)} style={backBtn}>← Sport</button>
+                <button onClick={resetSport} style={backBtn}>← Sport</button>
                 <h3 style={secTitel}>Competitie</h3>
                 {Object.entries(CONFIG[sport].competities).map(([k, v]) => (
                   <Keuzeknop key={k} label={v.label} onClick={() => setCompetitie(k)} />
@@ -5665,9 +5715,26 @@ function App() {
               </>
             )}
 
-            {sport && competitie && heeftRace && !race && (
+            {/* Blijft zichtbaar (met de gekozen categorie gemarkeerd) zolang je
+                niet in de race/type-tak van "Grand Prix's" zit — zo kun je
+                bv. tussen WK-stand coureurs en constructeurs wisselen zonder
+                helemaal terug te hoeven. */}
+            {sport && competitie && heeftCategorieen && (!categorie || categorieIsEindtype) && (
               <>
-                <button onClick={() => reset(1)} style={backBtn}>← Competitie</button>
+                <button onClick={resetCompetitie} style={backBtn}>← Competitie</button>
+                <h3 style={secTitel}>Categorie</h3>
+                {Object.entries(competitieCfg.categorieen).map(([k, v]) => (
+                  <Keuzeknop key={k} label={v.label} actief={categorie === k}
+                    onClick={() => { setCategorie(k); setType(v.types ? null : k); }} />
+                ))}
+              </>
+            )}
+
+            {sport && competitie && klaarVoorCategorie && heeftRace && !race && (
+              <>
+                <button onClick={heeftCategorieen ? resetCategorie : resetCompetitie} style={backBtn}>
+                  ← {heeftCategorieen ? "Categorie" : "Competitie"}
+                </button>
                 <h3 style={secTitel}>Race · {CONFIG[sport].competities[competitie].label}</h3>
                 <div style={{ maxHeight: 460, overflowY: "auto", paddingRight: 4 }}>
                   {RACES[competitie].map(([slug, naam]) => (
@@ -5679,11 +5746,11 @@ function App() {
 
             {sport && competitie && klaarVoorType && (
               <>
-                <button onClick={() => reset(heeftRace ? 2 : 1)} style={backBtn}>
-                  ← {heeftRace ? "Race" : "Competitie"}
+                <button onClick={heeftRace ? resetRace : (heeftCategorieen ? resetCategorie : resetCompetitie)} style={backBtn}>
+                  ← {heeftRace ? "Race" : (heeftCategorieen ? "Categorie" : "Competitie")}
                 </button>
                 <h3 style={secTitel}>Type graphic</h3>
-                {Object.entries(CONFIG[sport].competities[competitie].types).map(([k, v]) => (
+                {Object.entries(typesBron || {}).map(([k, v]) => (
                   <Keuzeknop key={k} label={v.label} actief={type === k} onClick={() => setType(k)} />
                 ))}
                 {isDeelnemers && (
