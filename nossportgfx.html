@@ -2766,7 +2766,10 @@ function GridTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport="Startopstelling" titel={data.titel} theme={data.theme} />
+      {/* Hogere titelvariant (barY=60 i.p.v. 100, zelfde als bij de PL-stand/
+          -programma): geeft meer lucht tussen de kop-balk en de eerste
+          startrij (y0=258 blijft gelijk, dus de marge groeit mee). */}
+      <Kop sport="Startopstelling" titel={data.titel} theme={data.theme} barY={60} />
       {oneven.map((r, i) => vak(r, xLinks, y0 + i * rowGap))}
       {even.map((r, i) => vak(r, xRechts, y0 + stagger + i * rowGap))}
     </svg>
