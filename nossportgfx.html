@@ -3975,7 +3975,7 @@ function MedaillespiegelDataEditor({ data, setData }) {
       <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 16 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 30 }}>{r.pos}</span>
             <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
             <input type="number" value={r.goud} onChange={(e) => zetRij(i, { goud: Number(e.target.value) })}
               placeholder="G" title="Goud" style={{ ...dpCijfer, marginBottom: 0, width: 46 }} />
@@ -4076,7 +4076,7 @@ function SchaatsenResultatenDataEditor({ data, setData }) {
       <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 20 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 30 }}>{r.pos}</span>
             <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
             <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
               placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
@@ -4176,7 +4176,7 @@ function SchaatsenWereldbekerstandDataEditor({ data, setData }) {
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 20 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 30 }}>{r.pos}</span>
             <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
             <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
               placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
@@ -4270,7 +4270,7 @@ function SchaatsenProgrammaDataEditor({ data, setData }) {
       <div style={{ maxHeight: 560, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 20 }}>{r.nr}</span>
+            <span style={{ ...dpPos, width: 30 }}>{r.nr}</span>
             <input value={r.omschrijving} onChange={(e) => zetRij(i, { omschrijving: e.target.value })}
               placeholder="Onderdeel" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
             <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
@@ -4533,7 +4533,7 @@ function StandDataEditor({ data, setData, competitie }) {
         {data.rijen.map((r, i) => (
           <div key={i} style={{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid #f1f2f4" }}>
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <span style={{ ...dpPos, width: 22, flexShrink: 0 }}>{r.pos}</span>
+              <span style={{ ...dpPos, width: 30, flexShrink: 0 }}>{r.pos}</span>
               <ClubSelect value={r.club} onChange={(v) => zetClub(i, v)} competitie={competitie} />
               <button onClick={() => verwijderRij(i)} style={{ ...dpX, flexShrink: 0 }} title="Rij verwijderen">×</button>
             </div>
@@ -4619,7 +4619,7 @@ function PersonenRijenEditor({ rijen, setRijen, toonLeider, toonTijd = true, too
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
         {rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 16 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 30 }}>{r.pos}</span>
             <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
             <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
               placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.3 }} />
@@ -4752,7 +4752,7 @@ function WielrenProgrammaDataEditor({ data, setData }) {
       <div style={{ maxHeight: 560, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 20 }}>{r.nr}</span>
+            <span style={{ ...dpPos, width: 30 }}>{r.nr}</span>
             <input value={r.route} onChange={(e) => zetRij(i, { route: e.target.value })}
               placeholder="Start - finish" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
             <select value={r.soort} onChange={(e) => zetRij(i, { soort: e.target.value })}
@@ -5048,7 +5048,7 @@ function F1WKStandTeamsDataEditor({ data, setData }) {
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 16 }}>{r.pos}</span>
+            <span style={{ ...dpPos, width: 30 }}>{r.pos}</span>
             <F1TeamSelect value={r.code} onChange={(v) => zetTeam(i, v)} />
             <input type="number" value={r.punten} onChange={(e) => zetRij(i, { punten: Number(e.target.value) })}
               style={{ ...dpCijfer, marginBottom: 0, width: 64 }} />
