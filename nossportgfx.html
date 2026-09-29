@@ -977,7 +977,7 @@ function getMockVoetbal(competitie, type) {
         thuis, uit, tijd, thuisLogo: CLUB_LOGO[thuis] || null, uitLogo: CLUB_LOGO[uit] || null,
       })),
     }));
-    return { sport: "Voetbal", titel: label, ondertitel: `speelronde ${data.ronde}`, type: "programma", theme, dagen };
+    return { sport: "Voetbal", titel: label, ondertitel: `speelronde ${data.ronde}`, type: "programma", theme, competitie, dagen };
   }
   return null;
 }
@@ -2943,7 +2943,13 @@ function ProgrammaTemplate({ data }) {
   const dagGap = 32;
   const logoW = 40;
 
-  let y = 320;
+  // Premier League heeft doorgaans meer wedstrijden op één speeldag dan de
+  // Eredivisie — de hogere titelvariant (kop-balk op y=60 i.p.v. y=100,
+  // zelfde als bij de PL-stand) geeft daar 40px extra marge aan de
+  // onderkant van het canvas voor terug.
+  const isHoog = data.competitie === "premierleague";
+  const barY = isHoog ? 60 : 100;
+  let y = isHoog ? 280 : 320;
   let matchIndex = 0;
   const blokken = [];
   data.dagen.forEach((d) => {
@@ -2964,7 +2970,7 @@ function ProgrammaTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={barY} />
       {blokken.map((b, i) => {
         if (b.soort === "dag") {
           return (
