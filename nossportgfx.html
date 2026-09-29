@@ -209,6 +209,14 @@ const THEMES = {
       [0, "#5A7B84"], [50, "#2c4c54"], [100, "#5A7B84"],
     ] },
   },
+  schaatsen: {
+    titel: "#0b4f6c",
+    tekst: NOS.tekst,
+    zebra: "#E9EDF9",
+    gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
+      [0, "#5DA9C7"], [50, "#0b4f6c"], [100, "#5DA9C7"],
+    ] },
+  },
 };
 
 /* ---- Font: Effra (NOS-huisstijl), volledige Regular + Bold TTF ------------- */
@@ -335,6 +343,19 @@ const CONFIG = {
         label: "Toernooien",
         types: {
           medaillespiegel: { label: "Medaillespiegel" },
+        },
+      },
+    },
+  },
+  schaatsen: {
+    label: "Schaatsen",
+    competities: {
+      wereldbeker: {
+        label: "Wereldbeker",
+        types: {
+          resultaten: { label: "Resultaten" },
+          wereldbekerstand: { label: "Wereldbekerstand" },
+          programma: { label: "Programma" },
         },
       },
     },
@@ -852,6 +873,69 @@ function getMock(sport, competitie, type, raceSlug) {
   if (sport === "voetbal") return getMockVoetbal(competitie, type);
   if (sport === "wielrennen") return getMockWielrennen(competitie, type);
   if (sport === "algemeen") return getMockAlgemeen(competitie, type);
+  if (sport === "schaatsen") return getMockSchaatsen(competitie, type);
+  return null;
+}
+
+/* ---- Mock schaatsen: resultaten / wereldbekerstand / programma ------------ */
+const SCHAATSEN_RESULTATEN_MOCK = {
+  onderdeel: "500m mannen",
+  rijen: [
+    ["nl", "Jenning de Boo", "34,21"], ["nl", "Wesly Dijs", "34,45"],
+    ["no", "Håvard Holmefjord Lorentzen", "34,58"], ["jp", "Yuma Murakami", "34,61"],
+    ["kr", "Kim Min-seok", "34,70"], ["us", "Jordan Stolz", "34,74"],
+    ["de", "Moritz Klein", "34,88"], ["cn", "Gao Tingyu", "34,95"],
+  ],
+};
+const SCHAATSEN_WERELDBEKERSTAND_MOCK = {
+  subkop: "eindstand na 3 wedstrijden",
+  rijen: [
+    ["nl", "Jenning de Boo", 420], ["us", "Jordan Stolz", 385],
+    ["nl", "Wesly Dijs", 360], ["no", "Håvard Holmefjord Lorentzen", 305],
+    ["jp", "Yuma Murakami", 280], ["kr", "Kim Min-seok", 255],
+    ["de", "Moritz Klein", 220], ["cn", "Gao Tingyu", 195],
+  ],
+  extra: ["nl", "Thomas Krol", 140],
+};
+const SCHAATSEN_PROGRAMMA_MOCK = {
+  rijen: [
+    ["500m vrouwen", "14:00"], ["500m mannen", "14:45"],
+    ["1000m vrouwen", "16:00"], ["1000m mannen", "16:45"],
+    ["Massastart vrouwen", "18:00"], ["Massastart mannen", "18:30"],
+  ],
+};
+
+function getMockSchaatsen(competitie, type) {
+  if (competitie !== "wereldbeker") return null;
+  const theme = THEMES.schaatsen;
+  if (type === "resultaten") {
+    const d = SCHAATSEN_RESULTATEN_MOCK;
+    return {
+      sport: "Schaatsen", titel: "Wereldbeker Tomaszów Mazowiecki", ondertitel: "uitslag", type: "resultaten",
+      theme, onderdeel: d.onderdeel,
+      rijen: d.rijen.map(([land, naam, tijd], i) => ({ pos: i + 1, land, naam, tijd })),
+      achtergrond: "verloop", foto: null,
+    };
+  }
+  if (type === "wereldbekerstand") {
+    const d = SCHAATSEN_WERELDBEKERSTAND_MOCK;
+    return {
+      sport: "Schaatsen", titel: "Wereldbeker 500m mannen", ondertitel: "stand", type: "wereldbekerstand",
+      theme, subkop: d.subkop,
+      rijen: d.rijen.map(([land, naam, punten], i) => ({ pos: i + 1, land, naam, punten })),
+      extra: { pos: 12, land: d.extra[0], naam: d.extra[1], punten: d.extra[2] },
+      achtergrond: "verloop", foto: null,
+    };
+  }
+  if (type === "programma") {
+    const d = SCHAATSEN_PROGRAMMA_MOCK;
+    return {
+      sport: "Schaatsen", titel: "Wereldbeker Tomaszów Mazowiecki", ondertitel: "programma", type: "programma",
+      theme,
+      rijen: d.rijen.map(([omschrijving, tijd], i) => ({ nr: i + 1, omschrijving, tijd })),
+      achtergrond: "verloop", foto: null,
+    };
+  }
   return null;
 }
 
@@ -3910,6 +3994,296 @@ function MedaillespiegelDataEditor({ data, setData }) {
   );
 }
 
+/* ============================ SCHAATSEN: RESULTATEN ========================== */
+/* Zelfde kolomindeling als de wielren-uitslag, maar zonder ploegkolom —          */
+/* schaatsen is een individuele sport, dus de naamkolom krijgt die ruimte.        */
+
+function SchaatsenResultatenTemplate({ data, setData }) {
+  const xL = 109.3, xR = 970.71;
+  const infoBarY = 337.06, infoBarH = 53.65;
+  const rowH = 50;
+  const tableY0 = 401.25;
+
+  const rankR = 179.24;
+  const divW = 8;
+  const tijdW = 180;
+  const naamL = rankR + divW;
+  const naamR = xR - divW - tijdW;
+  const rankMidX = (xL + rankR) / 2;
+  const vlagX = naamL + 16;
+  const vlagW = 36 * 4 / 3;
+  const naamTekstX = vlagX + vlagW + 14;
+  const naamMaxW = naamR - naamTekstX - 12;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+
+      <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
+      <text x={xL + 18} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
+        fontSize="32" fill={NOS.wit}>{data.onderdeel}</text>
+
+      {data.rijen.map((r, i) => {
+        const y = tableY0 + i * rowH;
+        const midY = y + rowH / 2 + 11;
+        const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
+        return (
+          <g key={r.pos}>
+            <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
+            <rect x={naamL} y={y} width={naamR - naamL} height={rowH} fill={fill} />
+            <rect x={naamR + divW} y={y} width={xR - (naamR + divW)} height={rowH} fill={fill} />
+            <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+            <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
+              weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
+            <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
+              fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{r.tijd}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function SchaatsenResultatenDataEditor({ data, setData }) {
+  const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
+  const verwijder = (i) => setData((d) => ({
+    ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })),
+  }));
+  const voegToe = () => setData((d) => ({
+    ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, land: "", naam: "", tijd: "" }],
+  }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Onderdeel (bv. "500m mannen")</div>
+      <input value={data.onderdeel} onChange={(e) => setData((d) => ({ ...d, onderdeel: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
+
+      <div style={dpLabel}>Uitslag ({data.rijen.length})</div>
+      <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
+        {data.rijen.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+            <span style={{ ...dpPos, width: 20 }}>{r.pos}</span>
+            <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
+            <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
+              placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
+            <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
+              placeholder="Tijd" style={{ ...dpCijfer, marginBottom: 0, width: 84 }} />
+            <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={voegToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Rij toevoegen</button>
+    </div>
+  );
+}
+
+/* ============================ SCHAATSEN: WERELDBEKERSTAND ==================== */
+
+function SchaatsenWereldbekerstandTemplate({ data, setData }) {
+  const xL = 109.3, xR = 970.71;
+  const subBarY = 337.06, subBarH = 53.65;
+  const rowH = 50;
+  const tableY0 = 401.25;
+
+  const rankR = 179.24;
+  const divW = 8;
+  const puntenW = 160;
+  const naamL = rankR + divW;
+  const naamR = xR - divW - puntenW;
+  const rankMidX = (xL + rankR) / 2;
+  const vlagX = naamL + 16;
+  const vlagW = 36 * 4 / 3;
+  const naamTekstX = vlagX + vlagW + 14;
+  const naamMaxW = naamR - naamTekstX - 12;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
+
+  const rij = (r, y, i) => {
+    const midY = y + rowH / 2 + 11;
+    const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
+    return (
+      <g key={r.pos}>
+        <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
+        <rect x={naamL} y={y} width={naamR - naamL} height={rowH} fill={fill} />
+        <rect x={naamR + divW} y={y} width={xR - (naamR + divW)} height={rowH} fill={fill} />
+        <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+          fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+        <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
+          weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
+        <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
+          fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.punten}</text>
+      </g>
+    );
+  };
+
+  const extraY = 1186.92;
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+
+      <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
+      <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
+        fontWeight="700" fontSize="28" fill={NOS.wit}>{data.subkop}</text>
+
+      {data.rijen.map((r, i) => rij(r, tableY0 + i * rowH, i))}
+      {rij(data.extra, extraY, 1)}
+    </svg>
+  );
+}
+
+function SchaatsenWereldbekerstandDataEditor({ data, setData }) {
+  const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
+  const verwijder = (i) => setData((d) => ({
+    ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })),
+  }));
+  const voegToe = () => setData((d) => ({
+    ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, land: "", naam: "", punten: 0 }],
+  }));
+  const zetExtra = (patch) => setData((d) => ({ ...d, extra: { ...d.extra, ...patch } }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Subkop (bv. "eindstand na 3 wedstrijden")</div>
+      <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
+
+      <div style={dpLabel}>Stand ({data.rijen.length})</div>
+      <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
+        {data.rijen.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+            <span style={{ ...dpPos, width: 20 }}>{r.pos}</span>
+            <LandSelect value={r.land} onChange={(v) => zetRij(i, { land: v })} />
+            <input value={r.naam} onChange={(e) => zetRij(i, { naam: e.target.value })}
+              placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
+            <input type="number" value={r.punten} onChange={(e) => zetRij(i, { punten: Number(e.target.value) })}
+              placeholder="pnt" style={{ ...dpCijfer, marginBottom: 0, width: 60 }} />
+            <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={voegToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Rij toevoegen</button>
+
+      <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. verder terug geklasseerde rijder)</div>
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
+          style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
+        <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
+        <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
+          placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
+        <input type="number" value={data.extra.punten} onChange={(e) => zetExtra({ punten: Number(e.target.value) })}
+          placeholder="pnt" style={{ ...dpCijfer, marginBottom: 0, width: 60 }} />
+      </div>
+    </div>
+  );
+}
+
+/* ============================ SCHAATSEN: PROGRAMMA ============================ */
+
+function SchaatsenProgrammaTemplate({ data, setData }) {
+  const xL = 101, xR = 979;
+  const nrW = 63, tijdW = 156, gap = 7;
+  const nrR = xL + nrW;
+  const tijdX = xR - tijdW;
+  const mainX = nrR + gap;
+  const mainW = tijdX - gap - mainX;
+  const nrMidX = (xL + nrR) / 2;
+  const y0 = 298.3;
+  const rowH = 44.76;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      {data.rijen.map((r, i) => {
+        const y = y0 + i * rowH;
+        const midY = y + rowH / 2 + 11;
+        const zebra = i % 2 === 1;
+        const fill = zebra ? themeEff.zebra : NOS.wit;
+        const nrFill = zebra ? "#4b4b4b" : "#1e1e1e";
+        return (
+          <g key={r.nr}>
+            <rect x={xL} y={y} width={nrW} height={rowH} fill={nrFill} />
+            <rect x={mainX} y={y} width={mainW} height={rowH} fill={fill} />
+            <rect x={tijdX} y={y} width={tijdW} height={rowH} fill={fill} />
+            <text x={nrMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize="32" fill={NOS.wit}>{r.nr}</text>
+            <text x={mainX + 20} y={midY} fontFamily={FONT}
+              fontWeight="700" fontSize="32" fill={NOS.tekst}>{r.omschrijving}</text>
+            <text x={tijdX + tijdW - 16} y={midY} textAnchor="end" fontFamily={FONT}
+              fontWeight="400" fontSize="32" fill={NOS.tekst}>{r.tijd}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function SchaatsenProgrammaDataEditor({ data, setData }) {
+  const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
+  const verwijder = (i) => setData((d) => ({
+    ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, nr: j + 1 })),
+  }));
+  const voegToe = () => setData((d) => ({
+    ...d, rijen: [...d.rijen, { nr: d.rijen.length + 1, omschrijving: "", tijd: "" }],
+  }));
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <AchtergrondKiezer data={data} setData={setData} />
+
+      <div style={dpLabel}>Programma ({data.rijen.length})</div>
+      <div style={{ maxHeight: 560, overflowY: "auto", paddingRight: 4 }}>
+        {data.rijen.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+            <span style={{ ...dpPos, width: 20 }}>{r.nr}</span>
+            <input value={r.omschrijving} onChange={(e) => zetRij(i, { omschrijving: e.target.value })}
+              placeholder="Onderdeel" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
+            <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
+              placeholder="Tijd" style={{ ...dpCijfer, marginBottom: 0, width: 84 }} />
+            <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={voegToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Onderdeel toevoegen</button>
+    </div>
+  );
+}
+
 /* ============================ WIZARD + APP ================================= */
 
 /* Vangnet om de preview. Een fout tijdens het renderen haalt in React anders de
@@ -4700,6 +5074,9 @@ function DataPanel({ sport, competitie, type, editData, setEditData }) {
   if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "klassement") return <WielrenKlassementDataEditor data={editData} setData={setEditData} />;
   if (sport === "algemeen" && type === "medaillespiegel") return <MedaillespiegelDataEditor data={editData} setData={setEditData} />;
+  if (sport === "schaatsen" && type === "resultaten") return <SchaatsenResultatenDataEditor data={editData} setData={setEditData} />;
+  if (sport === "schaatsen" && type === "wereldbekerstand") return <SchaatsenWereldbekerstandDataEditor data={editData} setData={setEditData} />;
+  if (sport === "schaatsen" && type === "programma") return <SchaatsenProgrammaDataEditor data={editData} setData={setEditData} />;
   return (
     <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.5 }}>
       Voor deze graphic staat de handmatige editor er nog niet — hij toont voorbeelddata.
@@ -5046,6 +5423,9 @@ function App() {
                   {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={editData} setData={setEditData} />}
                   {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} setData={setEditData} />}
                   {sport === "algemeen" && type === "medaillespiegel" && <MedaillespiegelTemplate data={editData} setData={setEditData} />}
+                  {sport === "schaatsen" && type === "resultaten" && <SchaatsenResultatenTemplate data={editData} setData={setEditData} />}
+                  {sport === "schaatsen" && type === "wereldbekerstand" && <SchaatsenWereldbekerstandTemplate data={editData} setData={setEditData} />}
+                  {sport === "schaatsen" && type === "programma" && <SchaatsenProgrammaTemplate data={editData} setData={setEditData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} />}
                   {isDeelnemers && <DeelnemersTemplate data={deelnemersData} />}
