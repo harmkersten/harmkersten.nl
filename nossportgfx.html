@@ -833,8 +833,8 @@ function getMockF1(competitie, type, raceSlug) {
     }
     return {
       sport: "Formule 1", titel: subtitel, type, theme: THEMES.formule1,
-      rijen: WK_STAND_TEAMS[competitie].map(([team, code, punten], i) => ({
-        pos: i + 1, team, code, punten,
+      rijen: WK_STAND_TEAMS[competitie].map(([team, code, punten, land], i) => ({
+        pos: i + 1, team, code, punten, land,
       })),
     };
   }
@@ -866,16 +866,16 @@ const WK_STAND_COUREURS = {
 };
 const WK_STAND_TEAMS = {
   wk2026: [
-    ["Mercedes", "MER", 425], ["Ferrari", "FER", 338], ["McLaren - Mercedes", "MCL", 263],
-    ["Red Bull Racing - Red Bull Ford", "RBR", 186], ["Racing Bulls - Red Bull Ford", "RCB", 66],
-    ["Alpine - Mercedes", "ALP", 63], ["Haas - Ferrari", "HAA", 21], ["Audi", "AUD", 16],
-    ["Williams - Mercedes", "WIL", 11], ["Aston Martin Aramco - Honda", "AMR", 3],
-    ["Cadillac - Ferrari", "CAD", 0],
+    ["Mercedes", "MER", 425, "de"], ["Ferrari", "FER", 338, "it"], ["McLaren - Mercedes", "MCL", 263, "gb"],
+    ["Red Bull Racing - Red Bull Ford", "RBR", 186, "gb"], ["Racing Bulls - Red Bull Ford", "RCB", 66, "it"],
+    ["Alpine - Mercedes", "ALP", 63, "fr"], ["Haas - Ferrari", "HAA", 21, "us"], ["Audi", "AUD", 16, "de"],
+    ["Williams - Mercedes", "WIL", 11, "gb"], ["Aston Martin Aramco - Honda", "AMR", 3, "gb"],
+    ["Cadillac - Ferrari", "CAD", 0, "us"],
   ],
   wk2025: [
-    ["Mercedes", "MER", 380], ["McLaren - Mercedes", "MCL", 260], ["Ferrari", "FER", 240],
-    ["Red Bull Racing - Red Bull Ford", "RBR", 195], ["Racing Bulls - Red Bull Ford", "RCB", 70],
-    ["Alpine - Mercedes", "ALP", 40],
+    ["Mercedes", "MER", 380, "de"], ["McLaren - Mercedes", "MCL", 260, "gb"], ["Ferrari", "FER", 240, "it"],
+    ["Red Bull Racing - Red Bull Ford", "RBR", 195, "gb"], ["Racing Bulls - Red Bull Ford", "RCB", 70, "it"],
+    ["Alpine - Mercedes", "ALP", 40, "fr"],
   ],
 };
 
@@ -2439,12 +2439,14 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep }) {
 const FOTO_ACCENT = { titel: "#284bbe", tekst: "#101e4c", zebra: "#E9EDF9" };
 const metFotoStijl = (theme, actief) => (actief ? { ...theme, ...FOTO_ACCENT } : theme);
 
-// barY/barH/titelOffset verschillen licht per sport (afgemeten op de
-// referentie-svg's): F1 heeft een iets hogere/kortere balk dan voetbal en
-// wielrennen. De ondertitel-balk (36pt) is voor alle sporten gelijk: hij
-// sluit direct aan op de sport-balk (barY+barH), hoogte 53.65, tekst-offset
-// 37.3 vanaf de bovenkant.
-function Kop({ sport, titel, theme, barY = 96.39, barH = 89.67, titelOffset = 64.77 }) {
+// barY schuift per graphic mee met de hoeveelheid inhoud (bv. de voetbalstand:
+// hoe meer rijen, hoe hoger de balk komt te staan) — barH/titelOffset zijn
+// overal hetzelfde (design-update 29 sept 2026, exact overgenomen uit de
+// referentie-svg's: Eredivisie/Premier League/medaillespiegel/F1). De
+// ondertitel-balk (36pt) is voor alle sporten gelijk: hij sluit direct aan
+// op de sport-balk (barY+barH), hoogte 50px, tekst-offset 35.5 vanaf de
+// bovenkant.
+function Kop({ sport, titel, theme, barY = 100, barH = 90, titelOffset = 65 }) {
   const th = theme || THEMES.formule1;
   // Logo op ware verhouding (nieuw 2026-logo, viewBox 664.3x236.6 -> ~2.81:1).
   const logoH = 39;
@@ -2505,8 +2507,8 @@ function Kop({ sport, titel, theme, barY = 96.39, barH = 89.67, titelOffset = 64
       <text ref={sportRef} x={balkMidX} y={barY + titelOffset} textAnchor="middle" fontFamily={FONT}
         fontWeight="700" fontSize={TS.titel} fill={NOS.wit}>{sport}</text>
       {/* Titel-balk (ondertitel 36pt), direct aansluitend op de sport-balk */}
-      <rect x={balkX} y={barY + barH} width={balkW} height="53.65" fill={NOS.wit} />
-      <text ref={titelRef} x={balkMidX} y={barY + barH + 37.3} textAnchor="middle" fontFamily={FONT}
+      <rect x={balkX} y={barY + barH} width={balkW} height="50" fill={NOS.wit} />
+      <text ref={titelRef} x={balkMidX} y={barY + barH + 35.5} textAnchor="middle" fontFamily={FONT}
         fontWeight="700" fontSize={TS.ondertitel} fill={th.tekst}>{titel}</text>
     </>
   );
@@ -2543,15 +2545,15 @@ function FitText({ x, y, maxW, size, weight = "700", fill, anchor = "start", opa
 /* ontwerp), zodat lange namen als 'Verstappen' ruim binnen de balk passen.    */
 function PodiumBlok({ p, x, y, w, h }) {
   const badgeH = 50;
-  const badgeW = 69.94;
-  const badgeGap = 7.25;   // ruimte tussen positie-badge en naambalk
+  const badgeW = 70;
+  const badgeGap = 8;   // ruimte tussen positie-badge en naambalk (8px-systeem)
   const naamH = 50;      // naambalk
   const teamH = 50;      // onderbalk (team + punten)
-  const puntenW = 99.89;
+  const puntenW = 100;
   const naamX = x;
   const naamW = w;
   const vlagX = naamX + 14;                    // iets kleinere linkermarge
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 10;       // krappere gap na de vlag
   const naamMaxW = naamX + naamW - naamTekstX - 12; // meer ruimte tot balkrand
   const fotoZoom = 1.3;  // ingezoomd op de foto i.p.v. het volledige vlak te tonen
@@ -2567,7 +2569,7 @@ function PodiumBlok({ p, x, y, w, h }) {
         fill={NOS.tekst}>{p.pos}</text>
       {/* naambalk: vlag + naam (bold), naam begrensd tot balkbreedte */}
       <rect x={naamX} y={y - naamH} width={naamW} height={naamH} fill={NOS.wit} />
-      <Vlag code={p.land} x={vlagX} y={y - naamH / 2 - 18} h={36} />
+      <Vlag code={p.land} x={vlagX} y={y - naamH / 2 - 21} h={42} />
       <FitText x={naamTekstX} y={y - naamH / 2 + 13} maxW={naamMaxW}
         weight="700" size={TS.tekst} fill={NOS.tekst}>{p.naam}</FitText>
       {/* foto-vlak: kleur op basis van team, toont door als p.foto ontbreekt */}
@@ -2616,9 +2618,9 @@ function UitslagTemplate({ data }) {
   const rowY0 = 918;
   const rowH = 50;
   const xL = 70;
-  const xR = 1007;
-  const divW = 6;            // breedte donkere divider
-  // kolomgrenzen (verhoudingen uit mockup, geschaald naar 70..1010)
+  const xR = 1008;           // sluit aan op de rechterrand van het podium (714+294)
+  const divW = 8;            // breedte donkere divider (8px-systeem, was 6)
+  // kolomgrenzen (verhoudingen uit mockup, geschaald naar 70..1008)
   const rankR = 145;         // rechterrand rank-kolom
   const teamL = 712;         // linkerrand team-kolom
   const teamR = 820;         // rechterrand team-kolom
@@ -2626,7 +2628,7 @@ function UitslagTemplate({ data }) {
   const rankMidX = (xL + rankR) / 2;
   const naamL = rankR + divW;
   const vlagX = naamL + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
@@ -2660,7 +2662,7 @@ function UitslagTemplate({ data }) {
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
             {/* naam: vlag + naam (bold), begrensd */}
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
             <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
             {/* team (regular) */}
@@ -2683,7 +2685,7 @@ function GridTemplate({ data }) {
   const naamH = 51;   // naambalk hoogte (36pt)
   const teamH = 41;   // teambalk hoogte (24pt)
   const vak = (r, x, y) => {
-    const naamTekstX = x + posW + 92;
+    const naamTekstX = x + posW + 100;
     const naamMaxW = x + posW + 8 + naamW - naamTekstX - 16;
     return (
       <g key={r.pos}>
@@ -2693,7 +2695,7 @@ function GridTemplate({ data }) {
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
         {/* naambalk (vlag + naam, bold 36), naam begrensd tot balkbreedte */}
         <rect x={x + posW + 8} y={y} width={naamW} height={naamH} fill={NOS.wit} />
-        <Vlag code={r.land} x={x + posW + 26} y={y + naamH / 2 - 18} h={36} />
+        <Vlag code={r.land} x={x + posW + 26} y={y + naamH / 2 - 21} h={42} />
         <FitText x={naamTekstX} y={y + naamH / 2 + 13} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         {/* teambalk (regular 24) */}
@@ -2727,51 +2729,58 @@ function GridTemplate({ data }) {
 }
 
 /* ============================ FORMULE 1: WK-STAND ============================ */
-/* Geen referentie-ontwerp voor deze twee — opgezet in dezelfde beeldtaal als */
-/* de bestaande F1-templates (Kop, doorlopende rijen met echte tussenruimte, */
-/* teamkleur als accent i.p.v. een logo, dat ontbreekt in de assets).        */
+/* Maten exact overgenomen uit het design-update-referentieontwerp (29 sept  */
+/* 2026, resp. 23 coureurs / 11 constructeurs). Geen teamkleur-accentbalkje  */
+/* meer (referentie toont alleen platte teamcode-tekst).                    */
 
 function WKStandCoureursTemplate({ data }) {
-  const xL = 70, xR = 1010;
-  const rankW = 90, teamW = 110, puntenW = 140, gap = 6;
-  const rankR = xL + rankW;
-  const teamL = xR - puntenW - gap - teamW;
+  // pos(70) | naam(460, incl. vlag) | team(80) | punten(80), steeds 8px gap,
+  // x=188 t/m 892 — gecentreerd op het canvas (540 = 1080/2).
+  const xL = 188, xR = 892;
+  const posW = 70, naamW = 450, teamW = 80, puntenW = 80, gap = 8;
+  const posR = xL + posW;
+  const naamL = posR + gap;
+  const naamR = naamL + naamW;
+  const teamL = naamR + gap;
   const teamR = teamL + teamW;
-  const rankMidX = (xL + rankR) / 2;
+  const puntenL = teamR + gap;
+  const posMidX = (xL + posR) / 2;
   const teamMidX = (teamL + teamR) / 2;
-  const vlagX = rankR + gap + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagX = naamL + 16;
+  const vlagW = 30 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
-  const naamMaxW = teamL - gap - naamTekstX - 12;
+  const naamMaxW = naamR - naamTekstX - 12;
 
-  const rijen = data.rijen;
-  const y0 = 232;
-  const rowH = Math.max(38, Math.min(50, Math.floor((1310 - y0) / rijen.length)));
+  const subBarY = 280, subBarH = 50;
+  const rowH = 40;
+  const y0 = subBarY + subBarH + 8;
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
       <Kop sport={data.sport} titel={data.titel} theme={data.theme} />
-      {rijen.map((r, i) => {
+      <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
+      <text x={xL + 16} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
+        fontWeight="700" fontSize="36" fill={NOS.wit}>coureurs</text>
+      {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
-        const midY = y + rowH / 2 + 11;
+        const midY = y + rowH / 2 + 10;
         const fill = i % 2 === 0 ? NOS.wit : NOS.zebra;
         return (
           <g key={r.pos}>
-            <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
-            <rect x={rankR + gap} y={y} width={teamL - gap - (rankR + gap)} height={rowH} fill={fill} />
+            <rect x={xL} y={y} width={posW} height={rowH} fill={fill} />
+            <rect x={naamL} y={y} width={naamW} height={rowH} fill={fill} />
             <rect x={teamL} y={y} width={teamW} height={rowH} fill={fill} />
-            <rect x={teamR + gap} y={y} width={xR - (teamR + gap)} height={rowH} fill={fill} />
-            <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+            <rect x={puntenL} y={y} width={puntenW} height={rowH} fill={fill} />
+            <text x={posMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize="32" fill={NOS.tekst}>{r.pos}</text>
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 15} h={30} />
             <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
-              weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
-            <rect x={teamL} y={y + rowH / 2 - 13} width={7} height={26} fill={TEAM_KLEUR[r.team] || NOS.rood} />
-            <text x={teamMidX + 4} y={midY} textAnchor="middle" fontFamily={FONT}
-              fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{r.team}</text>
+              weight="700" size="32" fill={NOS.tekst}>{r.naam}</FitText>
+            <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="400" fontSize="32" fill={NOS.tekst}>{r.team}</text>
             <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.punten}</text>
+              fontWeight="700" fontSize="32" fill={NOS.tekst}>{r.punten}</text>
           </g>
         );
       })}
@@ -2780,37 +2789,47 @@ function WKStandCoureursTemplate({ data }) {
 }
 
 function WKStandTeamsTemplate({ data }) {
-  const xL = 70, xR = 1010;
-  const rankW = 90, puntenW = 160, gap = 6;
-  const rankR = xL + rankW;
-  const naamStart = rankR + gap;
-  const naamEnd = xR - puntenW - gap;
-  const rankMidX = (xL + rankR) / 2;
+  // pos(70) | team(600, incl. vlag) | punten(100), steeds 8px gap, x=142
+  // t/m 928 (referentie is hier ~5px uit het midden, zo overgenomen).
+  const xL = 142, xR = 928;
+  const posW = 70, naamW = 600, puntenW = 100, gap = 8;
+  const posR = xL + posW;
+  const naamL = posR + gap;
+  const naamR = naamL + naamW;
+  const puntenL = naamR + gap;
+  const posMidX = (xL + posR) / 2;
+  const vlagX = naamL + 14;
+  const vlagW = 42 * 4 / 3;
+  const naamTekstX = vlagX + vlagW + 26;
+  const naamMaxW = naamR - naamTekstX - 12;
 
-  const rijen = data.rijen;
-  const y0 = 232;
-  const rowH = Math.max(46, Math.min(70, Math.floor((1310 - y0) / rijen.length)));
+  const subBarY = 400, subBarH = 60;
+  const rowH = 60;
+  const y0 = subBarY + subBarH + 8;
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.sport} titel={data.titel} theme={data.theme} />
-      {rijen.map((r, i) => {
+      <Kop sport={data.sport} titel={data.titel} theme={data.theme} barY={160} />
+      <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
+      <text x={xL + 24} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
+        fontWeight="700" fontSize="36" fill={NOS.wit}>constructeurs</text>
+      {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
-        const midY = y + rowH / 2 + 11;
+        const midY = y + rowH / 2 + 13;
         const fill = i % 2 === 0 ? NOS.wit : NOS.zebra;
         return (
           <g key={r.pos}>
-            <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
-            <rect x={naamStart} y={y} width={naamEnd - naamStart} height={rowH} fill={fill} />
-            <rect x={naamEnd + gap} y={y} width={xR - (naamEnd + gap)} height={rowH} fill={fill} />
-            <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-            <rect x={naamStart} y={y + rowH / 2 - 14} width={9} height={28} fill={TEAM_KLEUR[r.code] || NOS.rood} />
-            <FitText x={naamStart + 22} y={midY} maxW={naamEnd - naamStart - 22 - 12}
-              weight="700" size={TS.tekst} fill={NOS.tekst}>{r.team}</FitText>
+            <rect x={xL} y={y} width={posW} height={rowH} fill={fill} />
+            <rect x={naamL} y={y} width={naamW} height={rowH} fill={fill} />
+            <rect x={puntenL} y={y} width={puntenW} height={rowH} fill={fill} />
+            <text x={posMidX} y={midY} textAnchor="middle" fontFamily={FONT}
+              fontWeight="700" fontSize="40" fill={NOS.tekst}>{r.pos}</text>
+            {r.land && <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />}
+            <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
+              weight="700" size="40" fill={NOS.tekst}>{r.team}</FitText>
             <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.punten}</text>
+              fontWeight="700" fontSize="40" fill={NOS.tekst}>{r.punten}</text>
           </g>
         );
       })}
@@ -2821,32 +2840,36 @@ function WKStandTeamsTemplate({ data }) {
 /* ============================ VOETBAL: STAND ================================ */
 
 function StandTemplate({ data }) {
-  // Alle maten afgemeten op het referentie-ontwerp: pos/GS/W/G/V/PT zijn 5
-  // losse witte vakken van 71px met 7px tussenruimte (achtergrond schemert
-  // door), niet één doorlopende balk met dunne divider-lijnen erop.
-  const xL = 90, xR = 990;
-  const posW = 71, numW = 71, gap = 7;
+  // Alle maten exact overgenomen uit het design-update-referentieontwerp
+  // (29 sept 2026, Eredivisie 18 rijen + Premier League 20 rijen): pos/GS/
+  // W/G/V/PT zijn 6 losse witte vakken van 70px met steeds 8px tussenruimte
+  // (achtergrond schemert door), tabel loopt van x=80 t/m x=1000 (gecentreerd
+  // op het canvas, 540 = 1080/2).
+  const xL = 80, xR = 1000;
+  const posW = 70, numW = 70, gap = 8;
   const naamX = xL + posW + gap;
-  const naamEnd = 600;
+  const naamEnd = 610;
   const naamW = naamEnd - naamX;
   const kolommen = ["GS", "W", "G", "V", "PT"];
   const colX = (i) => naamEnd + gap + i * (numW + gap);
 
   const rowH = 50;
-  // De tabel (header + rijen) staat verticaal gecentreerd rond een vast
-  // ankerpunt, afgemeten op het Eredivisie-ontwerp (18 rijen: y0=325) en
-  // geverifieerd op het Premier League-ontwerp (20 rijen: y0≈271-275).
-  const tableCenterY = 805;
-  const y0 = tableCenterY - (data.rijen.length * rowH) / 2;
-  const headerY = y0 - 13;
+  // barY/y0 schalen lineair met het aantal rijen (-20px per extra rij), zo
+  // afgeleid uit de twee referentieontwerpen: Eredivisie (18 rijen, barY=100,
+  // y0=320) en Premier League (20 rijen, barY=60, y0=280) — allebei precies
+  // op deze twee round-pixel-formules.
+  const rows = data.rijen.length;
+  const barY = 460 - 20 * rows;
+  const y0 = 680 - 20 * rows;
+  const headerY = y0 - 15;
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={101.84} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={barY} />
       {kolommen.map((k, i) => (
         <text key={k} x={colX(i) + numW / 2} y={headerY} textAnchor="middle" fontFamily={FONT}
-          fontWeight="700" fontSize="30" fill={NOS.wit}>{k}</text>
+          fontWeight="700" fontSize="36" fill={NOS.wit}>{k}</text>
       ))}
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
@@ -2881,15 +2904,17 @@ function StandTemplate({ data }) {
 /* ============================ VOETBAL: PROGRAMMA ============================= */
 
 function ProgrammaTemplate({ data }) {
-  // Maten afgemeten op het referentie-ontwerp. Zebra-kleur wisselt doorlopend
-  // over de hele lijst (niet per dag-groep opnieuw begonnen bij wit).
-  const xL = 58.31, xR = 1017.18;
-  const dayBarH = 72.28;
-  const rowH = 72.28;
+  // Maten gerond op hele pixels: tabel gecentreerd op het canvas (540 =
+  // 1080/2, breedte 960), clublogo's 40x40px (zelfde maat als de stand).
+  // Zebra-kleur wisselt doorlopend over de hele lijst (niet per dag-groep
+  // opnieuw begonnen bij wit).
+  const xL = 60, xR = 1020;
+  const dayBarH = 72;
+  const rowH = 72;
   const dagGap = 32;
-  const logoW = 42;
+  const logoW = 40;
 
-  let y = 340.51;
+  let y = 320;
   let matchIndex = 0;
   const blokken = [];
   data.dagen.forEach((d) => {
@@ -2910,7 +2935,7 @@ function ProgrammaTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={101.84} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
       {blokken.map((b, i) => {
         if (b.soort === "dag") {
           return (
@@ -3813,12 +3838,12 @@ function EtappeIcon({ soort, x, y, size, kleur }) {
 /* ============================ WIELRENNEN: PROGRAMMA (ETAPPES) ================ */
 
 function WielrenProgrammaTemplate({ data, setData }) {
-  // Maten afgemeten op het referentie-ontwerp. 21 doorlopende rijen zonder
-  // tussenruimte (i.t.t. de uitslag/klassement-tabellen, die wél een gap
-  // tussen de kolommen hebben) — rang-vak wisselt donker/donkerder i.p.v.
-  // wit/zebra, de andere drie kolommen volgen de gewone wit/zebra-wisseling.
+  // Maten gerond op hele pixels: 21 doorlopende rijen, telkens 8px
+  // tussenruimte tussen de kolommen (was inconsistent 7px — nu gelijk aan de
+  // rest van de app) — rang-vak wisselt donker/donkerder i.p.v. wit/zebra,
+  // de andere drie kolommen volgen de gewone wit/zebra-wisseling.
   const xL = 101, xR = 979;
-  const rankW = 63, iconW = 62, distW = 156, gap = 7;
+  const rankW = 63, iconW = 62, distW = 156, gap = 8;
   const rankR = xL + rankW;
   const distX = xR - distW;
   const iconX = distX - gap - iconW;
@@ -3826,8 +3851,8 @@ function WielrenProgrammaTemplate({ data, setData }) {
   const mainW = iconX - gap - mainX;
   const rankMidX = (xL + rankR) / 2;
   const iconMidX = iconX + iconW / 2;
-  const y0 = 298.3;
-  const rowH = 44.76;
+  const y0 = 320;
+  const rowH = 45;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
@@ -3839,7 +3864,7 @@ function WielrenProgrammaTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 11;
@@ -3869,25 +3894,28 @@ function WielrenProgrammaTemplate({ data, setData }) {
 /* ============================ WIELRENNEN: UITSLAG ============================ */
 
 function TdFUitslagTemplate({ data, setData }) {
-  // Maten afgemeten op het referentie-ontwerp.
-  const xL = 109.3, xR = 970.71;
-  const infoBarY = 337.06, infoBarH = 53.65;
+  // Maten gerond op hele pixels, volgens het systeem uit de design-update
+  // (29 sept 2026): 8px tussenruimte tussen kolommen, en telkens 80px lucht
+  // tussen het eind van de Kop-balk en het begin van de eerste inhoudsbalk
+  // (zie ook Eredivisie: kop eindigt op 240, eerste rij op 320).
+  const xL = 109, xR = 971;
+  const infoBarY = 320, infoBarH = 50;
   const rowH = 50;
-  const tableY0 = 401.25; // sluit niet direct aan op de infobalk, ~10.5px gat
+  const tableY0 = infoBarY + infoBarH + 8;
 
-  const rankR = 179.24, teamL = 680.78, teamR = 782.29;
+  const rankR = 179, teamL = 683, teamR = 783;
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
 
-  const leidersBarY = 990.92;
-  const leidersBarH = 53.65;
+  const leidersBarY = tableY0 + data.rijen.length * rowH + 90;
+  const leidersBarH = 50;
   const leiderRowH = 50;
-  const leidersY0 = 1054.09; // sluit niet direct aan op de leiders-balk, ~9.5px gat
+  const leidersY0 = leidersBarY + leidersBarH + 8;
   const leiderIconW = rankR - xL;
   const leiderNaamX = xL + leiderIconW + 48 + 30;
   const truien = data.theme.truien;
@@ -3902,7 +3930,7 @@ function TdFUitslagTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       {/* etappe-infobalk */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
@@ -3925,7 +3953,7 @@ function TdFUitslagTemplate({ data, setData }) {
             <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={rowH} fill={fill} />
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
             <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
             <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -3950,7 +3978,7 @@ function TdFUitslagTemplate({ data, setData }) {
             <rect x={xL} y={y} width={leiderIconW} height={leiderRowH} fill={NOS.zwart} />
             <Shirt x={xL + 16} y={y + leiderRowH / 2 - 19} size={38}
               kleur={truien[i].kleur} stip={!!truien[i].stip} stipKleur={truien[i].stipKleur} />
-            <Vlag code={l.land} x={xL + leiderIconW + 8} y={y + leiderRowH / 2 - 18} h={36} />
+            <Vlag code={l.land} x={xL + leiderIconW + 8} y={y + leiderRowH / 2 - 21} h={42} />
             <FitText x={leiderNaamX} y={midY} maxW={teamL - leiderNaamX - 12}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{l.naam}</FitText>
             <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -3967,18 +3995,19 @@ function TdFUitslagTemplate({ data, setData }) {
 /* ============================ WIELRENNEN: KLASSEMENT ========================= */
 
 function TdFKlassementTemplate({ data, setData }) {
-  // Maten afgemeten op het referentie-ontwerp. Zelfde kolomindeling als de
-  // etappe-uitslag (beide gecentreerd op het canvas).
-  const xL = 118.2, xR = 979.61;
-  const subBarY = 321.54, subBarH = 53.65;
+  // Zelfde kolomindeling (en dus dezelfde exacte maten) als de etappe-uitslag
+  // — beide gecentreerd op het canvas, nu ook echt met identieke kolommen
+  // i.p.v. een net iets andere breedte per tabel.
+  const xL = 109, xR = 971;
+  const subBarY = 320, subBarH = 50;
   const rowH = 50;
-  const tableY0 = 385.04; // sluit niet direct aan op de subbalk, ~10px gat
+  const tableY0 = subBarY + subBarH + 8;
 
-  const rankR = 188.14, teamL = 689.68, teamR = 791.19;
+  const rankR = 179, teamL = 683, teamR = 783;
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 40; // ruimte voor trui-icoon bij de leider
   const teamMidX = (teamL + teamR) / 2;
@@ -3996,7 +4025,7 @@ function TdFKlassementTemplate({ data, setData }) {
         <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={rowH} fill={fill} />
         <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
         <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         {r.leider && <Shirt x={naamTekstX + naamMaxW + 8} y={y + rowH / 2 - 17} size={34} kleur="#FFD119" />}
@@ -4008,7 +4037,7 @@ function TdFKlassementTemplate({ data, setData }) {
     );
   };
 
-  const extraY = 1186.92;
+  const extraY = tableY0 + data.rijen.length * rowH + 40;
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
@@ -4018,7 +4047,7 @@ function TdFKlassementTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
@@ -4051,17 +4080,19 @@ function KasseienIcon({ x, y, size, kleur = "#fff" }) {
 /* 15 doorlopende rijen + 1 losse extra rij — geen "leiders klassementen".      */
 
 function ParijsRoubaixTemplate({ data, setData }) {
-  const xL = 109.3, xR = 970.71;
-  const infoBarY = 337.06, infoBarH = 53.65;
+  // Zelfde kolomindeling als de etappe-uitslag/klassement (allemaal
+  // gecentreerd op het canvas, met identieke kolombreedtes).
+  const xL = 109, xR = 971;
+  const infoBarY = 320, infoBarH = 50;
   const rowH = 50;
-  const tableY0 = 401.25;
-  const extraY = 1196.71; // ~45.5px gat na de 15e rij
+  const tableY0 = infoBarY + infoBarH + 8;
+  const extraY = tableY0 + data.rijen.length * rowH + 40;
 
-  const rankR = 179.24, teamL = 680.78, teamR = 782.29;
+  const rankR = 179, teamL = 683, teamR = 783;
   const divW = 8;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = rankR + divW + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = teamL - divW - naamTekstX - 12;
   const teamMidX = (teamL + teamR) / 2;
@@ -4079,7 +4110,7 @@ function ParijsRoubaixTemplate({ data, setData }) {
         <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={rowH} fill={fill} />
         <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
         <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -4098,7 +4129,7 @@ function ParijsRoubaixTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       {/* route-infobalk: bij een eendagskoers is er geen etappetype, dus
           standaard geen icoontje (i.t.t. de etappe-uitslag) — tekst begint
@@ -4140,7 +4171,7 @@ function DeelnemersTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
       <g id="deelnemers">
         {teams.map((t, i) => {
           const r = Math.floor(i / kol), c = i % kol;
@@ -4180,8 +4211,8 @@ function DeelnemersTemplate({ data }) {
 function MedaljeBadge({ cx, cy, buiten, binnen, tekst, cijfer }) {
   return (
     <g>
-      <circle cx={cx} cy={cy} r="20.4" fill={buiten} />
-      <circle cx={cx} cy={cy} r="16.4" fill={binnen} />
+      <circle cx={cx} cy={cy} r="20" fill={buiten} />
+      <circle cx={cx} cy={cy} r="16" fill={binnen} />
       <text x={cx} y={cy + 10} textAnchor="middle" fontFamily={FONT}
         fontWeight="700" fontSize="28.8" fill={tekst}>{cijfer}</text>
     </g>
@@ -4189,17 +4220,20 @@ function MedaljeBadge({ cx, cy, buiten, binnen, tekst, cijfer }) {
 }
 
 function MedaillespiegelTemplate({ data, setData }) {
-  // Maten afgemeten op het referentie-ontwerp.
-  const xL = 124.3, xR = 965.7;
-  const rankR = 185.4, countryL = 193.4, countryR = 758.4;
-  const goudL = 766.4, goudR = 827.5, zilverL = 835.5, zilverR = 896.6, bronsL = 904.6, bronsR = 965.7;
-  const subBarY = 380.7, subBarH = 61.1;
-  const rowH = 61.1;
-  const tableY0 = 449.1;
+  // Maten exact overgenomen uit het design-update-referentieontwerp (29 sept
+  // 2026): pos/land/goud/zilver/brons zijn 5 vlakken van 70/600/70/70/70px
+  // met steeds 8px tussenruimte, tabel loopt van x=84 t/m x=996 (gecentreerd
+  // op het canvas, 540 = 1080/2).
+  const xL = 84, xR = 996;
+  const rankR = 154, countryL = 162, countryR = 762;
+  const goudL = 770, goudR = 840, zilverL = 848, zilverR = 918, bronsL = 926, bronsR = 996;
+  const subBarY = 400, subBarH = 60;
+  const rowH = 60;
+  const tableY0 = 468;
   const rankMidX = (xL + rankR) / 2;
   const goudMidX = (goudL + goudR) / 2, zilverMidX = (zilverL + zilverR) / 2, bronsMidX = (bronsL + bronsR) / 2;
   const vlagX = countryL + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
@@ -4213,7 +4247,7 @@ function MedaillespiegelTemplate({ data, setData }) {
         fotoSleep={isFoto && setData ? fotoSleep : null} />
       {/* Kop-tekst omgedraaid, net als bij F1: "medaillespiegel" is de grote
           60pt-titel, het evenement (data.titel) de 36pt-ondertitel. */}
-      <Kop sport="medaillespiegel" titel={data.titel} theme={data.theme} barY={143.9} barH={89.7} titelOffset={64.8} />
+      <Kop sport="medaillespiegel" titel={data.titel} theme={data.theme} barY={160} />
 
       {/* subkop-balk + goud/zilver/brons kolomkoppen met medaille-badges */}
       <rect x={xL} y={subBarY} width={countryR - xL} height={subBarH} fill={data.theme.titel} />
@@ -4241,7 +4275,7 @@ function MedaillespiegelTemplate({ data, setData }) {
             <rect x={bronsL} y={y} width={bronsR - bronsL} height={rowH} fill={fill} />
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize="40" fill={tekstKleur}>{r.pos}</text>
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
             <FitText x={naamTekstX} y={midY} maxW={countryR - naamTekstX - 12}
               weight="700" size={40} fill={tekstKleur}>{landnaam(r.land)}</FitText>
             <text x={goudMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -4301,19 +4335,19 @@ function MedaillespiegelDataEditor({ data, setData }) {
 /* schaatsen is een individuele sport, dus de naamkolom krijgt die ruimte.        */
 
 function SchaatsenResultatenTemplate({ data, setData }) {
-  const xL = 109.3, xR = 970.71;
-  const infoBarY = 337.06, infoBarH = 53.65;
+  const xL = 109, xR = 971;
+  const infoBarY = 320, infoBarH = 50;
   const rowH = 50;
-  const tableY0 = 401.25;
+  const tableY0 = infoBarY + infoBarH + 8;
 
-  const rankR = 179.24;
+  const rankR = 179;
   const divW = 8;
   const tijdW = 180;
   const naamL = rankR + divW;
   const naamR = xR - divW - tijdW;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = naamL + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = naamR - naamTekstX - 12;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
@@ -4327,7 +4361,7 @@ function SchaatsenResultatenTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
@@ -4344,7 +4378,7 @@ function SchaatsenResultatenTemplate({ data, setData }) {
             <rect x={naamR + divW} y={y} width={xR - (naamR + divW)} height={rowH} fill={fill} />
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+            <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
             <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
             <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
@@ -4396,19 +4430,19 @@ function SchaatsenResultatenDataEditor({ data, setData }) {
 /* ============================ SCHAATSEN: WERELDBEKERSTAND ==================== */
 
 function SchaatsenWereldbekerstandTemplate({ data, setData }) {
-  const xL = 109.3, xR = 970.71;
-  const subBarY = 337.06, subBarH = 53.65;
+  const xL = 109, xR = 971;
+  const subBarY = 320, subBarH = 50;
   const rowH = 50;
-  const tableY0 = 401.25;
+  const tableY0 = subBarY + subBarH + 8;
 
-  const rankR = 179.24;
+  const rankR = 179;
   const divW = 8;
   const puntenW = 160;
   const naamL = rankR + divW;
   const naamR = xR - divW - puntenW;
   const rankMidX = (xL + rankR) / 2;
   const vlagX = naamL + 16;
-  const vlagW = 36 * 4 / 3;
+  const vlagW = 42 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
   const naamMaxW = naamR - naamTekstX - 12;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
@@ -4424,7 +4458,7 @@ function SchaatsenWereldbekerstandTemplate({ data, setData }) {
         <rect x={naamR + divW} y={y} width={xR - (naamR + divW)} height={rowH} fill={fill} />
         <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
-        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 18} h={36} />
+        <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
         <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
@@ -4433,7 +4467,7 @@ function SchaatsenWereldbekerstandTemplate({ data, setData }) {
     );
   };
 
-  const extraY = 1186.92;
+  const extraY = tableY0 + data.rijen.length * rowH + 40;
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
@@ -4443,7 +4477,7 @@ function SchaatsenWereldbekerstandTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
@@ -4508,14 +4542,14 @@ function SchaatsenWereldbekerstandDataEditor({ data, setData }) {
 
 function SchaatsenProgrammaTemplate({ data, setData }) {
   const xL = 101, xR = 979;
-  const nrW = 63, tijdW = 156, gap = 7;
+  const nrW = 63, tijdW = 156, gap = 8;
   const nrR = xL + nrW;
   const tijdX = xR - tijdW;
   const mainX = nrR + gap;
   const mainW = tijdX - gap - mainX;
   const nrMidX = (xL + nrR) / 2;
-  const y0 = 298.3;
-  const rowH = 44.76;
+  const y0 = 320;
+  const rowH = 45;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
@@ -4527,7 +4561,7 @@ function SchaatsenProgrammaTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={113.76} barH={87.87} titelOffset={62.01} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 11;
