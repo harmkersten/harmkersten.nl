@@ -945,7 +945,10 @@ function getMockVoetbal(competitie, type) {
     const rijen = VOETBAL_STAND[competitie].map(([club, gs, w, g, v, pt], i) => ({
       pos: i + 1, club, gs, w, g, v, pt, logo: CLUB_LOGO[club] || null,
     }));
-    return { sport: "Voetbal", titel: `stand ${label}`, ondertitel: `na speelronde ${VOETBAL_PROGRAMMA[competitie].ronde}`, type: "stand", theme, rijen };
+    // Ondertitel (de speelronde) bewust leeg als startpunt i.p.v. een
+    // voorinvulde waarde — anders bestaat het risico dat een oude/foute
+    // speelronde blijft staan en zo de graphic uit gaat.
+    return { sport: "Voetbal", titel: `stand ${label}`, ondertitel: "", type: "stand", theme, rijen };
   }
   if (type === "programma") {
     const data = VOETBAL_PROGRAMMA[competitie];
@@ -4866,8 +4869,9 @@ function StandDataEditor({ data, setData, competitie }) {
     <div>
       <div style={dpLabel}>Titel</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
-      <div style={dpLabel}>Ondertitel</div>
-      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel (bv. "na speelronde 19")</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))}
+        placeholder="na speelronde …" style={dpVeld} />
 
       <PlakBox label="Plak de standen-tabel (incl. kolomkoppen Rg/Team/Ptn/Wd/W/G/V/…)"
         placeholder={"Rg\tTeam\tPtn\tWd\tW\tG\tV\tDV\tDT\tDS\n1\n\nAZ\nAZ\n12\t4\t4\t0\t0\t13\t3\t10\n2\n…"}
