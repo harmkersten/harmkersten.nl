@@ -841,7 +841,10 @@ function getMockF1(competitie, type, raceSlug) {
   }
 
   if (type === "wkstandcoureurs" || type === "wkstandteams") {
-    const subtitel = `WK-stand ${type === "wkstandcoureurs" ? "coureurs" : "teams"} · na ${titel}`;
+    // Kort: "stand na X races" i.p.v. de coureurs/teams-aanduiding + GP-naam
+    // erbij te proppen — welke stand dit is (coureurs/constructeurs) staat al
+    // in de subkop-balk in het template zelf.
+    const subtitel = "stand na 15 races";
     if (type === "wkstandcoureurs") {
       return {
         sport: "Formule 1", titel: subtitel, type, theme: THEMES.formule1,
@@ -1209,7 +1212,10 @@ const SCHAATSEN_RESULTATEN_MOCK = {
   ],
 };
 const SCHAATSEN_WERELDBEKERSTAND_MOCK = {
-  subkop: "eindstand na 3 wedstrijden",
+  // Kort: het onderdeel (bv. "500m mannen") staat er wél bij, want dat is de
+  // enige plek in deze graphic waar dat te lezen valt — het aantal
+  // wedstrijden waarna deze stand is (dat wisselt toch elke keer) niet.
+  subkop: "eindstand 500m mannen",
   rijen: [
     ["nl", "Jenning de Boo", 420], ["us", "Jordan Stolz", 385],
     ["nl", "Wesly Dijs", 360], ["no", "Håvard Holmefjord Lorentzen", 305],
@@ -1231,8 +1237,10 @@ function getMockSchaatsen(competitie, type) {
   const theme = THEMES.schaatsen;
   if (type === "resultaten") {
     const d = SCHAATSEN_RESULTATEN_MOCK;
+    // Kort houden: de plaatsnaam staat er bewust niet bij (het onderdeel,
+    // bv. "500m mannen", staat al in de eigen infobalk hieronder).
     return {
-      sport: "Schaatsen", titel: "Wereldbeker Tomaszów Mazowiecki", ondertitel: "uitslag", type: "resultaten",
+      sport: "Schaatsen", titel: "Wereldbeker", ondertitel: "uitslag", type: "resultaten",
       theme, onderdeel: d.onderdeel,
       rijen: d.rijen.map(([land, naam, tijd], i) => ({ pos: i + 1, land, naam, tijd })),
       achtergrond: "verloop", foto: null,
@@ -1241,7 +1249,7 @@ function getMockSchaatsen(competitie, type) {
   if (type === "wereldbekerstand") {
     const d = SCHAATSEN_WERELDBEKERSTAND_MOCK;
     return {
-      sport: "Schaatsen", titel: "Wereldbeker 500m mannen", ondertitel: "stand", type: "wereldbekerstand",
+      sport: "Schaatsen", titel: "Wereldbeker", ondertitel: "stand", type: "wereldbekerstand",
       theme, subkop: d.subkop,
       rijen: d.rijen.map(([land, naam, punten], i) => ({ pos: i + 1, land, naam, punten })),
       extra: { pos: 12, land: d.extra[0], naam: d.extra[1], punten: d.extra[2] },
@@ -1251,7 +1259,7 @@ function getMockSchaatsen(competitie, type) {
   if (type === "programma") {
     const d = SCHAATSEN_PROGRAMMA_MOCK;
     return {
-      sport: "Schaatsen", titel: "Wereldbeker Tomaszów Mazowiecki", ondertitel: "programma", type: "programma",
+      sport: "Schaatsen", titel: "Wereldbeker", ondertitel: "programma", type: "programma",
       theme,
       rijen: d.rijen.map(([omschrijving, tijd], i) => ({ nr: i + 1, omschrijving, tijd })),
       achtergrond: "verloop", foto: null,
@@ -5435,8 +5443,9 @@ function F1WKStandCoureursDataEditor({ data, setData }) {
   const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
   return (
     <div>
-      <div style={dpLabel}>Titel/ondertitel</div>
-      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel (bv. "stand na 15 races")</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))}
+        placeholder="stand na … races" style={dpVeld} />
 
       <PlakBox label="Plak de WK-stand coureurs (incl. kolomkoppen Rg/Land/Naam/Team/Punten)"
         placeholder={"Rg\tLand\tNaam\tTeam\tPunten\n1\nKimi Antonelli\nITA\n\nKimi Antonelli\nlogo\nMercedes\n302\n2\n…"}
@@ -5459,8 +5468,9 @@ function F1WKStandTeamsDataEditor({ data, setData }) {
   const voegToe = () => setData((d) => ({ ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, team: "", code: "", punten: 0 }] }));
   return (
     <div>
-      <div style={dpLabel}>Titel/ondertitel</div>
-      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel (bv. "stand na 15 races")</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))}
+        placeholder="stand na … races" style={dpVeld} />
 
       <PlakBox label="Plak de WK-stand teams (incl. kolomkoppen Rg/Team/Punten)"
         placeholder={"Rg\tTeam\tPunten\n1\nMercedes\nMercedes\n425\n2\n…"}
