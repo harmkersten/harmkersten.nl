@@ -545,19 +545,19 @@ const CONFIG = {
     label: "Formule 1",
     competities: {
       wk2026: {
-        label: "Seizoen 2026",
+        label: "seizoen 2026",
         // De losse Grand Prix's vallen onder hun eigen categorie (die pas
         // een race laat kiezen); WK-standen zijn seizoensbreed en hebben
         // geen race nodig — vandaar geen "types" op dit niveau maar een
         // categorie-keuze ertussen. Zie ook de Categorie-stap in App().
         categorieen: {
           grandprix: {
-            label: "Grand Prix's",
+            label: "grand prix's",
             heeftRace: true,
             types: {
-              uitslag: { label: "Uitslag" },
-              kwalificatie: { label: "Kwalificatie" },
-              grid: { label: "Starting grid" },
+              uitslag: { label: "uitslag" },
+              kwalificatie: { label: "kwalificatie" },
+              grid: { label: "starting grid" },
             },
           },
           wkstandcoureurs: { label: "WK-stand coureurs" },
@@ -567,56 +567,56 @@ const CONFIG = {
     },
   },
   voetbal: {
-    label: "Voetbal",
+    label: "voetbal",
     competities: {
       eredivisie: {
         label: "Eredivisie",
         types: {
-          programma: { label: "Programma" },
-          stand: { label: "Stand" },
+          programma: { label: "programma" },
+          stand: { label: "stand" },
         },
       },
       premierleague: {
         label: "Premier League",
         types: {
-          programma: { label: "Programma" },
-          stand: { label: "Stand" },
+          programma: { label: "programma" },
+          stand: { label: "stand" },
         },
       },
       opstelling: {
-        label: "Opstelling",
+        label: "opstelling",
         types: {
-          duel: { label: "Duel (twee teams)" },
-          enkel: { label: "Eén team" },
+          duel: { label: "duel (twee teams)" },
+          enkel: { label: "één team" },
         },
       },
     },
   },
   wielrennen: {
-    label: "Wielrennen",
+    label: "wielrennen",
     competities: {
       tourdefrance: {
         label: "Tour de France",
         types: {
-          programma: { label: "Programma" },
-          uitslag: { label: "Uitslag" },
-          klassement: { label: "Algemeen klassement" },
+          programma: { label: "programma" },
+          uitslag: { label: "uitslag" },
+          klassement: { label: "algemeen klassement" },
         },
       },
       giro: {
         label: "Giro d'Italia",
         types: {
-          programma: { label: "Programma" },
-          uitslag: { label: "Uitslag" },
-          klassement: { label: "Algemeen klassement" },
+          programma: { label: "programma" },
+          uitslag: { label: "uitslag" },
+          klassement: { label: "algemeen klassement" },
         },
       },
       vuelta: {
         label: "Vuelta a España",
         types: {
-          programma: { label: "Programma" },
-          uitslag: { label: "Uitslag" },
-          klassement: { label: "Algemeen klassement" },
+          programma: { label: "programma" },
+          uitslag: { label: "uitslag" },
+          klassement: { label: "algemeen klassement" },
         },
       },
       // Parijs-Roubaix (echte wedstrijddata) is uit het menu gehaald nu de
@@ -624,41 +624,41 @@ const CONFIG = {
       // EENDAAGSE_RONDE.parijsroubaix en THEMES.parijsroubaix blijven staan,
       // dus dit is in één regel terug te zetten.
       etappekoers: {
-        label: "Etappekoers (zelf invullen)",
+        label: "etappekoers (zelf invullen)",
         types: {
-          programma: { label: "Programma" },
-          uitslag: { label: "Uitslag" },
-          klassement: { label: "Algemeen klassement" },
+          programma: { label: "programma" },
+          uitslag: { label: "uitslag" },
+          klassement: { label: "algemeen klassement" },
         },
       },
       eendagskoers: {
-        label: "Eendagskoers (zelf invullen)",
+        label: "eendagskoers (zelf invullen)",
         types: {
-          uitslag: { label: "Uitslag" },
+          uitslag: { label: "uitslag" },
         },
       },
     },
   },
   algemeen: {
-    label: "Algemeen",
+    label: "algemeen",
     competities: {
       toernooien: {
-        label: "Toernooien",
+        label: "toernooien",
         types: {
-          medaillespiegel: { label: "Medaillespiegel" },
+          medaillespiegel: { label: "medaillespiegel" },
         },
       },
     },
   },
   schaatsen: {
-    label: "Schaatsen",
+    label: "schaatsen",
     competities: {
       wereldbeker: {
         label: "Wereldbeker",
         types: {
-          resultaten: { label: "Resultaten" },
-          wereldbekerstand: { label: "Wereldbekerstand" },
-          programma: { label: "Programma" },
+          resultaten: { label: "resultaten" },
+          wereldbekerstand: { label: "wereldbekerstand" },
+          programma: { label: "programma" },
         },
       },
     },
@@ -5808,9 +5808,13 @@ function App() {
             {!sport && (
               <>
                 <h3 style={{ fontSize: 14, textTransform: "uppercase", color: "#6b7280", marginBottom: 12 }}>Sport</h3>
-                {Object.entries(CONFIG).map(([k, v]) => (
-                  <Keuzeknop key={k} label={v.label} onClick={() => setSport(k)} />
-                ))}
+                {Object.entries(CONFIG)
+                  .sort(([ka, va], [kb, vb]) => (
+                    ka === "algemeen" ? -1 : kb === "algemeen" ? 1 : va.label.localeCompare(vb.label, "nl")
+                  ))
+                  .map(([k, v]) => (
+                    <Keuzeknop key={k} label={v.label} onClick={() => setSport(k)} />
+                  ))}
               </>
             )}
 
