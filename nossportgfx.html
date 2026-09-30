@@ -1121,7 +1121,10 @@ function getMockEendagskoers(competitie, type) {
     route: d.route, km: d.km,
     rijen: d.rijen.map(([naam, land, team, tijd], i) => ({ pos: i + 1, naam, land, team, tijd })),
     extra: { pos: 23, naam: d.extra[0], land: d.extra[1], team: d.extra[2], tijd: d.extra[3] },
-    toonExtra: true,
+    // Bij Parijs-Roubaix is de extra rij echte data (laatste Nederlander) en
+    // dus aan als startpunt; bij de blanco eendagskoers is er niets zinnigs
+    // om te tonen totdat de redacteur 'm zelf invult, dus uit als startpunt.
+    toonExtra: competitie === "parijsroubaix",
     achtergrond: "verloop", foto: null,
   };
 }
