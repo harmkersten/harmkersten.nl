@@ -2410,7 +2410,14 @@ function Vlag({ code, x, y, h = 32 }) {
 /* Canvas 1080x1350 (4:5), zoals de mockups. Alles in SVG -> scherpe PNG.     */
 
 const W = 1080;
-const H = 1350;
+const H = 1350; // default/fallback; elke graphic bepaalt zijn eigen hoogte via hoogteVoor()
+
+// Canvas-hoogte per graphic: 1080x1350 (4:5, standaard) of 1080x1440 (3:4) —
+// zelf te kiezen via de FormaatKiezer, opgeslagen als data.formaat. Alles
+// (Achtergrond, Kop, iedere Template) leest zijn eigen H hiermee uit i.p.v.
+// de vaste module-constante, zodat de extra ruimte bij 1440 gewoon als
+// achtergrond onder de bestaande, ongewijzigde opmaak bij komt.
+const hoogteVoor = (data) => (data && data.formaat === "1080x1440" ? 1440 : 1350);
 
 /* ---- Type-scale (spec): titel 60, ondertitel + alle tekst 36, grid-team 24 - */
 const TS = {
@@ -2420,7 +2427,7 @@ const TS = {
   gridTeam: 24,  // teamnaam onder grid-vak
 };
 
-function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep }) {
+function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1350 }) {
   if (foto) {
     // Foto-variant: geen kleurverloop, de eigen (geüploade) foto vult het hele
     // canvas. Zonder bekende beeldmaten (bv. oudere data) blijft het simpele
@@ -2665,6 +2672,7 @@ function PodiumBlok({ p, x, y, w, h, waarde }) {
 }
 
 function UitslagTemplate({ data }) {
+  const H = hoogteVoor(data);
   const podium = [...data.podium].sort((a, b) => a.pos - b.pos);
   const p1 = podium.find((p) => p.pos === 1);
   const p2 = podium.find((p) => p.pos === 2);
@@ -2707,7 +2715,7 @@ function UitslagTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} />
+      <Achtergrond theme={data.theme} H={H} />
       {/* Titel/ondertitel omgedraaid t.o.v. de meeste sporten: hier is
           "Uitslag" de grote 58pt-titel en de Grand Prix de 36pt-ondertitel
           (referentie-svg) — allebei aan te passen in de editor. */}
@@ -2751,6 +2759,7 @@ function UitslagTemplate({ data }) {
 }
 
 function GridTemplate({ data }) {
+  const H = hoogteVoor(data);
   // Eén startvak (positie + naam + team). Maten afgemeten op het referentie-ontwerp.
   const posW = 72;
   const naamW = 294;
@@ -2793,7 +2802,7 @@ function GridTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} />
+      <Achtergrond theme={data.theme} H={H} />
       {/* Hogere titelvariant (barY=60 i.p.v. 100, zelfde als bij de PL-stand/
           -programma): geeft meer lucht tussen de kop-balk en de eerste
           startrij (y0=258 blijft gelijk, dus de marge groeit mee). */}
@@ -2810,6 +2819,7 @@ function GridTemplate({ data }) {
 /* meer (referentie toont alleen platte teamcode-tekst).                    */
 
 function WKStandCoureursTemplate({ data }) {
+  const H = hoogteVoor(data);
   // pos(70) | naam(460, incl. vlag) | team(80) | punten(80), steeds 8px gap,
   // x=188 t/m 892 — gecentreerd op het canvas (540 = 1080/2).
   const xL = 188, xR = 892;
@@ -2833,7 +2843,7 @@ function WKStandCoureursTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} />
+      <Achtergrond theme={data.theme} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 16} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
@@ -2865,6 +2875,7 @@ function WKStandCoureursTemplate({ data }) {
 }
 
 function WKStandTeamsTemplate({ data }) {
+  const H = hoogteVoor(data);
   // pos(70) | team(600, incl. vlag) | punten(100), steeds 8px gap, x=142
   // t/m 928 (referentie is hier ~5px uit het midden, zo overgenomen).
   const xL = 142, xR = 928;
@@ -2885,7 +2896,7 @@ function WKStandTeamsTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} />
+      <Achtergrond theme={data.theme} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={160} />
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 24} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
@@ -2916,6 +2927,7 @@ function WKStandTeamsTemplate({ data }) {
 /* ============================ VOETBAL: STAND ================================ */
 
 function StandTemplate({ data }) {
+  const H = hoogteVoor(data);
   // Alle maten exact overgenomen uit het design-update-referentieontwerp
   // (29 sept 2026, Eredivisie 18 rijen + Premier League 20 rijen): pos/GS/
   // W/G/V/PT zijn 6 losse witte vakken van 70px met steeds 8px tussenruimte
@@ -2941,7 +2953,7 @@ function StandTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} />
+      <Achtergrond theme={data.theme} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={barY} />
       {kolommen.map((k, i) => (
         <text key={k} x={colX(i) + numW / 2} y={headerY} textAnchor="middle" fontFamily={FONT}
@@ -2980,6 +2992,7 @@ function StandTemplate({ data }) {
 /* ============================ VOETBAL: PROGRAMMA ============================= */
 
 function ProgrammaTemplate({ data }) {
+  const H = hoogteVoor(data);
   // Maten gerond op hele pixels: tabel gecentreerd op het canvas (540 =
   // 1080/2, breedte 960), clublogo's 40x40px (zelfde maat als de stand).
   // Zebra-kleur wisselt doorlopend over de hele lijst (niet per dag-groep
@@ -3016,7 +3029,7 @@ function ProgrammaTemplate({ data }) {
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} />
+      <Achtergrond theme={data.theme} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={barY} />
       {blokken.map((b, i) => {
         if (b.soort === "dag") {
@@ -3726,6 +3739,7 @@ function useFotoSleep(zetPositie) {
 }
 
 function OpstellingDuelTemplate({ opst, sleep }) {
+  const H = hoogteVoor(opst);
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
@@ -3741,7 +3755,8 @@ function OpstellingDuelTemplate({ opst, sleep }) {
   );
 }
 
-function OpstellingEnkelTemplate({ ploeg, sleep, kleur }) {
+function OpstellingEnkelTemplate({ ploeg, sleep, kleur, formaat }) {
+  const H = hoogteVoor({ formaat });
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
@@ -3920,6 +3935,7 @@ function EtappeIcon({ soort, x, y, size, kleur }) {
 /* ============================ WIELRENNEN: PROGRAMMA (ETAPPES) ================ */
 
 function WielrenProgrammaTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   // Maten gerond op hele pixels: 21 doorlopende rijen, telkens 8px
   // tussenruimte tussen de kolommen (was inconsistent 7px — nu gelijk aan de
   // rest van de app) — rang-vak wisselt donker/donkerder i.p.v. wit/zebra,
@@ -3945,7 +3961,7 @@ function WielrenProgrammaTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
@@ -3976,6 +3992,7 @@ function WielrenProgrammaTemplate({ data, setData }) {
 /* ============================ WIELRENNEN: UITSLAG ============================ */
 
 function TdFUitslagTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   // Maten gerond op hele pixels, volgens het systeem uit de design-update
   // (29 sept 2026): 8px tussenruimte tussen kolommen, en telkens 80px lucht
   // tussen het eind van de Kop-balk en het begin van de eerste inhoudsbalk
@@ -4011,7 +4028,7 @@ function TdFUitslagTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       {/* etappe-infobalk */}
@@ -4077,6 +4094,7 @@ function TdFUitslagTemplate({ data, setData }) {
 /* ============================ WIELRENNEN: KLASSEMENT ========================= */
 
 function TdFKlassementTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   // Zelfde kolomindeling (en dus dezelfde exacte maten) als de etappe-uitslag
   // — beide gecentreerd op het canvas, nu ook echt met identieke kolommen
   // i.p.v. een net iets andere breedte per tabel.
@@ -4128,7 +4146,7 @@ function TdFKlassementTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
@@ -4162,6 +4180,7 @@ function KasseienIcon({ x, y, size, kleur = "#fff" }) {
 /* 15 doorlopende rijen + 1 losse extra rij — geen "leiders klassementen".      */
 
 function ParijsRoubaixTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   // Zelfde kolomindeling als de etappe-uitslag/klassement (allemaal
   // gecentreerd op het canvas, met identieke kolombreedtes).
   const xL = 109, xR = 971;
@@ -4210,7 +4229,7 @@ function ParijsRoubaixTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       {/* route-infobalk: bij een eendagskoers is er geen etappetype, dus
@@ -4247,6 +4266,7 @@ function MedaljeBadge({ cx, cy, buiten, binnen, tekst, cijfer }) {
 }
 
 function MedaillespiegelTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   // Maten exact overgenomen uit het design-update-referentieontwerp (29 sept
   // 2026): pos/land/goud/zilver/brons zijn 5 vlakken van 70/600/70/70/70px
   // met steeds 8px tussenruimte, tabel loopt van x=84 t/m x=996 (gecentreerd
@@ -4271,7 +4291,7 @@ function MedaillespiegelTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       {/* Titel/ondertitel omgedraaid, net als bij F1: "medaillespiegel" is de
           grote 58pt-titel, het evenement de 36pt-ondertitel — allebei aan te
           passen in de editor. */}
@@ -4365,6 +4385,7 @@ function MedaillespiegelDataEditor({ data, setData }) {
 /* schaatsen is een individuele sport, dus de naamkolom krijgt die ruimte.        */
 
 function SchaatsenResultatenTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   const xL = 109, xR = 971;
   const infoBarY = 320, infoBarH = 50;
   const rowH = 50;
@@ -4390,7 +4411,7 @@ function SchaatsenResultatenTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
@@ -4460,6 +4481,7 @@ function SchaatsenResultatenDataEditor({ data, setData }) {
 /* ============================ SCHAATSEN: WERELDBEKERSTAND ==================== */
 
 function SchaatsenWereldbekerstandTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   const xL = 109, xR = 971;
   const subBarY = 320, subBarH = 50;
   const rowH = 50;
@@ -4506,7 +4528,7 @@ function SchaatsenWereldbekerstandTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
@@ -4571,6 +4593,7 @@ function SchaatsenWereldbekerstandDataEditor({ data, setData }) {
 /* ============================ SCHAATSEN: PROGRAMMA ============================ */
 
 function SchaatsenProgrammaTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
   const xL = 101, xR = 979;
   const nrW = 63, tijdW = 156, gap = 8;
   const nrR = xL + nrW;
@@ -4590,7 +4613,7 @@ function SchaatsenProgrammaTemplate({ data, setData }) {
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} />
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
@@ -5172,6 +5195,29 @@ function AchtergrondKiezer({ data, setData }) {
   );
 }
 
+// Canvas-formaat, zelfde plek/stijl als AchtergrondKiezer erboven — werkt op
+// elk data-object met een (optioneel) .formaat-veld, dus ook op opst.
+function FormaatKiezer({ data, setData }) {
+  const modus = data.formaat === "1080x1440" ? "1080x1440" : "1080x1350";
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={dpLabel}>Formaat</div>
+      <div style={{ display: "flex", gap: 8 }}>
+        {[["1080x1350", "1080 × 1350", "4:5"], ["1080x1440", "1080 × 1440", "3:4"]].map(([k, label, sub]) => (
+          <button key={k} onClick={() => setData((d) => ({ ...d, formaat: k }))} style={{
+            flex: 1, padding: "9px 0", borderRadius: 8, cursor: "pointer",
+            border: modus === k ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
+            background: modus === k ? "#fef2f2" : "#fff", color: "#111",
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>{label}</div>
+            <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 400 }}>{sub}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function WielrenProgrammaDataEditor({ data, setData }) {
   const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
   const verwijder = (i) => setData((d) => ({
@@ -5607,6 +5653,7 @@ function App() {
     a: legePloeg("#FFF000"),
     b: legePloeg("#39B54A"),
     achtergrond: ACHTERGROND_KLEUREN[ACHTERGROND_KLEUREN.length - 1],
+    formaat: "1080x1350",
   });
   const svgWrap = useRef(null);
 
@@ -5691,6 +5738,10 @@ function App() {
   const exportPNG = useCallback(async () => {
     const svg = svgWrap.current?.querySelector("svg");
     if (!svg) return;
+    // Canvasmaat uit de svg zelf lezen i.p.v. de vaste W/H-constanten: die
+    // wijken af zodra de graphic op 1080x1440 staat (FormaatKiezer).
+    const svgW = Number(svg.getAttribute("width")) || W;
+    const svgH = Number(svg.getAttribute("height")) || H;
     // Zorg dat Effra geladen is voordat we rasteriseren.
     try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
     const xml = new XMLSerializer().serializeToString(svg);
@@ -5700,16 +5751,16 @@ function App() {
       const schaal = 2; // intern op 2x tekenen voor scherpe randen
       // 1) scherp renderen op 2x
       const groot = document.createElement("canvas");
-      groot.width = W * schaal; groot.height = H * schaal;
+      groot.width = svgW * schaal; groot.height = svgH * schaal;
       const gctx = groot.getContext("2d");
-      gctx.drawImage(img, 0, 0, W * schaal, H * schaal);
-      // 2) terugschalen naar exact 1080x1350
+      gctx.drawImage(img, 0, 0, svgW * schaal, svgH * schaal);
+      // 2) terugschalen naar exact de canvasmaat van de graphic
       const out = document.createElement("canvas");
-      out.width = W; out.height = H; // exact 1080 x 1350
+      out.width = svgW; out.height = svgH;
       const octx = out.getContext("2d");
       octx.imageSmoothingEnabled = true;
       octx.imageSmoothingQuality = "high";
-      octx.drawImage(groot, 0, 0, W, H);
+      octx.drawImage(groot, 0, 0, svgW, svgH);
       const a = document.createElement("a");
       const delen = [sport, competitie, race, type].filter(Boolean);
       a.download = `nos-${delen.join("-")}.png`;
@@ -5873,6 +5924,7 @@ function App() {
                       Sleep een shirt in de preview om het los van de formatie neer te zetten.
                     </p>
                     <div style={{ marginTop: 14 }}>
+                      <FormaatKiezer data={opst} setData={setOpst} />
                       <h3 style={secTitel}>Achtergrondkleur</h3>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {ACHTERGROND_KLEUREN.map((kleur) => (
@@ -5942,7 +5994,7 @@ function App() {
                   {sport === "schaatsen" && type === "wereldbekerstand" && <SchaatsenWereldbekerstandTemplate data={editData} setData={setEditData} />}
                   {sport === "schaatsen" && type === "programma" && <SchaatsenProgrammaTemplate data={editData} setData={setEditData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
-                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} />}
+                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} formaat={opst.formaat} />}
                 </div>
                 </PreviewGrens>
               </div>
@@ -5957,6 +6009,7 @@ function App() {
             {heeftData && editData ? (
               <>
                 <h3 style={secTitel}>Data</h3>
+                <FormaatKiezer data={editData} setData={setEditData} />
                 <DataPanel sport={sport} competitie={competitie} type={type} editData={editData} setEditData={setEditData} />
               </>
             ) : (
