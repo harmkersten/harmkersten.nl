@@ -958,7 +958,7 @@ function getMockVoetbal(competitie, type) {
   const theme = THEMES[competitie];
   if (type === "stand") {
     const rijen = (VOETBAL_STAND[competitie] || []).map(([club, gs, w, g, v, pt], i) => ({
-      pos: i + 1, club, gs, w, g, v, pt, logo: CLUB_LOGO[club] || null,
+      pos: i + 1, club, gs, w, g, v, pt, ds: 0, logo: CLUB_LOGO[club] || null,
     }));
     // Ondertitel (de speelronde) bewust leeg als startpunt i.p.v. een
     // voorinvulde waarde — anders bestaat het risico dat een oude/foute
@@ -2504,8 +2504,10 @@ function splitCijfers(regel) {
 
 /* Voetbalstand-widget: "Rg  Team  Ptn  Wd  W  G  V  DV  DT  DS", waarbij de
    club-cel als 2 losse regels binnenkomt (logo-alt + naam) en alleen de
-   cijfers nog tab-gescheiden zijn. Wij gebruiken Ptn/Wd/W/G/V (DV/DT/DS staan
-   niet op de graphic). */
+   cijfers nog tab-gescheiden zijn. Ptn/Wd/W/G/V staan altijd op de graphic;
+   DS (doelsaldo) is optioneel in te schakelen (StandDataEditor) en wordt,
+   als de widget 'm meegeeft, hier al meegenomen — DV/DT zelf (los van DS)
+   staan nergens op de graphic. */
 function parseStandPaste(text) {
   const lines = text.split(/\r?\n/).map((l) => l.trim());
   const rijen = [];
@@ -2522,8 +2524,11 @@ function parseStandPaste(text) {
     if (i >= lines.length) break;
     const cijfers = splitCijfers(lines[i]); i++;
     if (cijfers.length < 5 || cijfers.slice(0, 5).some((c) => !/^-?\d+$/.test(c))) continue;
-    const [ptn, wd, w, g, v] = cijfers.map(Number);
-    rijen.push({ pos: rijen.length + 1, club, gs: wd, w, g, v, pt: ptn, logo: vindClubLogo(club) });
+    const [ptn, wd, w, g, v, dv, dt, dsRaw] = cijfers.map(Number);
+    // DS rechtstreeks als die meekomt (8ste kolom), anders afgeleid uit
+    // DV/DT als die er wél zijn; zonder een van beide blijft het 0.
+    const ds = cijfers.length >= 8 ? dsRaw : (cijfers.length >= 7 ? dv - dt : 0);
+    rijen.push({ pos: rijen.length + 1, club, gs: wd, w, g, v, pt: ptn, ds, logo: vindClubLogo(club) });
   }
   return rijen;
 }
@@ -3294,10 +3299,15 @@ function StandTemplate({ data, setData }) {
   const xL = 80, xR = 1000;
   const posW = 70, numW = 70, gap = 8;
   const naamX = xL + posW + gap;
-  const naamEnd = 610;
+  // Doelsaldo (DS) is optioneel (data.toonDoelsaldo, standaard uit) — als
+  // 'ie aan staat schuift de naamkolom 78px (kolombreedte + gap) in, zodat
+  // de tabel als geheel nog steeds precies tot xR=1000 loopt.
+  const toonDS = !!data.toonDoelsaldo;
+  const naamEnd = toonDS ? 532 : 610;
   const naamW = naamEnd - naamX;
-  const kolommen = ["GS", "W", "G", "V", "PT"];
+  const kolommen = toonDS ? ["GS", "W", "G", "V", "DS", "PT"] : ["GS", "W", "G", "V", "PT"];
   const colX = (i) => naamEnd + gap + i * (numW + gap);
+  const formatDS = (v) => (Number(v) > 0 ? `+${v}` : `${v}`);
 
   const rowH = 50;
   // barY/y0 schalen lineair met het aantal rijen (-20px per extra rij), zo
@@ -3326,12 +3336,17 @@ function StandTemplate({ data, setData }) {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 11;
         const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
+        // Laatste kolom (PT) blijft altijd vet; DS (indien aan) schuift
+        // ertussen, regular zoals de rest.
+        const waardes = toonDS
+          ? [r.gs, r.w, r.g, r.v, formatDS(r.ds), r.pt]
+          : [r.gs, r.w, r.g, r.v, r.pt];
         return (
           <g key={r.pos}>
             <rect x={xL} y={y} width={posW} height={rowH} fill={fill} />
             <rect x={naamX} y={y} width={naamW} height={rowH} fill={fill} />
-            {[0, 1, 2, 3, 4].map((i2) => (
-              <rect key={i2} x={colX(i2)} y={y} width={numW} height={rowH} fill={fill} />
+            {kolommen.map((k, i2) => (
+              <rect key={k} x={colX(i2)} y={y} width={numW} height={rowH} fill={fill} />
             ))}
             <text x={xL + posW / 2} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize={TS.tekst} fill={themeEff.tekst}>{r.pos}</text>
@@ -3339,12 +3354,11 @@ function StandTemplate({ data, setData }) {
               preserveAspectRatio="xMidYMid meet" />}
             <FitText x={naamX + 60} y={midY} maxW={naamW - 68}
               weight="700" size={TS.tekst} fill={themeEff.tekst}>{r.club}</FitText>
-            {[r.gs, r.w, r.g, r.v].map((val, i2) => (
+            {waardes.map((val, i2) => (
               <text key={i2} x={colX(i2) + numW / 2} y={midY} textAnchor="middle" fontFamily={FONT}
-                fontWeight="400" fontSize={TS.tekst} fill={themeEff.tekst}>{val}</text>
+                fontWeight={i2 === waardes.length - 1 ? "700" : "400"} fontSize={TS.tekst}
+                fill={themeEff.tekst}>{val}</text>
             ))}
-            <text x={colX(4) + numW / 2} y={midY} textAnchor="middle" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={themeEff.tekst}>{r.pt}</text>
           </g>
         );
       })}
@@ -5382,8 +5396,9 @@ function StandDataEditor({ data, setData, competitie }) {
     ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })),
   }));
   const voegRijToe = () => setData((d) => ({
-    ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, club: "", gs: 0, w: 0, g: 0, v: 0, pt: 0, logo: null }],
+    ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, club: "", gs: 0, w: 0, g: 0, v: 0, pt: 0, ds: 0, logo: null }],
   }));
+  const kolommen = data.toonDoelsaldo ? ["gs", "w", "g", "v", "ds", "pt"] : ["gs", "w", "g", "v", "pt"];
   return (
     <div>
       <div style={dpLabel}>Titel</div>
@@ -5391,6 +5406,12 @@ function StandDataEditor({ data, setData, competitie }) {
       <div style={dpLabel}>Ondertitel (bv. "na speelronde 19")</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))}
         placeholder="na speelronde …" style={dpVeld} />
+
+      <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }}>
+        <input type="checkbox" checked={!!data.toonDoelsaldo}
+          onChange={(e) => setData((d) => ({ ...d, toonDoelsaldo: e.target.checked }))} />
+        Doelsaldo tonen (DS)
+      </label>
 
       {/* Alleen bij de nog in te vullen competitie: Eredivisie/Premier
           League hebben al hun eigen huisstijl-illustratie als achtergrond. */}
@@ -5418,10 +5439,10 @@ function StandDataEditor({ data, setData, competitie }) {
               <button onClick={() => verwijderRij(i)} style={{ ...dpX, flexShrink: 0 }} title="Rij verwijderen">×</button>
             </div>
             <div style={{ display: "flex", gap: 4, marginTop: 4, paddingLeft: 26 }}>
-              {["gs", "w", "g", "v", "pt"].map((k) => (
+              {kolommen.map((k) => (
                 <div key={k} style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 9, fontWeight: 700, color: "#9ca3af", textAlign: "center", textTransform: "uppercase" }}>
-                    {{ gs: "Gesp.", w: "Winst", g: "Gelijk", v: "Verl.", pt: "Ptn" }[k]}
+                    {{ gs: "Gesp.", w: "Winst", g: "Gelijk", v: "Verl.", ds: "Saldo", pt: "Ptn" }[k]}
                   </div>
                   <input type="number" value={r[k]}
                     onChange={(e) => zetRij(i, { [k]: e.target.value === "" ? "" : Number(e.target.value) })}
