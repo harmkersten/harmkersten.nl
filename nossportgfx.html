@@ -5709,11 +5709,45 @@ function App() {
   // id="veldlijnen"), dus weghalen is één klik. Het ingebedde Effra-font gaat er
   // bewust uit: Illustrator negeert @font-face toch en het scheelt ~400 kB —
   // de tekst blijft levend met font-family "Effra".
-  const exportSVG = useCallback(() => {
+  // Vlaggen én het NOS-logo zijn zelf ook SVG's, ingebed als <image
+  // href="data:image/svg+xml;..."> — zo'n SVG-in-SVG via een data-URI
+  // rendert een browser prima, maar Illustrator niet, dus die vielen bij het
+  // openen weg. Daarom worden ze hier eerst naar PNG gerasterd (canvas) vóór
+  // het wegschrijven; echte vectoren (paths/rects/tekst) blijven vector.
+  const rasterizeerNaarPng = (href, w, h) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const schaal = 4; // scherp genoeg ook uitvergroot in Illustrator
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(w * schaal));
+      canvas.height = Math.max(1, Math.round(h * schaal));
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(href); // kon niet rasteren -> laat 'm zoals-ie was
+    img.src = href;
+  });
+
+  const exportSVG = useCallback(async () => {
     const svg = svgWrap.current?.querySelector("svg");
     if (!svg) return;
     const kopie = svg.cloneNode(true);
     kopie.querySelectorAll("style").forEach((el) => el.remove());
+
+    const xlinkNS = "http://www.w3.org/1999/xlink";
+    const svgAlsImage = [...kopie.querySelectorAll("image")].filter((el) => {
+      const href = el.getAttribute("href") || el.getAttributeNS(xlinkNS, "href") || "";
+      return href.startsWith("data:image/svg+xml");
+    });
+    await Promise.all(svgAlsImage.map(async (el) => {
+      const href = el.getAttribute("href") || el.getAttributeNS(xlinkNS, "href");
+      const w = parseFloat(el.getAttribute("width")) || 100;
+      const h = parseFloat(el.getAttribute("height")) || 100;
+      const png = await rasterizeerNaarPng(href, w, h);
+      el.setAttribute("href", png);
+      el.removeAttributeNS(xlinkNS, "href");
+    }));
+
     kopie.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     kopie.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
