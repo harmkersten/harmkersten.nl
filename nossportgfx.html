@@ -755,7 +755,7 @@ function seedShuffle(arr, seed) {
 function getMockF1(competitie, type, raceSlug) {
   const races = RACES[competitie];
   const race = races.find((r) => r[0] === raceSlug) || races[0];
-  const titel = race[1];
+  const raceNaam = race[1];
   const pool = POOL[competitie];
 
   if (type === "uitslag") {
@@ -765,7 +765,10 @@ function getMockF1(competitie, type, raceSlug) {
       punten: PUNTEN[i], foto: FOTO_URI[d.kort] || null,
     }));
     return {
-      sport: "Formule 1", titel, type: "uitslag", theme: THEMES.formule1,
+      // Titel/ondertitel omgedraaid t.o.v. de meeste sporten: hier is
+      // "Uitslag" de grote 58pt-titel en de Grand Prix de 36pt-ondertitel
+      // (referentie-svg) — allebei nu wel gewoon aan te passen in de editor.
+      sport: "Formule 1", titel: "Uitslag", ondertitel: raceNaam, type: "uitslag", theme: THEMES.formule1,
       // Podium: alleen achternaam (kort) zodat het binnen de smalle balk past.
       podium: [
         { ...top10[1], naam: top10[1].kort }, // pos 2
@@ -780,7 +783,7 @@ function getMockF1(competitie, type, raceSlug) {
   if (type === "grid") {
     const volgorde = seedShuffle(pool, "g" + raceSlug);
     return {
-      sport: "Formule 1", titel, type: "grid", theme: THEMES.formule1,
+      sport: "Formule 1", titel: "Startopstelling", ondertitel: raceNaam, type: "grid", theme: THEMES.formule1,
       // Startopstelling toont de teamnaam voluit (er is ruimte); alleen de
       // race-uitslag gebruikt de afkorting.
       rijen: volgorde.map((d, i) => ({
@@ -796,14 +799,14 @@ function getMockF1(competitie, type, raceSlug) {
     const subtitel = "stand na 15 races";
     if (type === "wkstandcoureurs") {
       return {
-        sport: "Formule 1", titel: subtitel, type, theme: THEMES.formule1,
+        sport: "Formule 1", titel: "Formule 1", ondertitel: subtitel, type, theme: THEMES.formule1,
         rijen: WK_STAND_COUREURS[competitie].map(([naam, land, team, punten], i) => ({
           pos: i + 1, naam, land, team, punten,
         })),
       };
     }
     return {
-      sport: "Formule 1", titel: subtitel, type, theme: THEMES.formule1,
+      sport: "Formule 1", titel: "Formule 1", ondertitel: subtitel, type, theme: THEMES.formule1,
       rijen: WK_STAND_TEAMS[competitie].map(([team, code, punten, land], i) => ({
         pos: i + 1, team, code, punten, land,
       })),
@@ -1120,10 +1123,10 @@ function getMockAlgemeen(competitie, type) {
   if (competitie !== "toernooien" || type !== "medaillespiegel") return null;
   const d = MEDAILLESPIEGEL_MOCK;
   return {
-    // "medaillespiegel" is de vaste 60pt-koptekst (net als "Uitslag" bij F1,
-    // hardcoded in het template zelf) — data.titel is de 36pt-ondertitel,
-    // hier het evenement, en dus het enige titelveld dat de redacteur ziet.
-    sport: "Algemeen", titel: "Olympische Winterspelen", type: "medaillespiegel",
+    // Titel/ondertitel omgedraaid t.o.v. de meeste sporten: "medaillespiegel"
+    // is de grote 58pt-titel, het evenement de 36pt-ondertitel — allebei aan
+    // te passen in de editor (was voorheen alleen het evenement).
+    sport: "Algemeen", titel: "medaillespiegel", ondertitel: "Olympische Winterspelen", type: "medaillespiegel",
     theme: THEMES.algemeen, subkop: d.subkop,
     rijen: d.rijen.map((r, i) => ({ pos: i + 1, ...r })),
     achtergrond: "verloop", foto: null,
@@ -2646,9 +2649,10 @@ function UitslagTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      {/* Kop-tekst omgedraaid t.o.v. de andere sporten: hier is "Uitslag" de
-          grote 60pt-titel en de Grand Prix de 36pt-ondertitel (referentie-svg). */}
-      <Kop sport="Uitslag" titel={data.titel} theme={data.theme} />
+      {/* Titel/ondertitel omgedraaid t.o.v. de meeste sporten: hier is
+          "Uitslag" de grote 58pt-titel en de Grand Prix de 36pt-ondertitel
+          (referentie-svg) — allebei aan te passen in de editor. */}
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
 
       <PodiumBlok p={p2} x={70} y={p2y} w={colW} h={p2h} />
       <PodiumBlok p={p1} x={393} y={p1y} w={colW} h={p1h} />
@@ -2734,7 +2738,7 @@ function GridTemplate({ data }) {
       {/* Hogere titelvariant (barY=60 i.p.v. 100, zelfde als bij de PL-stand/
           -programma): geeft meer lucht tussen de kop-balk en de eerste
           startrij (y0=258 blijft gelijk, dus de marge groeit mee). */}
-      <Kop sport="Startopstelling" titel={data.titel} theme={data.theme} barY={60} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={60} />
       {oneven.map((r, i) => vak(r, xLinks, y0 + i * rowGap))}
       {even.map((r, i) => vak(r, xRechts, y0 + stagger + i * rowGap))}
     </svg>
@@ -2771,7 +2775,7 @@ function WKStandCoureursTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.sport} titel={data.titel} theme={data.theme} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 16} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
         fontWeight="700" fontSize="36" fill={NOS.wit}>coureurs</text>
@@ -2823,7 +2827,7 @@ function WKStandTeamsTemplate({ data }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
-      <Kop sport={data.sport} titel={data.titel} theme={data.theme} barY={160} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={160} />
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 24} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
         fontWeight="700" fontSize="36" fill={NOS.wit}>constructeurs</text>
@@ -4264,9 +4268,10 @@ function MedaillespiegelTemplate({ data, setData }) {
       <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
         fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
         fotoSleep={isFoto && setData ? fotoSleep : null} />
-      {/* Kop-tekst omgedraaid, net als bij F1: "medaillespiegel" is de grote
-          60pt-titel, het evenement (data.titel) de 36pt-ondertitel. */}
-      <Kop sport="medaillespiegel" titel={data.titel} theme={data.theme} barY={160} />
+      {/* Titel/ondertitel omgedraaid, net als bij F1: "medaillespiegel" is de
+          grote 58pt-titel, het evenement de 36pt-ondertitel — allebei aan te
+          passen in de editor. */}
+      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={160} />
 
       {/* subkop-balk + goud/zilver/brons kolomkoppen met medaille-badges */}
       <rect x={xL} y={subBarY} width={countryR - xL} height={subBarH} fill={data.theme.titel} />
@@ -4320,8 +4325,10 @@ function MedaillespiegelDataEditor({ data, setData }) {
   }));
   return (
     <div>
-      <div style={dpLabel}>Titel (evenement)</div>
+      <div style={dpLabel}>Titel</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel (evenement)</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Subkop (bv. "eindstand op 22 februari")</div>
       <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
       <AchtergrondKiezer data={data} setData={setData} />
@@ -5394,8 +5401,10 @@ function F1UitslagDataEditor({ data, setData }) {
   };
   return (
     <div>
-      <div style={dpLabel}>Titel (Grand Prix)</div>
+      <div style={dpLabel}>Titel</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel (Grand Prix)</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
 
       <PlakBox label="Plak de race-uitslag (top 10, incl. kolomkoppen Rg/Nr./Land/Naam/Team/…/Resultaat/Pnt)"
         placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tRondes\tPitstops\tResultaat\tPnt\n1\t1\t\nGBR\nGBR\nLando Norris\nMcLaren\nMcLaren\n72\t2\t2:04:44.859\t25\n2\t12\t…"}
@@ -5416,8 +5425,10 @@ function F1GridDataEditor({ data, setData }) {
   const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
   return (
     <div>
-      <div style={dpLabel}>Titel (Grand Prix)</div>
+      <div style={dpLabel}>Titel</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel (Grand Prix)</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
 
       <PlakBox label="Plak de startopstelling (incl. kolomkoppen Pos/Land/Naam/Team)"
         placeholder={"1\nGroot-Brittannië\nG. Russell\nMercedes\nMercedes\nG. Russell\n3\nAustralië\nO. Piastri\nMcLaren\n…"}
@@ -5442,8 +5453,10 @@ function F1WKStandCoureursDataEditor({ data, setData }) {
   const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
   return (
     <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel (bv. "stand na 15 races")</div>
-      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))}
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))}
         placeholder="stand na … races" style={dpVeld} />
 
       <PlakBox label="Plak de WK-stand coureurs (incl. kolomkoppen Rg/Land/Naam/Team/Punten)"
@@ -5467,8 +5480,10 @@ function F1WKStandTeamsDataEditor({ data, setData }) {
   const voegToe = () => setData((d) => ({ ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, team: "", code: "", punten: 0 }] }));
   return (
     <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel (bv. "stand na 15 races")</div>
-      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))}
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))}
         placeholder="stand na … races" style={dpVeld} />
 
       <PlakBox label="Plak de WK-stand teams (incl. kolomkoppen Rg/Team/Punten)"
@@ -5531,8 +5546,12 @@ function App() {
     achtergrond: ACHTERGROND_KLEUREN[ACHTERGROND_KLEUREN.length - 1],
   });
   const svgWrap = useRef(null);
-  // Aangevinkte ploegen voor de wielrennen-deelnemerslijst.
+  // Aangevinkte ploegen + titel/ondertitel voor de wielrennen-deelnemerslijst
+  // (deze graphic gaat niet via getMock/DataPanel maar heeft zijn eigen
+  // editor in het linkerpaneel, zie isDeelnemers hieronder).
   const [gekozenTeams, setGekozenTeams] = useState([]);
+  const [deelnemersTitel, setDeelnemersTitel] = useState("Tour de France 2026");
+  const [deelnemersOndertitel, setDeelnemersOndertitel] = useState("deelnemende teams");
   const wisselTeam = (id) => setGekozenTeams((g) =>
     g.includes(id) ? g.filter((x) => x !== id) : [...g, id]);
   const wisselKlasse = (klasse) => setGekozenTeams((g) => {
@@ -5603,7 +5622,7 @@ function App() {
   }
 
   const deelnemersData = isDeelnemers ? {
-    titel: "Tour de France 2026", ondertitel: "deelnemende teams",
+    titel: deelnemersTitel, ondertitel: deelnemersOndertitel,
     theme: THEMES.tourdefrance,
     teams: WIELER_LIJST.filter((t) => gekozenTeams.includes(t.id)),
   } : null;
@@ -5771,6 +5790,10 @@ function App() {
                 ))}
                 {isDeelnemers && (
                   <div style={{ marginTop: 16 }}>
+                    <div style={dpLabel}>Titel</div>
+                    <input value={deelnemersTitel} onChange={(e) => setDeelnemersTitel(e.target.value)} style={dpVeld} />
+                    <div style={dpLabel}>Ondertitel</div>
+                    <input value={deelnemersOndertitel} onChange={(e) => setDeelnemersOndertitel(e.target.value)} style={dpVeld} />
                     <div style={{ display: "flex", justifyContent: "space-between",
                       alignItems: "baseline", marginBottom: 8 }}>
                       <h3 style={{ ...secTitel, marginBottom: 0 }}>Ploegen</h3>
