@@ -2456,14 +2456,39 @@ const CLUB_ALIAS = {
 const CLUB_ALIAS_TIGHT = Object.fromEntries(
   Object.entries(CLUB_ALIAS).map(([alias, naam]) => [normTight(alias), naam])
 );
+// Vindt de bijpassende CLUB_LOGO-sleutel voor een geplakte/getypte naam:
+// eerst exact (na alias-vertaling), anders op een deel van de naam — zo
+// matcht bv. "AS Roma" alsnog op onze sleutel "Roma", en "1. FC Köln e.V."
+// op "1. FC Köln". Bij meerdere kandidaten wint de langste sleutel die in
+// de invoer voorkomt (specifiekste match), of anders de kortste sleutel
+// waar de invoer zelf een deel van is. Sleutels korter dan 4 tekens (zoals
+// "AZ", "NEC", "PSV") doen niet mee aan het deel-matchen — te kort om
+// betrouwbaar als eigen naamdeel te herkennen i.p.v. toevallige substring.
+function vindClubKey(naam) {
+  const doel = normTight(CLUB_ALIAS_TIGHT[normTight(naam)] || naam);
+  if (!doel) return null;
+  const keys = Object.keys(CLUB_LOGO);
+  let key = keys.find((k) => normTight(k) === doel);
+  if (!key) {
+    const bevat = keys.filter((k) => {
+      const kt = normTight(k);
+      return kt.length >= 4 && doel.includes(kt);
+    });
+    key = bevat.sort((a, b) => b.length - a.length)[0];
+  }
+  if (!key && doel.length >= 4) {
+    const bevatIn = keys.filter((k) => normTight(k).includes(doel));
+    key = bevatIn.sort((a, b) => a.length - b.length)[0];
+  }
+  return key || null;
+}
 // Herleidt een geplakte clubnaam naar onze eigen naam, zodat zowel de
 // weergave op de graphic als de logo-match kloppen.
 function canonClubNaam(naam) {
-  return CLUB_ALIAS_TIGHT[normTight(naam)] || naam;
+  return vindClubKey(naam) || naam;
 }
 function vindClubLogo(naam) {
-  const doel = normTight(canonClubNaam(naam));
-  const key = Object.keys(CLUB_LOGO).find((k) => normTight(k) === doel);
+  const key = vindClubKey(naam);
   return key ? CLUB_LOGO[key] : null;
 }
 // Tab-gescheiden cijferregel; valt terug op spaties als tabs verloren gingen
