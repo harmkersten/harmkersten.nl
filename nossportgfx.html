@@ -430,6 +430,17 @@ const THEMES = {
       [0, "#B9779B"], [50, "#DAB9CA"], [100, "#9B3A6F"],
     ] },
   },
+  // Standaard blauw verloop voor een nog in te vullen ("eigen") competitie
+  // — geen vaste clubkleur/illustratie zoals bij Eredivisie/Premier League,
+  // dus een neutrale eigen blauwtint i.p.v. het echte clublogo-blauw.
+  eigen: {
+    titel: "#284CBE",
+    tekst: "#1B2A6B",
+    zebra: "#E9EDF9",
+    gradient: { x1: 0, y1: 0, x2: 1, y2: 1, stops: [
+      [0, "#8FACD6"], [100, "#5288C8"],
+    ] },
+  },
   tourdefrance: {
     titel: "#1F1F1F",
     tekst: NOS.tekst,
@@ -580,6 +591,12 @@ const CONFIG = {
         label: "Premier League",
         types: {
           programma: { label: "programma" },
+          stand: { label: "stand" },
+        },
+      },
+      eigen: {
+        label: "eigen competitie (zelf invullen)",
+        types: {
           stand: { label: "stand" },
         },
       },
@@ -896,6 +913,9 @@ const VOETBAL_STAND = {
     ["Brighton", 27, 8, 14, 15, 19], ["Brentford", 27, 8, 12, 15, 19],
     ["Bournemouth", 27, 8, 14, 15, 19], ["Aston Villa", 27, 8, 12, 15, 19],
   ],
+  // Nog in te vullen competitie: bewust leeg, geen fictieve clubs — de
+  // redacteur plakt of vult zelf de echte stand in.
+  eigen: [],
 };
 
 const VOETBAL_PROGRAMMA = {
@@ -928,17 +948,23 @@ const VOETBAL_PROGRAMMA = {
   },
 };
 
+// Alleen Eredivisie/Premier League hebben een vaste competitienaam voor in
+// de titel — "eigen" (nog in te vullen) heeft die niet, vandaar de fallback
+// naar "" i.p.v. een hardcoded derde naam.
+const VOETBAL_COMPETITIE_LABEL = { eredivisie: "Eredivisie", premierleague: "Premier League" };
+
 function getMockVoetbal(competitie, type) {
-  const label = competitie === "eredivisie" ? "Eredivisie" : "Premier League";
+  const label = VOETBAL_COMPETITIE_LABEL[competitie] || "";
   const theme = THEMES[competitie];
   if (type === "stand") {
-    const rijen = VOETBAL_STAND[competitie].map(([club, gs, w, g, v, pt], i) => ({
+    const rijen = (VOETBAL_STAND[competitie] || []).map(([club, gs, w, g, v, pt], i) => ({
       pos: i + 1, club, gs, w, g, v, pt, logo: CLUB_LOGO[club] || null,
     }));
     // Ondertitel (de speelronde) bewust leeg als startpunt i.p.v. een
     // voorinvulde waarde — anders bestaat het risico dat een oude/foute
-    // speelronde blijft staan en zo de graphic uit gaat.
-    return { sport: "Voetbal", titel: `stand ${label}`, ondertitel: "", type: "stand", theme, rijen };
+    // speelronde blijft staan en zo de graphic uit gaat. Zonder bekende
+    // competitienaam ("eigen") blijft de titel gewoon "stand".
+    return { sport: "Voetbal", titel: label ? `stand ${label}` : "stand", ondertitel: "", type: "stand", theme, rijen };
   }
   if (type === "programma") {
     const data = VOETBAL_PROGRAMMA[competitie];
@@ -4978,7 +5004,11 @@ const VOETBAL_CLUBS_PER_COMPETITIE = Object.fromEntries(
   Object.entries(VOETBAL_STAND).map(([competitie, rijen]) => [competitie, rijen.map(([club]) => club).sort((a, b) => a.localeCompare(b))])
 );
 function ClubSelect({ value, onChange, placeholder, competitie }) {
-  const opties = VOETBAL_CLUBS_PER_COMPETITIE[competitie] || VOETBAL_CLUBS_LIJST;
+  // Een lege lijst (zoals bij "eigen", nog in te vullen) is ook falsy-achtig
+  // qua bedoeling maar niet qua JS-waarheid ([] is truthy) — expliciet op
+  // lengte checken, anders valt hij niet terug op de volledige clublijst.
+  const perCompetitie = VOETBAL_CLUBS_PER_COMPETITIE[competitie];
+  const opties = perCompetitie && perCompetitie.length ? perCompetitie : VOETBAL_CLUBS_LIJST;
   return (
     <select value={value || ""} onChange={(e) => onChange(e.target.value)}
       style={{ ...dpVeld, marginBottom: 0, flex: 1, textOverflow: "ellipsis" }}>
