@@ -2132,8 +2132,23 @@ const normTight = (s) => normSpace(s).replace(/\s+/g, "");
 function landcode(naam) {
   return LANDNAAM_NAAR_CODE[normSpace(naam)] || null;
 }
+// Sommige databronnen leveren de volledige officiële clubnaam i.p.v. onze
+// eigen (kortere) naam, bv. widget geeft "Brighton & Hove Albion" terwijl
+// wij de club als "Brighton" kennen. Alias -> onze naam.
+const CLUB_ALIAS = {
+  "Brighton & Hove Albion": "Brighton",
+  "Brighton and Hove Albion": "Brighton",
+};
+const CLUB_ALIAS_TIGHT = Object.fromEntries(
+  Object.entries(CLUB_ALIAS).map(([alias, naam]) => [normTight(alias), naam])
+);
+// Herleidt een geplakte clubnaam naar onze eigen naam, zodat zowel de
+// weergave op de graphic als de logo-match kloppen.
+function canonClubNaam(naam) {
+  return CLUB_ALIAS_TIGHT[normTight(naam)] || naam;
+}
 function vindClubLogo(naam) {
-  const doel = normTight(naam);
+  const doel = normTight(canonClubNaam(naam));
   const key = Object.keys(CLUB_LOGO).find((k) => normTight(k) === doel);
   return key ? CLUB_LOGO[key] : null;
 }
@@ -2159,8 +2174,9 @@ function parseStandPaste(text) {
     i++; // rangnummer zelf negeren, wij nummeren opnieuw op volgorde
     while (i < lines.length && lines[i] === "") i++;
     if (i >= lines.length) break;
-    const club = lines[i]; i++;
-    while (i < lines.length && (lines[i] === "" || lines[i] === club)) i++;
+    const geplakteNaam = lines[i]; i++;
+    const club = canonClubNaam(geplakteNaam);
+    while (i < lines.length && (lines[i] === "" || lines[i] === geplakteNaam)) i++;
     if (i >= lines.length) break;
     const cijfers = splitCijfers(lines[i]); i++;
     if (cijfers.length < 5 || cijfers.slice(0, 5).some((c) => !/^-?\d+$/.test(c))) continue;
