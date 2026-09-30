@@ -2286,6 +2286,34 @@ function parseF1StandCoureursPaste(text) {
   return rijen;
 }
 
+/* Startopstelling-widget: "Pos  Land  Naam  Team" — geen Nr.-kolom (net als
+   de WK-stand), en de land-cel komt hier als volle NL naam binnen (niet als
+   3-letter code). Team én naam staan allebei dubbel (logo-alt-regels): de
+   naam zowel vóór als ná de teamnaam. Belangrijk: de widget plakt de rijen
+   niet op raceverloop-volgorde maar in twee kolommen (eerst alle oneven
+   startposities, dan alle even) — dus de echte positie uit de geplakte tekst
+   gebruiken en pas ná het parsen op positie sorteren, niet gewoon doornummeren. */
+function parseF1GridPaste(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  const rijen = [];
+  let i = 0;
+  const peek = () => { let j = i; while (j < lines.length && lines[j] === "") j++; return j < lines.length ? lines[j] : ""; };
+  const volgende = () => { while (i < lines.length && lines[i] === "") i++; return i < lines.length ? lines[i++] : ""; };
+  while (i < lines.length) {
+    if (!/^\d+$/.test(lines[i])) { i++; continue; }
+    const pos = Number(lines[i]); i++;
+    const land = landcode(volgende()) || "";
+    const naam = volgende();
+    let team = volgende();
+    if (peek() === team) volgende(); // gedupliceerde team-regel
+    if (peek() === naam) volgende(); // gedupliceerde naam-regel aan het eind
+    if (!naam) continue;
+    rijen.push({ pos, naam, land, team: TEAM_CODE_NAAM[teamcode(team)] || team });
+  }
+  rijen.sort((a, b) => a.pos - b.pos);
+  return rijen;
+}
+
 /* WK-standen-widget, teams: "Rg  Team  Punten" — zelfde vorm als de */
 /* voetbalstand-widget, maar met maar één cijferkolom. */
 function parseF1TeamsPaste(text) {
@@ -5391,13 +5419,15 @@ function F1GridDataEditor({ data, setData }) {
       <div style={dpLabel}>Titel (Grand Prix)</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
 
-      <PlakBox label="Plak de kwalificatie-uitslag/startopstelling (incl. kolomkoppen Rg/Nr./Land/Naam/Team/…/Resultaat)"
-        placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tRondes\tResultaat\n1\t1\t\nGBR\nGBR\nLando Norris\nMcLaren\nMcLaren\n21\t1:11.163\n2\t63\t…"}
+      <PlakBox label="Plak de startopstelling (incl. kolomkoppen Pos/Land/Naam/Team)"
+        placeholder={"1\nGroot-Brittannië\nG. Russell\nMercedes\nMercedes\nG. Russell\n3\nAustralië\nO. Piastri\nMcLaren\n…"}
         onParse={(tekst) => {
           // Startopstelling toont net als het referentie-ontwerp alleen de
-          // achternaam (kort) en de teamnaam voluit (niet de afkorting).
-          const rijen = parseF1PersonenPaste(tekst)
-            .map((r, i) => ({ pos: i + 1, naam: kortenaam(r.naam), land: r.land, team: TEAM_CODE_NAAM[teamcode(r.team)] || r.team }));
+          // achternaam (kort) en de teamnaam voluit (niet de afkorting). De
+          // widget plakt in twee kolommen (eerst oneven, dan even
+          // startposities) — parseF1GridPaste sorteert al op echte positie.
+          const rijen = parseF1GridPaste(tekst)
+            .map((r) => ({ ...r, naam: kortenaam(r.naam) }));
           if (rijen.length) zetRijen(rijen);
           return rijen;
         }} />
