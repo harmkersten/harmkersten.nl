@@ -601,7 +601,6 @@ const CONFIG = {
           programma: { label: "Programma" },
           uitslag: { label: "Uitslag" },
           klassement: { label: "Algemeen klassement" },
-          deelnemers: { label: "Deelnemende teams" },
         },
       },
       giro: {
@@ -4213,61 +4212,6 @@ function ParijsRoubaixTemplate({ data, setData }) {
   );
 }
 
-/* ======================= WIELRENNEN: DEELNEMENDE TEAMS ===================== */
-/* Raster van tenues met ploegnaam en UCI-code + land. Het aantal kolommen en  */
-/* de tenuegrootte volgen uit het aantal aangevinkte ploegen, zodat een veld   */
-/* van 8 net zo goed vult als een Tour-startlijst van 23.                      */
-
-function DeelnemersTemplate({ data }) {
-  const teams = data.teams;
-  const n = teams.length;
-  const kol = n <= 6 ? 2 : n <= 12 ? 3 : n <= 24 ? 4 : 5;
-  const rijen = Math.ceil(n / kol);
-  const xL = 60, xR = 1020;
-  const vakB = (xR - xL) / kol;
-  const top = 292, bodem = 1296;
-  const vakH = (bodem - top) / rijen;
-
-  // Twee tekstregels onder het tenue; de rest is voor het tenue zelf.
-  const naamFont = Math.min(30, Math.max(17, vakB * 0.115));
-  const codeFont = Math.max(14, naamFont * 0.74);
-  const tekstH = naamFont + codeFont + 16;
-  const tenueH = Math.max(40, Math.min(vakH - tekstH - 14, vakB * 0.66));
-  const tenueB = tenueH * WIELER_SCHAAL;
-
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} />
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
-      <g id="deelnemers">
-        {teams.map((t, i) => {
-          const r = Math.floor(i / kol), c = i % kol;
-          // Laatste rij centreren als hij niet vol is.
-          const inRij = Math.min(kol, n - r * kol);
-          const rijBreed = inRij * vakB;
-          const x0 = xL + (xR - xL - rijBreed) / 2 + c * vakB;
-          const midX = x0 + vakB / 2;
-          const y0 = top + r * vakH;
-          const tenueY = y0 + (vakH - tekstH - tenueH) / 2;
-          const naamY = tenueY + tenueH + naamFont + 6;
-          return (
-            <g key={t.id} id={`ploeg-${t.code}`}>
-              <WielerTenue kit={t} uid={`d-${i}`} size={tenueH}
-                x={midX - tenueB / 2} y={tenueY} />
-              <FitText x={midX} y={naamY} maxW={vakB - 16} anchor="middle"
-                weight="700" size={naamFont} fill={NOS.wit}>{t.naam}</FitText>
-              <text x={midX} y={naamY + codeFont + 6} textAnchor="middle" fontFamily={FONT}
-                fontWeight="400" fontSize={codeFont} fill={NOS.wit} opacity="0.72">
-                {t.code} · {t.land}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-    </svg>
-  );
-}
-
 /* ============================ ALGEMEEN: MEDAILLESPIEGEL ====================== */
 /* Rang + land + goud/zilver/brons. Het eigen land (bij NOS altijd Nederland)
    krijgt oranje/wit i.p.v. de gewone wit/lichtblauw-zebra — een los
@@ -5649,20 +5593,6 @@ function App() {
     achtergrond: ACHTERGROND_KLEUREN[ACHTERGROND_KLEUREN.length - 1],
   });
   const svgWrap = useRef(null);
-  // Aangevinkte ploegen + titel/ondertitel voor de wielrennen-deelnemerslijst
-  // (deze graphic gaat niet via getMock/DataPanel maar heeft zijn eigen
-  // editor in het linkerpaneel, zie isDeelnemers hieronder).
-  const [gekozenTeams, setGekozenTeams] = useState([]);
-  const [deelnemersTitel, setDeelnemersTitel] = useState("Tour de France 2026");
-  const [deelnemersOndertitel, setDeelnemersOndertitel] = useState("deelnemende teams");
-  const wisselTeam = (id) => setGekozenTeams((g) =>
-    g.includes(id) ? g.filter((x) => x !== id) : [...g, id]);
-  const wisselKlasse = (klasse) => setGekozenTeams((g) => {
-    const ids = WIELER_LIJST.filter((t) => t.klasse === klasse).map((t) => t.id);
-    const allemaal = ids.every((id) => g.includes(id));
-    return allemaal ? g.filter((id) => !ids.includes(id))
-                    : [...g, ...ids.filter((id) => !g.includes(id))];
-  });
 
   // Effra in de document laden zodat ook de wizard-UI het font gebruikt.
   useEffect(() => {
@@ -5698,11 +5628,9 @@ function App() {
   const categorieIsEindtype = heeftCategorieen && !!categorie && categorieCfg && !categorieCfg.types;
   const klaarVoorCategorie = !heeftCategorieen || !!categorie;
   const klaarVoorType = klaarVoorCategorie && !categorieIsEindtype && (heeftRace ? !!race : true);
-  // Opstelling en deelnemerslijst komen niet uit de mock-datalaag maar uit de
-  // editor ernaast.
+  // Opstelling komt niet uit de mock-datalaag maar uit de editor ernaast.
   const isOpstelling = sport === "voetbal" && competitie === "opstelling";
-  const isDeelnemers = sport === "wielrennen" && type === "deelnemers";
-  const heeftData = !!type && !isOpstelling && !isDeelnemers;
+  const heeftData = !!type && !isOpstelling;
 
   // editData is een bewerkbare kopie van de mock-data: de redacteur kan hier
   // waardes in aanpassen of een tabel uit een bestaande widget in plakken
@@ -5724,13 +5652,7 @@ function App() {
     setEditData(heeftData ? getMock(sport, competitie, type, race) : null);
   }
 
-  const deelnemersData = isDeelnemers ? {
-    titel: deelnemersTitel, ondertitel: deelnemersOndertitel,
-    theme: THEMES.tourdefrance,
-    teams: WIELER_LIJST.filter((t) => gekozenTeams.includes(t.id)),
-  } : null;
-  const toonPreview = !!editData || (isOpstelling && !!type) ||
-    (isDeelnemers && deelnemersData.teams.length > 0);
+  const toonPreview = !!editData || (isOpstelling && !!type);
   const wijzigPloeg = (zijde) => (patch) =>
     setOpst((o) => ({ ...o, [zijde]: { ...o[zijde], ...patch } }));
 
@@ -5891,68 +5813,6 @@ function App() {
                 {Object.entries(typesBron || {}).map(([k, v]) => (
                   <Keuzeknop key={k} label={v.label} actief={type === k} onClick={() => setType(k)} />
                 ))}
-                {isDeelnemers && (
-                  <div style={{ marginTop: 16 }}>
-                    <div style={dpLabel}>Titel</div>
-                    <input value={deelnemersTitel} onChange={(e) => setDeelnemersTitel(e.target.value)} style={dpVeld} />
-                    <div style={dpLabel}>Ondertitel</div>
-                    <input value={deelnemersOndertitel} onChange={(e) => setDeelnemersOndertitel(e.target.value)} style={dpVeld} />
-                    <div style={{ display: "flex", justifyContent: "space-between",
-                      alignItems: "baseline", marginBottom: 8 }}>
-                      <h3 style={{ ...secTitel, marginBottom: 0 }}>Ploegen</h3>
-                      <span style={{ fontSize: 13, color: "#6b7280" }}>
-                        {gekozenTeams.length} gekozen
-                      </span>
-                    </div>
-                    {gekozenTeams.length > 0 && (
-                      <button onClick={() => setGekozenTeams([])} style={{
-                        width: "100%", padding: "8px 0", marginBottom: 10, borderRadius: 8,
-                        border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280",
-                        fontSize: 13, fontWeight: 600, cursor: "pointer",
-                      }}>Selectie wissen</button>
-                    )}
-                    <div style={{ maxHeight: 470, overflowY: "auto", paddingRight: 4 }}>
-                      {WIELER_KLASSEN.map((klasse) => {
-                        const ploegen = WIELER_LIJST.filter((t) => t.klasse === klasse);
-                        const aan = ploegen.filter((t) => gekozenTeams.includes(t.id)).length;
-                        return (
-                          <div key={klasse} style={{ marginBottom: 14 }}>
-                            <button onClick={() => wisselKlasse(klasse)} style={{
-                              width: "100%", textAlign: "left", padding: "8px 10px",
-                              borderRadius: 8, border: "none", background: "#f3f4f6",
-                              fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer",
-                              marginBottom: 6,
-                            }}>{klasse} · {aan}/{ploegen.length}</button>
-                            {ploegen.map((t) => {
-                              const aanuit = gekozenTeams.includes(t.id);
-                              return (
-                                <label key={t.id} style={{
-                                  display: "flex", alignItems: "center", gap: 8,
-                                  padding: "5px 10px", cursor: "pointer", fontSize: 14,
-                                  borderRadius: 6, background: aanuit ? "#fef2f2" : "transparent",
-                                }}>
-                                  <input type="checkbox" checked={aanuit}
-                                    onChange={() => wisselTeam(t.id)} />
-                                  <span style={{ flex: 1 }}>{t.naam}</span>
-                                  {/* Kleuren die nog nagelopen moeten worden krijgen een
-                                      stipje, zodat je ziet waar je op moet letten. */}
-                                  {t.zeker !== "vast" && (
-                                    <span title={`kleuren: ${t.zeker}`} style={{
-                                      width: 7, height: 7, borderRadius: "50%",
-                                      background: t.zeker === "onzeker" ? "#dc2626" : "#f59e0b",
-                                    }} />
-                                  )}
-                                  <span style={{ fontSize: 12, color: "#9ca3af" }}>{t.code}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
                 {isOpstelling && type && (
                   <>
                     <p style={{ fontSize: 13, color: "#6b7280", margin: "14px 0 0" }}>
@@ -6029,7 +5889,6 @@ function App() {
                   {sport === "schaatsen" && type === "programma" && <SchaatsenProgrammaTemplate data={editData} setData={setEditData} />}
                   {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
                   {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} />}
-                  {isDeelnemers && <DeelnemersTemplate data={deelnemersData} />}
                 </div>
                 </PreviewGrens>
               </div>
@@ -6048,7 +5907,7 @@ function App() {
               </>
             ) : (
               <div style={{ color: "#9ca3af", fontSize: 14 }}>
-                {isOpstelling || isDeelnemers
+                {isOpstelling
                   ? "Deze graphic heeft zijn eigen editor in het linkerpaneel."
                   : "Kies eerst een sport, competitie en type."}
               </div>
