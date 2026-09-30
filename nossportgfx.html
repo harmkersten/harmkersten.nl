@@ -563,21 +563,6 @@ const CONFIG = {
           wkstandteams: { label: "WK-stand constructeurs" },
         },
       },
-      wk2025: {
-        label: "Seizoen 2025",
-        categorieen: {
-          grandprix: {
-            label: "Grand Prix's",
-            heeftRace: true,
-            types: {
-              uitslag: { label: "Uitslag" },
-              grid: { label: "Starting grid" },
-            },
-          },
-          wkstandcoureurs: { label: "WK-stand coureurs" },
-          wkstandteams: { label: "WK-stand constructeurs" },
-        },
-      },
     },
   },
   voetbal: {
@@ -681,59 +666,45 @@ const CONFIG = {
 };
 
 /* ---- Races per seizoen (de 'event'-parameter op het endpoint) ------------- */
+// Datum = racedag (laatste dag van het GP-weekend), als ISO-string zodat de
+// racelijst er altijd chronologisch op te sorteren is (zie het gebruik
+// hieronder) i.p.v. te vertrouwen op de volgorde waarin ze hier staan.
+// GP Saoedi-Arabië is afgelast maar blijft in de kalender staan. Land = code
+// van het gastland (voor de vlag in de racekeuze).
 const RACES = {
   wk2026: [
-    ["australie", "Grand Prix van Australië"],
-    ["china", "Grand Prix van China"],
-    ["japan", "Grand Prix van Japan"],
-    ["bahrein", "Grand Prix van Bahrein"],
-    ["saoedi-arabie", "Grand Prix van Saudi Arabië"],
-    ["miami", "Grand Prix van Miami"],
-    ["canada", "Grand Prix van Canada"],
-    ["monaco", "Grand Prix van Monaco"],
-    ["spanje", "Grand Prix van Spanje"],
-    ["oostenrijk", "Grand Prix van Oostenrijk"],
-    ["groot-brittannie", "Grand Prix van Groot-Brittannië"],
-    ["belgie", "Grand Prix van België"],
-    ["hongarije", "Grand Prix van Hongarije"],
-    ["nederland", "Grand Prix van Nederland"],
-    ["italie", "Grand Prix van Italië"],
-    ["azerbeidzjan", "Grand Prix van Azerbeidzjan"],
-    ["singapore", "Grand Prix van Singapore"],
-    ["verenigde-staten", "Grand Prix van de Verenigde Staten"],
-    ["mexico", "Grand Prix van Mexico"],
-    ["brazilie", "Grand Prix van Brazilië"],
-    ["las-vegas", "Grand Prix van Las Vegas"],
-    ["qatar", "Grand Prix van Qatar"],
-    ["abu-dhabi", "Grand Prix van Abu Dhabi"],
-  ],
-  wk2025: [
-    ["australie", "Grand Prix van Australië"],
-    ["china", "Grand Prix van China"],
-    ["japan", "Grand Prix van Japan"],
-    ["bahrein", "Grand Prix van Bahrein"],
-    ["saoedi-arabie", "Grand Prix van Saudi Arabië"],
-    ["miami", "Grand Prix van Miami"],
-    ["imola", "Grand Prix van Emilia-Romagna"],
-    ["monaco", "Grand Prix van Monaco"],
-    ["spanje", "Grand Prix van Spanje"],
-    ["canada", "Grand Prix van Canada"],
-    ["oostenrijk", "Grand Prix van Oostenrijk"],
-    ["groot-brittannie", "Grand Prix van Groot-Brittannië"],
-    ["belgie", "Grand Prix van België"],
-    ["hongarije", "Grand Prix van Hongarije"],
-    ["nederland", "Grand Prix van Nederland"],
-    ["italie", "Grand Prix van Italië"],
-    ["azerbeidzjan", "Grand Prix van Azerbeidzjan"],
-    ["singapore", "Grand Prix van Singapore"],
-    ["verenigde-staten", "Grand Prix van de Verenigde Staten"],
-    ["mexico", "Grand Prix van Mexico"],
-    ["brazilie", "Grand Prix van Brazilië"],
-    ["las-vegas", "Grand Prix van Las Vegas"],
-    ["qatar", "Grand Prix van Qatar"],
-    ["abu-dhabi", "Grand Prix van Abu Dhabi"],
+    ["australie", "Grand Prix van Australië", "2026-03-08", "au"],
+    ["china", "Grand Prix van China", "2026-03-15", "cn"],
+    ["japan", "Grand Prix van Japan", "2026-03-29", "jp"],
+    ["saoedi-arabie", "Grand Prix van Saoedi-Arabië", "2026-04-19", "sa"],
+    ["miami", "Grand Prix van Miami", "2026-05-03", "us"],
+    ["canada", "Grand Prix van Canada", "2026-05-24", "ca"],
+    ["monaco", "Grand Prix van Monaco", "2026-06-07", "mc"],
+    ["barcelona-catalonie", "Grand Prix van Barcelona-Catalonië", "2026-06-14", "es"],
+    ["oostenrijk", "Grand Prix van Oostenrijk", "2026-06-28", "at"],
+    ["groot-brittannie", "Grand Prix van Groot-Brittannië", "2026-07-05", "gb"],
+    ["belgie", "Grand Prix van België", "2026-07-19", "be"],
+    ["hongarije", "Grand Prix van Hongarije", "2026-07-26", "hu"],
+    ["nederland", "Grand Prix van Nederland", "2026-08-23", "nl"],
+    ["italie", "Grand Prix van Italië", "2026-09-06", "it"],
+    ["spanje", "Grand Prix van Spanje", "2026-09-13", "es"],
+    ["azerbeidzjan", "Grand Prix van Azerbeidzjan", "2026-09-26", "az"],
+    ["bahrein", "Grand Prix van Bahrein", "2026-10-04", "bh"],
+    ["singapore", "Grand Prix van Singapore", "2026-10-11", "sg"],
+    ["verenigde-staten", "Grand Prix van de Verenigde Staten", "2026-10-25", "us"],
+    ["mexico", "Grand Prix van Mexico", "2026-11-01", "mx"],
+    ["sao-paulo", "Grand Prix van São Paulo", "2026-11-08", "br"],
+    ["las-vegas", "Grand Prix van Las Vegas", "2026-11-21", "us"],
+    ["qatar", "Grand Prix van Qatar", "2026-11-29", "qa"],
+    ["abu-dhabi", "Grand Prix van Abu Dhabi", "2026-12-06", "ae"],
   ],
 };
+
+const MAAND_KORT = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+function raceDatumLabel(iso) {
+  const [, m, d] = iso.split("-").map(Number);
+  return `${d} ${MAAND_KORT[m - 1]}`;
+}
 
 /* ---- Driver-pool per seizoen (verzonnen line-ups voor mock) --------------- */
 /* volledige naam voor uitslag, korte naam voor grid, kort team + vol team.     */
@@ -761,28 +732,6 @@ const POOL = {
     { vol: "Lance Stroll", kort: "Stroll", land: "ca", team: "AMR", teamVol: "Aston Martin" },
     { vol: "Valtteri Bottas", kort: "Bottas", land: "fi", team: "CAD", teamVol: "Cadillac" },
     { vol: "Sergio Perez", kort: "Perez", land: "mx", team: "CAD", teamVol: "Cadillac" },
-  ],
-  wk2025: [
-    { vol: "Lando Norris", kort: "Norris", land: "gb", team: "MCL", teamVol: "McLaren" },
-    { vol: "Oscar Piastri", kort: "Piastri", land: "au", team: "MCL", teamVol: "McLaren" },
-    { vol: "Max Verstappen", kort: "Verstappen", land: "nl", team: "RBR", teamVol: "Red Bull Racing" },
-    { vol: "Yuki Tsunoda", kort: "Tsunoda", land: "jp", team: "RBR", teamVol: "Red Bull Racing" },
-    { vol: "Charles Leclerc", kort: "Leclerc", land: "mc", team: "FER", teamVol: "Ferrari" },
-    { vol: "Lewis Hamilton", kort: "Hamilton", land: "gb", team: "FER", teamVol: "Ferrari" },
-    { vol: "George Russell", kort: "Russell", land: "gb", team: "MER", teamVol: "Mercedes" },
-    { vol: "Kimi Antonelli", kort: "Antonelli", land: "it", team: "MER", teamVol: "Mercedes" },
-    { vol: "Isack Hadjar", kort: "Hadjar", land: "fr", team: "RCB", teamVol: "Racing Bulls" },
-    { vol: "Liam Lawson", kort: "Lawson", land: "nz", team: "RCB", teamVol: "Racing Bulls" },
-    { vol: "Nico Hülkenberg", kort: "Hülkenberg", land: "de", team: "SAU", teamVol: "Kick Sauber" },
-    { vol: "Gabriel Bortoleto", kort: "Bortoleto", land: "br", team: "SAU", teamVol: "Kick Sauber" },
-    { vol: "Pierre Gasly", kort: "Gasly", land: "fr", team: "ALP", teamVol: "Alpine" },
-    { vol: "Franco Colapinto", kort: "Colapinto", land: "ar", team: "ALP", teamVol: "Alpine" },
-    { vol: "Esteban Ocon", kort: "Ocon", land: "fr", team: "HAA", teamVol: "Haas" },
-    { vol: "Oliver Bearman", kort: "Bearman", land: "gb", team: "HAA", teamVol: "Haas" },
-    { vol: "Carlos Sainz", kort: "Sainz", land: "es", team: "WIL", teamVol: "Williams" },
-    { vol: "Alex Albon", kort: "Albon", land: "gb", team: "WIL", teamVol: "Williams" },
-    { vol: "Fernando Alonso", kort: "Alonso", land: "es", team: "AMR", teamVol: "Aston Martin" },
-    { vol: "Lance Stroll", kort: "Stroll", land: "ca", team: "AMR", teamVol: "Aston Martin" },
   ],
 };
 
@@ -878,13 +827,6 @@ const WK_STAND_COUREURS = {
     ["Fernando Alonso", "es", "AMR", 3], ["Lance Stroll", "ca", "AMR", 0],
     ["Valtteri Bottas", "fi", "CAD", 0], ["Sergio Perez", "mx", "CAD", 0],
   ],
-  wk2025: [
-    ["Kimi Antonelli", "it", "MER", 210], ["George Russell", "gb", "MER", 170],
-    ["Lando Norris", "gb", "MCL", 165], ["Max Verstappen", "nl", "RBR", 140],
-    ["Charles Leclerc", "mc", "FER", 130], ["Lewis Hamilton", "gb", "FER", 110],
-    ["Oscar Piastri", "au", "MCL", 95], ["Yuki Tsunoda", "jp", "RBR", 55],
-    ["Liam Lawson", "nz", "RCB", 40], ["Pierre Gasly", "fr", "ALP", 30],
-  ],
 };
 // Korte teamnamen: geen motorleverancier/sponsor erachter (dus "McLaren"
 // i.p.v. "McLaren - Mercedes", "Williams" i.p.v. "Atlassian Williams -
@@ -896,11 +838,6 @@ const WK_STAND_TEAMS = {
     ["Alpine", "ALP", 63, "fr"], ["Haas", "HAA", 21, "us"], ["Audi", "AUD", 16, "de"],
     ["Williams", "WIL", 11, "gb"], ["Aston Martin", "AMR", 3, "gb"],
     ["Cadillac", "CAD", 0, "us"],
-  ],
-  wk2025: [
-    ["Mercedes", "MER", 380, "de"], ["McLaren", "MCL", 260, "gb"], ["Ferrari", "FER", 240, "it"],
-    ["Red Bull Racing", "RBR", 195, "gb"], ["Racing Bulls", "RCB", 70, "it"],
-    ["Alpine", "ALP", 40, "fr"],
   ],
 };
 
@@ -2400,7 +2337,7 @@ const H = 1350;
 
 /* ---- Type-scale (spec): titel 60, ondertitel + alle tekst 36, grid-team 24 - */
 const TS = {
-  titel: 60,
+  titel: 58,
   ondertitel: 36,
   tekst: 36,     // ranking, naam, teamnaam, punten in uitslag
   gridTeam: 24,  // teamnaam onder grid-vak
@@ -4729,15 +4666,36 @@ function Stap({ n, actief, gedaan, label }) {
   );
 }
 
-function Keuzeknop({ label, onClick, actief }) {
+// land: optionele 2-letter landcode voor een vlaggetje vóór het label (bv.
+// bij de Grand Prix-keuze); sub: optionele kleinere tweede regel (bv. datum).
+function Keuzeknop({ label, sub, land, onClick, actief }) {
   return (
     <button onClick={onClick} style={{
-      display: "block", width: "100%", textAlign: "left", padding: "14px 18px",
+      display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "14px 18px",
       marginBottom: 10, borderRadius: 10, cursor: "pointer",
       border: actief ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
       background: actief ? "#fef2f2" : "#fff", fontSize: 16, fontWeight: 600,
       color: "#111", transition: "all .12s",
-    }}>{label}</button>
+    }}>
+      {land && <VlagImg code={land} />}
+      <span style={{ flex: 1 }}>
+        {label}
+        {sub && <span style={{ display: "block", fontSize: 12, fontWeight: 400, color: "#9ca3af", marginTop: 2 }}>{sub}</span>}
+      </span>
+    </button>
+  );
+}
+
+// HTML-variant van Vlag (die zelf <image>/<rect> voor binnen een <svg>
+// rendert) — voor gebruik in de gewone HTML-keuzepanelen van de wizard.
+function VlagImg({ code, w = 26, h = 19 }) {
+  const uri = VLAG_URI[code];
+  if (!uri) return <span style={{ width: w, height: h, background: "#c8c8c8", borderRadius: 2, flexShrink: 0 }} />;
+  return (
+    <img src={uri} alt="" style={{
+      width: w, height: h, objectFit: "cover", borderRadius: 2,
+      border: "1px solid #00000022", flexShrink: 0,
+    }} />
   );
 }
 
@@ -5764,8 +5722,9 @@ function App() {
                 </button>
                 <h3 style={secTitel}>Race · {CONFIG[sport].competities[competitie].label}</h3>
                 <div style={{ maxHeight: 460, overflowY: "auto", paddingRight: 4 }}>
-                  {RACES[competitie].map(([slug, naam]) => (
-                    <Keuzeknop key={slug} label={naam} onClick={() => setRace(slug)} />
+                  {/* Gesorteerd op datum i.p.v. te vertrouwen op de volgorde in RACES. */}
+                  {[...RACES[competitie]].sort((a, b) => a[2].localeCompare(b[2])).map(([slug, naam, datum, land]) => (
+                    <Keuzeknop key={slug} label={naam} sub={raceDatumLabel(datum)} land={land} onClick={() => setRace(slug)} />
                   ))}
                 </div>
               </>
