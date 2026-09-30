@@ -2448,10 +2448,13 @@ function landcode(naam) {
 }
 // Sommige databronnen leveren de volledige officiële clubnaam i.p.v. onze
 // eigen (kortere) naam, bv. widget geeft "Brighton & Hove Albion" terwijl
-// wij de club als "Brighton" kennen. Alias -> onze naam.
+// wij de club als "Brighton" kennen. Alias -> onze naam. Ook voor bekende
+// afkortingen die geen deel van de naam zelf zijn (dus niet via het
+// deel-matchen in vindClubKey te vinden) — "HSV" bevat geen "Hamburger SV".
 const CLUB_ALIAS = {
   "Brighton & Hove Albion": "Brighton",
   "Brighton and Hove Albion": "Brighton",
+  "HSV": "Hamburger SV",
 };
 const CLUB_ALIAS_TIGHT = Object.fromEntries(
   Object.entries(CLUB_ALIAS).map(([alias, naam]) => [normTight(alias), naam])
