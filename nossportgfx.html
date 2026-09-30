@@ -2594,7 +2594,11 @@ function PodiumBlok({ p, x, y, w, h, waarde }) {
   const badgeGap = 8;   // ruimte tussen positie-badge en naambalk (8px-systeem)
   const naamH = 50;      // naambalk
   const teamH = 50;      // onderbalk (team + punten)
-  const puntenW = 100;
+  // 180 i.p.v. 100: een kale rondetijd ("1:42.526", ~138px bij 36pt) paste
+  // niet in 100px en werd zichtbaar samengeknepen — bij 180 past hij
+  // ruimschoots zonder FitText te hoeven verkleinen. De teamcode ernaast is
+  // altijd maar 3 letters, dus die kant blijft ruim genoeg over (114px).
+  const puntenW = 180;
   const naamX = x;
   const naamW = w;
   const vlagX = naamX + 14;                    // iets kleinere linkermarge
