@@ -556,6 +556,7 @@ const CONFIG = {
             heeftRace: true,
             types: {
               uitslag: { label: "Uitslag" },
+              kwalificatie: { label: "Kwalificatie" },
               grid: { label: "Starting grid" },
             },
           },
@@ -752,6 +753,14 @@ function seedShuffle(arr, seed) {
 }
 
 /* ---- Mock F1: uitslag + starting grid --------------------------------------- */
+// Rondetijd in "M:SS.mmm"-notatie (bv. 102.523 -> "1:42.523"), voor de
+// kwalificatie-mockdata.
+function formatRondeTijd(sec) {
+  const m = Math.floor(sec / 60);
+  const s = (sec - m * 60).toFixed(3).padStart(6, "0");
+  return `${m}:${s}`;
+}
+
 function getMockF1(competitie, type, raceSlug) {
   const races = RACES[competitie];
   const race = races.find((r) => r[0] === raceSlug) || races[0];
@@ -776,6 +785,25 @@ function getMockF1(competitie, type, raceSlug) {
         { ...top10[2], naam: top10[2].kort }, // pos 3
       ],
       // Lijst 4-10: volledige naam (vol).
+      rijen: top10.slice(3).map((r) => ({ ...r, naam: r.vol })),
+    };
+  }
+
+  if (type === "kwalificatie") {
+    const volgorde = seedShuffle(pool, "k" + raceSlug);
+    // Kwalificatie toont ieders eigen beste ronde (aflopend, geen gat t.o.v.
+    // P1 zoals bij de race-uitslag) — fictieve maar oplopende rondetijden.
+    const top10 = volgorde.slice(0, 10).map((d, i) => ({
+      pos: i + 1, vol: d.vol, kort: d.kort, land: d.land, team: d.team,
+      tijd: formatRondeTijd(102.3 + i * 0.32), foto: FOTO_URI[d.kort] || null,
+    }));
+    return {
+      sport: "Formule 1", titel: "Kwalificatie", ondertitel: raceNaam, type: "kwalificatie", theme: THEMES.formule1,
+      podium: [
+        { ...top10[1], naam: top10[1].kort },
+        { ...top10[0], naam: top10[0].kort },
+        { ...top10[2], naam: top10[2].kort },
+      ],
       rijen: top10.slice(3).map((r) => ({ ...r, naam: r.vol })),
     };
   }
@@ -2238,6 +2266,9 @@ function parseF1PersonenPaste(text) {
       i++;
     }
     const tokens = restRegels.flatMap((r) => splitCijfers(r));
+    // Een kwalificatie-widget voegt soms een losse status-letter toe ná de
+    // tijd (bv. "q" = qualified) — telt niet mee als tijd of punten.
+    while (tokens.length && /^[a-z]$/i.test(tokens[tokens.length - 1])) tokens.pop();
     let punten = null;
     if (tokens.length && /^-?\d+$/.test(tokens[tokens.length - 1])) punten = Number(tokens.pop());
     const tijd = tokens.length ? tokens[tokens.length - 1] : "";
@@ -2555,7 +2586,9 @@ function FitText({ x, y, maxW, size, weight = "700", fill, anchor = "start", opa
 
 /* De naambalk steekt links iets uit voorbij het fotovlak (zoals in het NOS-   */
 /* ontwerp), zodat lange namen als 'Verstappen' ruim binnen de balk passen.    */
-function PodiumBlok({ p, x, y, w, h }) {
+// waarde: al opgemaakte tekst voor het witte vlak rechtsonder — "25 pt" bij
+// een race-uitslag, een kale rondetijd ("1:42.526") bij een kwalificatie.
+function PodiumBlok({ p, x, y, w, h, waarde }) {
   const badgeH = 50;
   const badgeW = 70;
   const badgeGap = 8;   // ruimte tussen positie-badge en naambalk (8px-systeem)
@@ -2603,9 +2636,11 @@ function PodiumBlok({ p, x, y, w, h }) {
       <text x={x + 18} y={y + h + teamH / 2 + 13} fontFamily={FONT}
         fontWeight="400" fontSize={TS.tekst} fill={NOS.wit}>{p.team}</text>
       <rect x={x + w - puntenW} y={y + h} width={puntenW} height={teamH} fill={NOS.wit} />
-      <text x={x + w - 18} y={y + h + teamH / 2 + 13} textAnchor="end"
-        fontFamily={FONT} fontWeight="400" fontSize={TS.tekst}
-        fill={NOS.tekst}>{p.punten} pt</text>
+      {/* FitText i.p.v. platte tekst: "25 pt" past ruim, maar een kale
+          rondetijd ("1:42.300") is te breed voor dit vak en zou anders half
+          over de zwarte teambalk heen vallen (donkere tekst, onleesbaar). */}
+      <FitText x={x + w - 18} y={y + h + teamH / 2 + 13} anchor="end" maxW={puntenW - 24}
+        weight="400" size={TS.tekst} fill={NOS.tekst}>{waarde}</FitText>
     </>
   );
 }
@@ -2646,6 +2681,11 @@ function UitslagTemplate({ data }) {
   const teamMidX = (teamL + teamR) / 2;
   const puntL = teamR + divW;
 
+  // Zelfde template voor Uitslag (punten) en Kwalificatie (rondetijd, geen
+  // "pt"-eenheid erachter) — alleen de weergave van de rechterwaarde wisselt.
+  const isKwalificatie = data.type === "kwalificatie";
+  const waarde = (r) => (isKwalificatie ? r.tijd : `${r.punten} pt`);
+
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
       <Achtergrond theme={data.theme} />
@@ -2654,9 +2694,9 @@ function UitslagTemplate({ data }) {
           (referentie-svg) — allebei aan te passen in de editor. */}
       <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
 
-      <PodiumBlok p={p2} x={70} y={p2y} w={colW} h={p2h} />
-      <PodiumBlok p={p1} x={393} y={p1y} w={colW} h={p1h} />
-      <PodiumBlok p={p3} x={714} y={p3y} w={colW} h={p3h} />
+      <PodiumBlok p={p2} x={70} y={p2y} w={colW} h={p2h} waarde={waarde(p2)} />
+      <PodiumBlok p={p1} x={393} y={p1y} w={colW} h={p1h} waarde={waarde(p1)} />
+      <PodiumBlok p={p3} x={714} y={p3y} w={colW} h={p3h} waarde={waarde(p3)} />
 
       {/* plek 4-10: doorlopende rij met dividers, aansluitend, zebra-fill */}
       {data.rijen.map((r, i) => {
@@ -2681,9 +2721,9 @@ function UitslagTemplate({ data }) {
             {/* team (regular) */}
             <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{r.team}</text>
-            {/* punten (regular, met pt) */}
+            {/* waarde (regular): punten bij Uitslag, kale rondetijd bij Kwalificatie */}
             <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
-              fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{r.punten} pt</text>
+              fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{waarde(r)}</text>
           </g>
         );
       })}
@@ -5391,6 +5431,36 @@ function naarF1Uitslag(top10) {
   };
 }
 
+// Zelfde conversie als vanF1Uitslag/naarF1Uitslag, maar met "tijd" (kale
+// rondetijd) i.p.v. "punten" — Kwalificatie deelt verder dezelfde
+// podium+rijen-vorm en hetzelfde UitslagTemplate.
+function vanF1Kwalificatie(data) {
+  const [p2, p1, p3] = data.podium;
+  const top = [
+    { pos: 1, naam: p1.vol || p1.naam, land: p1.land, team: p1.team, tijd: p1.tijd },
+    { pos: 2, naam: p2.vol || p2.naam, land: p2.land, team: p2.team, tijd: p2.tijd },
+    { pos: 3, naam: p3.vol || p3.naam, land: p3.land, team: p3.team, tijd: p3.tijd },
+    ...data.rijen.map((r) => ({ pos: r.pos, naam: r.naam, land: r.land, team: r.team, tijd: r.tijd })),
+  ];
+  return top;
+}
+function naarF1Kwalificatie(top10) {
+  const t = [...top10].sort((a, b) => a.pos - b.pos).slice(0, 10);
+  const mk = (r) => {
+    const kort = kortenaam(r.naam);
+    return { pos: r.pos, vol: r.naam, kort, land: r.land, team: r.team, tijd: r.tijd || "", foto: FOTO_URI[kort] || null };
+  };
+  const t10 = t.map(mk);
+  return {
+    podium: [
+      { ...t10[1], naam: t10[1].kort },
+      { ...t10[0], naam: t10[0].kort },
+      { ...t10[2], naam: t10[2].kort },
+    ],
+    rijen: t10.slice(3).map((r) => ({ ...r, naam: r.vol })),
+  };
+}
+
 function F1UitslagDataEditor({ data, setData }) {
   const top10 = vanF1Uitslag(data);
   // podium (plek 1-3) moet altijd blijven bestaan en past niet meer dan 10 -
@@ -5417,6 +5487,34 @@ function F1UitslagDataEditor({ data, setData }) {
 
       <div style={dpLabel}>Top 10 ({top10.length}) — plek 1, 2 en 3 vormen het podium</div>
       <PersonenRijenEditor rijen={top10} setRijen={zetTop10} toonTijd={false} toonPunten teamSoort="f1" />
+    </div>
+  );
+}
+
+function F1KwalificatieDataEditor({ data, setData }) {
+  const top10 = vanF1Kwalificatie(data);
+  const zetTop10 = (nieuw) => {
+    if (nieuw.length < 3) return;
+    setData((d) => ({ ...d, ...naarF1Kwalificatie(nieuw.slice(0, 10)) }));
+  };
+  return (
+    <div>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel (Grand Prix)</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+
+      <PlakBox label="Plak de kwalificatie-uitslag (top 10, incl. kolomkoppen Rg/Nr./Land/Naam/Team/Rondes/Resultaat)"
+        placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tRondes\tResultaat\n1\t63\t\nGBR\nGBR\nGeorge Russell\nMercedes\nMercedes\n26\t1:42.526\tq\n2\t16\t…"}
+        onParse={(tekst) => {
+          const rijen = parseF1PersonenPaste(tekst).slice(0, 10)
+            .map((r, i) => ({ pos: i + 1, naam: r.naam, land: r.land, team: teamcode(r.team) || r.team, tijd: r.tijd }));
+          if (rijen.length >= 3) zetTop10(rijen);
+          return rijen.length >= 3 ? rijen : [];
+        }} />
+
+      <div style={dpLabel}>Top 10 ({top10.length}) — plek 1, 2 en 3 vormen het podium</div>
+      <PersonenRijenEditor rijen={top10} setRijen={zetTop10} toonTijd teamSoort="f1" />
     </div>
   );
 }
@@ -5514,6 +5612,7 @@ function F1WKStandTeamsDataEditor({ data, setData }) {
 function DataPanel({ sport, competitie, type, editData, setEditData }) {
   if (!editData) return null;
   if (sport === "formule1" && type === "uitslag") return <F1UitslagDataEditor data={editData} setData={setEditData} />;
+  if (sport === "formule1" && type === "kwalificatie") return <F1KwalificatieDataEditor data={editData} setData={setEditData} />;
   if (sport === "formule1" && type === "grid") return <F1GridDataEditor data={editData} setData={setEditData} />;
   if (sport === "formule1" && type === "wkstandcoureurs") return <F1WKStandCoureursDataEditor data={editData} setData={setEditData} />;
   if (sport === "formule1" && type === "wkstandteams") return <F1WKStandTeamsDataEditor data={editData} setData={setEditData} />;
@@ -5910,6 +6009,7 @@ function App() {
                 <PreviewGrens sleutel={`${sport}-${competitie}-${race}-${type}`}>
                 <div style={{ width: "100%", maxWidth: 640, margin: "0 auto" }}>
                   {sport === "formule1" && type === "uitslag" && <UitslagTemplate data={editData} />}
+                  {sport === "formule1" && type === "kwalificatie" && <UitslagTemplate data={editData} />}
                   {sport === "formule1" && type === "grid" && <GridTemplate data={editData} />}
                   {sport === "formule1" && type === "wkstandcoureurs" && <WKStandCoureursTemplate data={editData} />}
                   {sport === "formule1" && type === "wkstandteams" && <WKStandTeamsTemplate data={editData} />}
