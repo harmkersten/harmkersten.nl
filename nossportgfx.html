@@ -776,7 +776,7 @@ function getMockF1(competitie, type, raceSlug) {
       // Titel/ondertitel omgedraaid t.o.v. de meeste sporten: hier is
       // "Uitslag" de grote 58pt-titel en de Grand Prix de 36pt-ondertitel
       // (referentie-svg) — allebei nu wel gewoon aan te passen in de editor.
-      sport: "Formule 1", titel: "Uitslag", ondertitel: raceNaam, type: "uitslag", theme: THEMES.formule1,
+      sport: "Formule 1", titel: "uitslag", ondertitel: raceNaam, type: "uitslag", theme: THEMES.formule1,
       // Podium: alleen achternaam (kort) zodat het binnen de smalle balk past.
       podium: [
         { ...top10[1], naam: top10[1].kort }, // pos 2
@@ -797,7 +797,7 @@ function getMockF1(competitie, type, raceSlug) {
       tijd: formatRondeTijd(102.3 + i * 0.32), foto: FOTO_URI[d.kort] || null,
     }));
     return {
-      sport: "Formule 1", titel: "Kwalificatie", ondertitel: raceNaam, type: "kwalificatie", theme: THEMES.formule1,
+      sport: "Formule 1", titel: "kwalificatie", ondertitel: raceNaam, type: "kwalificatie", theme: THEMES.formule1,
       podium: [
         { ...top10[1], naam: top10[1].kort },
         { ...top10[0], naam: top10[0].kort },
@@ -810,7 +810,7 @@ function getMockF1(competitie, type, raceSlug) {
   if (type === "grid") {
     const volgorde = seedShuffle(pool, "g" + raceSlug);
     return {
-      sport: "Formule 1", titel: "Startopstelling", ondertitel: raceNaam, type: "grid", theme: THEMES.formule1,
+      sport: "Formule 1", titel: "startopstelling", ondertitel: raceNaam, type: "grid", theme: THEMES.formule1,
       // Startopstelling toont de teamnaam voluit (er is ruimte); alleen de
       // race-uitslag gebruikt de afkorting.
       rijen: volgorde.map((d, i) => ({
@@ -900,7 +900,6 @@ const VOETBAL_STAND = {
 
 const VOETBAL_PROGRAMMA = {
   eredivisie: {
-    ronde: "19/34",
     dagen: [
       { dag: "vrijdag 3 april", duels: [["ADO Den Haag", "Ajax", "20:00"]] },
       { dag: "zaterdag 4 april", duels: [
@@ -914,7 +913,6 @@ const VOETBAL_PROGRAMMA = {
     ],
   },
   premierleague: {
-    ronde: "19/34",
     dagen: [
       { dag: "vrijdag 3 april", duels: [["Arsenal", "Tottenham Hotspur", "20:00"]] },
       { dag: "zaterdag 4 april", duels: [
@@ -950,7 +948,9 @@ function getMockVoetbal(competitie, type) {
         thuis, uit, tijd, thuisLogo: CLUB_LOGO[thuis] || null, uitLogo: CLUB_LOGO[uit] || null,
       })),
     }));
-    return { sport: "Voetbal", titel: label, ondertitel: `speelronde ${data.ronde}`, type: "programma", theme, competitie, dagen };
+    // "x" i.p.v. het echte rondenummer: duidelijk startpunt dat nog
+    // ingevuld moet worden, net als de lege ondertitel bij "stand" hierboven.
+    return { sport: "Voetbal", titel: label, ondertitel: "na speelronde x", type: "programma", theme, competitie, dagen };
   }
   return null;
 }
