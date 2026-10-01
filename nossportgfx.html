@@ -5481,24 +5481,23 @@ function LandSelect({ value, onChange, kort }) {
 }
 
 const VOETBAL_CLUBS_LIJST = Object.keys(CLUB_LOGO).sort((a, b) => a.localeCompare(b));
-// Per competitie alleen de eigen clubs in de dropdown — anders staan alle
-// Eredivisie- én Premier League-clubs door elkaar in één lijst. Afgeleid uit
-// VOETBAL_STAND (die kent de indeling al), niet met de hand bijgehouden.
-const VOETBAL_CLUBS_PER_COMPETITIE = Object.fromEntries(
-  Object.entries(VOETBAL_STAND).map(([competitie, rijen]) => [competitie, rijen.map(([club]) => club).sort((a, b) => a.localeCompare(b))])
-);
+// Vrij tekstveld (geen <select>): bij een <select> moet de waarde exact een
+// van de opties zijn, anders valt 'ie terug op de placeholder — een geplakte
+// of handmatig getypte naam die niet letterlijk in de lijst staat (bv. een
+// net gepromoveerde club, of een tegenstander uit een andere competitie bij
+// "algemeen") toonde zo altijd "– thuis –"/"– uit –", ook al klopte de
+// onderliggende data (en de preview) prima. Een <datalist> geeft nog wel
+// autocomplete-suggesties, maar dwingt niets af.
 function ClubSelect({ value, onChange, placeholder, competitie }) {
-  // Een lege lijst (zoals bij "eigen", nog in te vullen) is ook falsy-achtig
-  // qua bedoeling maar niet qua JS-waarheid ([] is truthy) — expliciet op
-  // lengte checken, anders valt hij niet terug op de volledige clublijst.
-  const perCompetitie = VOETBAL_CLUBS_PER_COMPETITIE[competitie];
-  const opties = perCompetitie && perCompetitie.length ? perCompetitie : VOETBAL_CLUBS_LIJST;
+  const listId = `clublijst-${competitie || "alle"}`;
   return (
-    <select value={value || ""} onChange={(e) => onChange(e.target.value)}
-      style={{ ...dpVeld, marginBottom: 0, flex: 1, textOverflow: "ellipsis" }}>
-      <option value="">– {placeholder || "club"} –</option>
-      {opties.map((naam) => <option key={naam} value={naam}>{naam}</option>)}
-    </select>
+    <>
+      <input list={listId} value={value || ""} onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder || "club"} style={{ ...dpVeld, marginBottom: 0, flex: 1, textOverflow: "ellipsis" }} />
+      <datalist id={listId}>
+        {VOETBAL_CLUBS_LIJST.map((naam) => <option key={naam} value={naam} />)}
+      </datalist>
+    </>
   );
 }
 
