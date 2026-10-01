@@ -5181,19 +5181,29 @@ class PreviewGrens extends React.Component {
   }
 }
 
-function Stap({ n, actief, gedaan, label }) {
+// Een voltooide stap is klikbaar (onClick meegegeven) om er met een
+// schone staat (die stap + alles erna gereset) naartoe terug te springen;
+// een nog niet bereikte stap heeft geen onClick en blijft niet-interactief.
+function Stap({ n, actief, gedaan, label, onClick }) {
   const kleur = actief ? NOS.rood : gedaan ? "#4b5563" : "#d1d5db";
+  const klikbaar = !!onClick;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <button onClick={onClick} disabled={!klikbaar} style={{
+      display: "flex", alignItems: "center", gap: 8, border: "none", background: "none",
+      padding: 0, font: "inherit", cursor: klikbaar ? "pointer" : "default",
+    }}>
       <div style={{
         width: 26, height: 26, borderRadius: "50%", background: kleur,
         color: "#fff", display: "flex", alignItems: "center",
         justifyContent: "center", fontSize: 14, fontWeight: 700,
       }}>{n}</div>
-      <span style={{ fontSize: 14, color: actief ? "#111" : "#6b7280", fontWeight: actief ? 700 : 500 }}>
+      <span style={{
+        fontSize: 14, color: actief ? "#111" : "#6b7280", fontWeight: actief ? 700 : 500,
+        textDecoration: klikbaar ? "underline" : "none", textDecorationColor: "#d1d5db",
+      }}>
         {label}
       </span>
-    </div>
+    </button>
   );
 }
 
@@ -6338,12 +6348,12 @@ function App() {
             hardgecodeerde stapnummers. */}
         <div style={{ display: "flex", gap: 28, marginBottom: 24, flexWrap: "wrap" }}>
           {[
-            { label: "Sport", actief: !sport, gedaan: !!sport },
-            { label: "Competitie", actief: !!sport && !competitie, gedaan: !!competitie },
-            ...(heeftCategorieen ? [{ label: "Categorie", actief: !!competitie && !categorie, gedaan: !!categorie }] : []),
-            ...(heeftRace ? [{ label: "Race", actief: klaarVoorCategorie && !race, gedaan: !!race }] : []),
-            ...(categorieIsEindtype ? [] : [{ label: "Type", actief: klaarVoorType && !type, gedaan: !!type }]),
-          ].map((s, i) => <Stap key={s.label} n={i + 1} label={s.label} actief={s.actief} gedaan={s.gedaan} />)}
+            { label: "Sport", actief: !sport, gedaan: !!sport, onClick: resetSport },
+            { label: "Competitie", actief: !!sport && !competitie, gedaan: !!competitie, onClick: resetCompetitie },
+            ...(heeftCategorieen ? [{ label: "Categorie", actief: !!competitie && !categorie, gedaan: !!categorie, onClick: resetCategorie }] : []),
+            ...(heeftRace ? [{ label: "Race", actief: klaarVoorCategorie && !race, gedaan: !!race, onClick: resetRace }] : []),
+            ...(categorieIsEindtype ? [] : [{ label: "Type", actief: klaarVoorType && !type, gedaan: !!type, onClick: () => setType(null) }]),
+          ].map((s, i) => <Stap key={s.label} n={i + 1} label={s.label} actief={s.actief} gedaan={s.gedaan} onClick={s.gedaan ? s.onClick : undefined} />)}
         </div>
 
         <div style={{
@@ -6523,8 +6533,10 @@ function App() {
 }
 
 const backBtn = {
-  border: "none", background: "none", color: "#6b7280", cursor: "pointer",
-  fontSize: 14, marginBottom: 12, padding: 0,
+  display: "inline-flex", alignItems: "center", gap: 6,
+  border: "1px solid #d1d5db", background: "#fff", color: "#111",
+  cursor: "pointer", fontSize: 13, fontWeight: 700, marginBottom: 14,
+  padding: "7px 14px", borderRadius: 8,
 };
 const secTitel = { fontSize: 14, textTransform: "uppercase", color: "#6b7280", marginBottom: 12 };
 
