@@ -966,11 +966,9 @@ function getMockVoetbal(competitie, type) {
     const rijen = (VOETBAL_STAND[competitie] || []).map(([club, gs, w, g, v, pt], i) => ({
       pos: i + 1, club, gs, w, g, v, pt, ds: 0, logo: CLUB_LOGO[club] || null,
     }));
-    // Ondertitel (de speelronde) bewust leeg als startpunt i.p.v. een
-    // voorinvulde waarde — anders bestaat het risico dat een oude/foute
-    // speelronde blijft staan en zo de graphic uit gaat. Zonder bekende
-    // competitienaam ("eigen") blijft de titel gewoon "stand".
-    return { sport: "Voetbal", titel: label ? `stand ${label}` : "stand", ondertitel: "", type: "stand", theme, rijen };
+    // "Competitie X" i.p.v. een lege titel als er geen bekende competitie-
+    // naam is ("eigen") — zelfde "nog in te vullen"-signaal als "team x".
+    return { sport: "Voetbal", titel: label || "Competitie X", ondertitel: "stand na speelronde x", type: "stand", theme, rijen };
   }
   if (type === "programma") {
     const data = VOETBAL_PROGRAMMA[competitie];
@@ -5467,9 +5465,9 @@ function StandDataEditor({ data, setData, competitie }) {
     <div>
       <div style={dpLabel}>Titel</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
-      <div style={dpLabel}>Ondertitel (bv. "speelronde 19")</div>
+      <div style={dpLabel}>Ondertitel (bv. "stand na speelronde 19")</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))}
-        placeholder="speelronde …" style={dpVeld} />
+        placeholder="stand na speelronde …" style={dpVeld} />
 
       <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }}>
         <input type="checkbox" checked={!!data.toonDoelsaldo}
