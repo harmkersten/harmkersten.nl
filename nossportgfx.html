@@ -2480,6 +2480,9 @@ const CLUB_ALIAS = {
   "Brighton & Hove Albion": "Brighton",
   "Brighton and Hove Albion": "Brighton",
   "HSV": "Hamburger SV",
+  // "MVV" is maar 3 tekens na normTight — te kort voor het deel-matchen
+  // hieronder (minimaal 4), dus zonder alias bleef dit onherkend.
+  "MVV": "MVV Maastricht",
 };
 const CLUB_ALIAS_TIGHT = Object.fromEntries(
   Object.entries(CLUB_ALIAS).map(([alias, naam]) => [normTight(alias), naam])
@@ -2492,8 +2495,15 @@ const CLUB_ALIAS_TIGHT = Object.fromEntries(
 // waar de invoer zelf een deel van is. Sleutels korter dan 4 tekens (zoals
 // "AZ", "NEC", "PSV") doen niet mee aan het deel-matchen — te kort om
 // betrouwbaar als eigen naamdeel te herkennen i.p.v. toevallige substring.
+// Beloftenteams in de Eerste Divisie ("Jong Ajax", "Jong PSV", "Jong AZ", …)
+// delen het logo van de hoofdmacht — vindClubKey matcht daarom op de naam
+// zónder "Jong "-voorvoegsel. canonClubNaam (de weergavenaam) zet dat
+// voorvoegsel wel terug, anders zou "Jong Ajax" als gewoon "Ajax" getoond
+// worden, wat een heel andere (en verkeerde) club suggereert.
+const JONG_PREFIX_RE = /^jong\s+/i;
 function vindClubKey(naam) {
-  const doel = normTight(CLUB_ALIAS_TIGHT[normTight(naam)] || naam);
+  const zonderJong = (naam || "").trim().replace(JONG_PREFIX_RE, "");
+  const doel = normTight(CLUB_ALIAS_TIGHT[normTight(zonderJong)] || zonderJong);
   if (!doel) return null;
   const keys = Object.keys(CLUB_LOGO);
   let key = keys.find((k) => normTight(k) === doel);
@@ -2513,7 +2523,9 @@ function vindClubKey(naam) {
 // Herleidt een geplakte clubnaam naar onze eigen naam, zodat zowel de
 // weergave op de graphic als de logo-match kloppen.
 function canonClubNaam(naam) {
-  return vindClubKey(naam) || naam;
+  const key = vindClubKey(naam);
+  if (!key) return naam;
+  return JONG_PREFIX_RE.test((naam || "").trim()) ? `Jong ${key}` : key;
 }
 function vindClubLogo(naam) {
   const key = vindClubKey(naam);
