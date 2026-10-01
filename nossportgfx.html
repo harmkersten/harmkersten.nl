@@ -2858,6 +2858,40 @@ const TS = {
   gridTeam: 24,  // teamnaam onder grid-vak
 };
 
+const mengHex = (c1, c2, f) => {
+  const n = (hex) => parseInt(hex.slice(1), 16);
+  const [a, b] = [n(c1), n(c2)];
+  const kanaal = (shift) => Math.round(((a >> shift) & 255) + (((b >> shift) & 255) - ((a >> shift) & 255)) * f);
+  return `#${[16, 8, 0].map((s) => kanaal(s).toString(16).padStart(2, "0")).join("")}`;
+};
+// Kleur op offset `pct` (0-100) langs de stops-lijst, met lineaire
+// interpolatie tussen de omliggende stops — dekt zowel de gebruikelijke
+// 3-stop thema's (kleur-midden-kleur, waar dit bij pct=50 altijd exact de
+// middelste stop teruggeeft) als de ene 2-stop-uitzondering (THEMES.eigen).
+function kleurOpOffset(stops, pct) {
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [o1, c1] = stops[i];
+    const [o2, c2] = stops[i + 1];
+    if (pct >= o1 && pct <= o2) return mengHex(c1, c2, o2 === o1 ? 0 : (pct - o1) / (o2 - o1));
+  }
+  return stops[stops.length - 1][1];
+}
+
+// Elk thema in THEMES is opgebouwd als een rechte lijn tussen 2
+// tegenovergestelde hoeken (x1,y1 -> x2,y2); de andere 2 hoeken krijgen
+// daardoor altijd de kleur op het midden van die lijn. Deze functie leest
+// die 4 hoekkleuren uit het thema, zodat Achtergrond ze kan gebruiken voor
+// een zacht radiaal verloop (zie daar) i.p.v. 1 harde rechte as.
+function hoekkleurenVoorGradient(g) {
+  const kleurStart = g.stops[0][1];
+  const kleurEind = g.stops[g.stops.length - 1][1];
+  const kleurMidden = kleurOpOffset(g.stops, 50);
+  const isHoek = (hx, hy) => Math.round(g.x1) === hx && Math.round(g.y1) === hy;
+  const isAndereHoek = (hx, hy) => Math.round(g.x2) === hx && Math.round(g.y2) === hy;
+  const kleurVoor = (hx, hy) => (isHoek(hx, hy) ? kleurStart : isAndereHoek(hx, hy) ? kleurEind : kleurMidden);
+  return { tl: kleurVoor(0, 0), tr: kleurVoor(1, 0), bl: kleurVoor(0, 1), br: kleurVoor(1, 1) };
+}
+
 function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1350 }) {
   if (foto) {
     // Foto-variant: geen kleurverloop, de eigen (geüploade) foto vult het hele
@@ -2909,20 +2943,35 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
     );
   }
   const g = th.gradient;
-  const laatsteStop = g.stops[g.stops.length - 1][1];
+  const hoeken = hoekkleurenVoorGradient(g);
+  const middenKleur = g.stops[Math.floor((g.stops.length - 1) / 2)][1];
+  // Straal = halve diagonaal: het middelpunt van het canvas ligt exact op die
+  // afstand van alle 4 hoeken, dus daar doven alle 4 verlopen precies uit
+  // (puur middenKleur, geen contaminatie) en bereikt geen enkel hoekverloop
+  // een ándere hoek (die liggen verder weg dan de halve diagonaal) — zo
+  // blijft elke hoek zijn eigen zuivere kleur houden, ongeacht tekenvolgorde.
+  const straal = Math.hypot(W, H) / 2;
+  const hoekPunten = [["tl", 0, 0], ["tr", W, 0], ["bl", 0, H], ["br", W, H]];
   return (
     <>
       <defs>
         <style>{fontFaceCss()}</style>
-        {/* As + stops per thema afgemeten op de ontwerp-referenties (zie THEMES). */}
-        <linearGradient id="bg" x1={g.x1} y1={g.y1} x2={g.x2} y2={g.y2}>
-          {g.stops.map(([offset, color], i) => (
-            <stop key={i} offset={`${offset}%`} stopColor={color} />
-          ))}
-        </linearGradient>
+        {/* Zacht radiaal verloop vanuit alle 4 hoeken — zelfde opzet als de
+            freeform/mesh-gradients in de originele Illustrator-ontwerpen
+            (4 hoekpunten + middenkleur), i.p.v. 1 harde rechte as tussen 2
+            hoeken. Hoekkleuren volgen uit het thema, zie
+            hoekkleurenVoorGradient hieronder. */}
+        {hoekPunten.map(([id, cx, cy]) => (
+          <radialGradient key={id} id={`bg-${id}`} cx={cx} cy={cy} r={straal} gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={hoeken[id]} />
+            <stop offset="100%" stopColor={hoeken[id]} stopOpacity="0" />
+          </radialGradient>
+        ))}
       </defs>
-      <rect width={W} height={H} fill={laatsteStop} />
-      <rect width={W} height={H} fill="url(#bg)" />
+      <rect width={W} height={H} fill={middenKleur} />
+      {hoekPunten.map(([id]) => (
+        <rect key={id} width={W} height={H} fill={`url(#bg-${id})`} />
+      ))}
     </>
   );
 }
