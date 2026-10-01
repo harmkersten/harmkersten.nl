@@ -2533,6 +2533,54 @@ function parseStandPaste(text) {
   return rijen;
 }
 
+/* Voetbalprogramma-widget: een dag-kop ("vrijdag 3 april") gevolgd door één
+   of meer wedstrijden. Elke wedstrijd staat er twee keer op: eerst als lange
+   lopende zin ("Competitie, Speelronde N, Wedstrijd op het programma tussen
+   X en Y om "), dan nogmaals los (tijd/Speelronde N/thuis/tijd/uit) — we
+   negeren de zin zelf en lezen alleen de losse regels erna. Een dag-kop
+   herken je aan "<weekdag> <dagnummer> <maand>" zonder iets anders erbij. */
+const DAGNAMEN = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
+const MAANDNAMEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+const DAGKOP_RE = new RegExp(`^(${DAGNAMEN.join("|")})\\s+\\d{1,2}\\s+(${MAANDNAMEN.join("|")})$`, "i");
+const PROGRAMMA_TIJD_RE = /^\d{1,2}:\d{2}$/;
+const SPEELRONDE_RE = /^Speelronde\s+(\d+)/i;
+
+function parseVoetbalProgrammaPaste(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  const dagen = [];
+  let huidigeDag = null;
+  let speelronde = null;
+  let i = 0;
+  const peek = () => { let j = i; while (j < lines.length && lines[j] === "") j++; return j < lines.length ? lines[j] : ""; };
+  const volgende = () => { while (i < lines.length && lines[i] === "") i++; return i < lines.length ? lines[i++] : ""; };
+  while (i < lines.length) {
+    if (lines[i] === "") { i++; continue; }
+    if (DAGKOP_RE.test(lines[i])) {
+      huidigeDag = { dag: lines[i], duels: [] };
+      dagen.push(huidigeDag);
+      i++;
+      continue;
+    }
+    if (/wedstrijd op het programma tussen/i.test(lines[i])) {
+      i++;
+      const tijd = PROGRAMMA_TIJD_RE.test(peek()) ? volgende() : "";
+      const sr = peek().match(SPEELRONDE_RE);
+      if (sr) { speelronde = sr[1]; volgende(); }
+      const thuisNaam = volgende();
+      if (PROGRAMMA_TIJD_RE.test(peek())) volgende(); // herhaalde tijd, negeren
+      const uitNaam = volgende();
+      if (huidigeDag && thuisNaam && uitNaam) {
+        const thuis = canonClubNaam(thuisNaam);
+        const uit = canonClubNaam(uitNaam);
+        huidigeDag.duels.push({ thuis, uit, tijd, thuisLogo: vindClubLogo(thuis), uitLogo: vindClubLogo(uit) });
+      }
+      continue;
+    }
+    i++;
+  }
+  return { dagen, speelronde };
+}
+
 /* Wielrennen-uitslag/klassement-widget: "Rg  Nr.  Land  Naam  Team  Resultaat".
    De land-cel komt als (lege vlag-regel,) volledige naam, 3-letter code; de
    team-cel als 2 losse regels (logo-alt + naam), net als bij de voetbalstand. */
@@ -5479,9 +5527,21 @@ function ProgrammaDataEditor({ data, setData, competitie }) {
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
-      <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 12px" }}>
-        Plakken vanuit de widget kan hier nog niet — vul de wedstrijden met de hand in.
-      </p>
+
+      <PlakBox label="Plak het programma (hele pagina, incl. tijden en speelronde)"
+        placeholder={"vrijdag 3 april\n\nEredivisie,  Speelronde 19, Wedstrijd op het programma tussen Ajax en PSV om \n20:00\nSpeelronde 19\nAjax\n\n20:00\n\nPSV\n…"}
+        onParse={(tekst) => {
+          const { dagen: nieuweDagen, speelronde } = parseVoetbalProgrammaPaste(tekst);
+          const alleDuels = nieuweDagen.flatMap((dag) => dag.duels);
+          if (alleDuels.length) {
+            setData((d) => ({
+              ...d, dagen: nieuweDagen,
+              ondertitel: speelronde ? `na speelronde ${speelronde}` : d.ondertitel,
+            }));
+          }
+          return alleDuels;
+        }} />
+
       <div style={{ maxHeight: 540, overflowY: "auto", paddingRight: 4 }}>
         {data.dagen.map((dag, di) => (
           <div key={di} style={{ marginBottom: 14, border: "1px solid #e5e7eb", borderRadius: 10, padding: 10 }}>
