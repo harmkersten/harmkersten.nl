@@ -601,8 +601,9 @@ const CONFIG = {
         },
       },
       eigen: {
-        label: "stand algemeen",
+        label: "algemeen",
         types: {
+          programma: { label: "programma" },
           stand: { label: "stand" },
         },
       },
@@ -952,6 +953,9 @@ const VOETBAL_PROGRAMMA = {
       ] },
     ],
   },
+  // Nog in te vullen competitie: bewust leeg, zelfde opzet als
+  // VOETBAL_STAND.eigen hierboven.
+  eigen: { dagen: [] },
 };
 
 // Alleen Eredivisie/Premier League hebben een vaste competitienaam voor in
@@ -980,7 +984,7 @@ function getMockVoetbal(competitie, type) {
     }));
     // "x" i.p.v. het echte rondenummer: duidelijk startpunt dat nog
     // ingevuld moet worden, net als de lege ondertitel bij "stand" hierboven.
-    return { sport: "Voetbal", titel: label, ondertitel: "speelronde x", type: "programma", theme, competitie, dagen };
+    return { sport: "Voetbal", titel: label || "Competitie X", ondertitel: "speelronde x", type: "programma", theme, competitie, dagen };
   }
   return null;
 }
