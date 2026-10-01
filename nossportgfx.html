@@ -375,6 +375,12 @@ const TEAM_CODE_NAAM = {
   HAA: "Haas", MCL: "McLaren", MER: "Mercedes", RCB: "Racing Bulls", RBR: "Red Bull Racing",
   WIL: "Williams",
 };
+// Vestigingsland per team (voor de vlag bij de WK-stand constructeurs).
+const TEAM_CODE_LAND = {
+  ALP: "fr", AMR: "gb", AUD: "de", CAD: "us", FER: "it",
+  HAA: "us", MCL: "gb", MER: "de", RCB: "it", RBR: "gb",
+  WIL: "gb",
+};
 const TEAM_TRIGGERS = {
   // Mercedes/Ferrari staan bewust als laatste: bij een constructeur die naar
   // zijn motorleverancier is vernoemd (bv. "Cadillac - Ferrari", "Atlassian
@@ -976,7 +982,7 @@ function getMockVoetbal(competitie, type) {
     }));
     // "x" i.p.v. het echte rondenummer: duidelijk startpunt dat nog
     // ingevuld moet worden, net als de lege ondertitel bij "stand" hierboven.
-    return { sport: "Voetbal", titel: label, ondertitel: "na speelronde x", type: "programma", theme, competitie, dagen };
+    return { sport: "Voetbal", titel: label, ondertitel: "speelronde x", type: "programma", theme, competitie, dagen };
   }
   return null;
 }
@@ -2780,7 +2786,7 @@ function parseF1TeamsPaste(text) {
     // "Atlassian Williams - Mercedes") — met een herkende code gebruiken we
     // de korte officiële naam (TEAM_CODE_NAAM) i.p.v. die volle naam.
     const code = teamcode(team) || "";
-    rijen.push({ pos: rijen.length + 1, team: TEAM_CODE_NAAM[code] || team, code, punten });
+    rijen.push({ pos: rijen.length + 1, team: TEAM_CODE_NAAM[code] || team, code, punten, land: TEAM_CODE_LAND[code] });
   }
   return rijen;
 }
@@ -5461,9 +5467,9 @@ function StandDataEditor({ data, setData, competitie }) {
     <div>
       <div style={dpLabel}>Titel</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
-      <div style={dpLabel}>Ondertitel (bv. "na speelronde 19")</div>
+      <div style={dpLabel}>Ondertitel (bv. "speelronde 19")</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))}
-        placeholder="na speelronde …" style={dpVeld} />
+        placeholder="speelronde …" style={dpVeld} />
 
       <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0", fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }}>
         <input type="checkbox" checked={!!data.toonDoelsaldo}
@@ -5546,7 +5552,7 @@ function ProgrammaDataEditor({ data, setData, competitie }) {
           if (alleDuels.length) {
             setData((d) => ({
               ...d, dagen: nieuweDagen,
-              ondertitel: speelronde ? `na speelronde ${speelronde}` : d.ondertitel,
+              ondertitel: speelronde ? `speelronde ${speelronde}` : d.ondertitel,
             }));
           }
           return alleDuels;
@@ -6089,7 +6095,7 @@ function F1WKStandCoureursDataEditor({ data, setData }) {
 
 function F1WKStandTeamsDataEditor({ data, setData }) {
   const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
-  const zetTeam = (i, code) => zetRij(i, { code, team: TEAM_CODE_NAAM[code] || "" });
+  const zetTeam = (i, code) => zetRij(i, { code, team: TEAM_CODE_NAAM[code] || "", land: TEAM_CODE_LAND[code] });
   const verwijder = (i) => setData((d) => ({ ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, pos: j + 1 })) }));
   const voegToe = () => setData((d) => ({ ...d, rijen: [...d.rijen, { pos: d.rijen.length + 1, team: "", code: "", punten: 0 }] }));
   return (
