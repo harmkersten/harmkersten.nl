@@ -6352,7 +6352,7 @@ function App() {
             { label: "Competitie", actief: !!sport && !competitie, gedaan: !!competitie, onClick: resetCompetitie },
             ...(heeftCategorieen ? [{ label: "Categorie", actief: !!competitie && !categorie, gedaan: !!categorie, onClick: resetCategorie }] : []),
             ...(heeftRace ? [{ label: "Race", actief: klaarVoorCategorie && !race, gedaan: !!race, onClick: resetRace }] : []),
-            ...(categorieIsEindtype ? [] : [{ label: "Type", actief: klaarVoorType && !type, gedaan: !!type, onClick: () => setType(null) }]),
+            ...(categorieIsEindtype ? [] : [{ label: "Type", actief: !!competitie && klaarVoorType && !type, gedaan: !!type, onClick: () => setType(null) }]),
           ].map((s, i) => <Stap key={s.label} n={i + 1} label={s.label} actief={s.actief} gedaan={s.gedaan} onClick={s.gedaan ? s.onClick : undefined} />)}
         </div>
 
