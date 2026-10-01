@@ -3502,9 +3502,12 @@ function StandTemplate({ data, setData }) {
 
 /* ============================ VOETBAL: PROGRAMMA ============================= */
 
-function ProgrammaTemplate({ data }) {
+function ProgrammaTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
   // Maten gerond op hele pixels: tabel gecentreerd op het canvas (540 =
   // 1080/2, breedte 960), clublogo's 40x40px (zelfde maat als de stand).
   // Zebra-kleur wisselt doorlopend over de hele lijst (niet per dag-groep
@@ -3540,15 +3543,19 @@ function ProgrammaTemplate({ data }) {
   const uitLogoX = midX + 70;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} H={H} />
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
       <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={barY} />
+      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={barY} />
       {blokken.map((b, i) => {
         if (b.soort === "dag") {
           return (
             <g key={i}>
-              <rect x={xL} y={b.y} width={xR - xL} height={dayBarH} fill={data.theme.titel} />
+              <rect x={xL} y={b.y} width={xR - xL} height={dayBarH} fill={themeEff.titel} />
               <text x={midX} y={b.y + dayBarH / 2 + 11} textAnchor="middle" fontFamily={FONT}
                 fontWeight="700" fontSize="32" fill={NOS.wit}>{b.label}</text>
             </g>
@@ -3559,17 +3566,17 @@ function ProgrammaTemplate({ data }) {
         const logoY = b.y + rowH / 2 - logoW / 2;
         return (
           <g key={i}>
-            <rect x={xL} y={b.y} width={xR - xL} height={rowH} fill={b.even ? data.theme.zebra : NOS.wit} />
+            <rect x={xL} y={b.y} width={xR - xL} height={rowH} fill={b.even ? themeEff.zebra : NOS.wit} />
             <text x={homeLogoX - 10} y={midY} textAnchor="end" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={data.theme.tekst}>{m.thuis}</text>
+              fontWeight="700" fontSize={TS.tekst} fill={themeEff.tekst}>{m.thuis}</text>
             {m.thuisLogo && <image href={m.thuisLogo} x={homeLogoX} y={logoY} width={logoW} height={logoW}
               preserveAspectRatio="xMidYMid meet" />}
             <text x={midX} y={midY} textAnchor="middle" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={data.theme.tekst}>{m.tijd}</text>
+              fontWeight="700" fontSize={TS.tekst} fill={themeEff.tekst}>{m.tijd}</text>
             {m.uitLogo && <image href={m.uitLogo} x={uitLogoX} y={logoY} width={logoW} height={logoW}
               preserveAspectRatio="xMidYMid meet" />}
             <text x={uitLogoX + logoW + 10} y={midY} textAnchor="start" fontFamily={FONT}
-              fontWeight="700" fontSize={TS.tekst} fill={data.theme.tekst}>{m.uit}</text>
+              fontWeight="700" fontSize={TS.tekst} fill={themeEff.tekst}>{m.uit}</text>
           </g>
         );
       })}
@@ -5623,6 +5630,10 @@ function ProgrammaDataEditor({ data, setData, competitie }) {
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
 
+      {/* Alleen bij de nog in te vullen competitie: Eredivisie/Premier
+          League hebben al hun eigen huisstijl-illustratie als achtergrond. */}
+      {competitie === "eigen" && <AchtergrondKiezer data={data} setData={setData} />}
+
       <PlakBox label="Plak het programma (hele pagina, incl. tijden en speelronde)"
         placeholder={"vrijdag 3 april\n\nEredivisie,  Speelronde 19, Wedstrijd op het programma tussen Ajax en PSV om \n20:00\nSpeelronde 19\nAjax\n\n20:00\n\nPSV\n…"}
         onParse={(tekst) => {
@@ -6597,7 +6608,7 @@ function App() {
                   {sport === "formule1" && type === "wkstandcoureurs" && <WKStandCoureursTemplate data={editData} />}
                   {sport === "formule1" && type === "wkstandteams" && <WKStandTeamsTemplate data={editData} />}
                   {sport === "voetbal" && type === "stand" && <StandTemplate data={editData} setData={setEditData} />}
-                  {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={editData} />}
+                  {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={editData} setData={setEditData} />}
                   {sport === "wielrennen" && type === "programma" && <WielrenProgrammaTemplate data={editData} setData={setEditData} />}
                   {sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie) && <ParijsRoubaixTemplate data={editData} setData={setEditData} />}
                   {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={editData} setData={setEditData} />}
