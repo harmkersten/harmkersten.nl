@@ -6308,7 +6308,8 @@ function App() {
     kopie.querySelectorAll("style").forEach((el) => el.remove());
 
     const xlinkNS = "http://www.w3.org/1999/xlink";
-    const svgAlsImage = [...kopie.querySelectorAll("image")].filter((el) => {
+    const alleImages = [...kopie.querySelectorAll("image")];
+    const svgAlsImage = alleImages.filter((el) => {
       const href = el.getAttribute("href") || el.getAttributeNS(xlinkNS, "href") || "";
       return href.startsWith("data:image/svg+xml");
     });
@@ -6318,8 +6319,19 @@ function App() {
       const h = parseFloat(el.getAttribute("height")) || 100;
       const png = await rasterizeerNaarPng(href, w, h);
       el.setAttribute("href", png);
-      el.removeAttributeNS(xlinkNS, "href");
     }));
+    // Illustrator's SVG-import negeert de kale "href" op <image>-elementen en
+    // kijkt alleen naar het oudere "xlink:href" — zonder die namespace-
+    // variant blijven alle rasterbeelden (clublogo's, vlaggen, NOS-logo,
+    // foto's) onzichtbaar bij het openen, ook al staat de data gewoon
+    // correct in het bestand (de PNG-export gaat niet via deze svg-
+    // serialisatie en toonde ze daarom al wel goed). Beide attributen
+    // meegeven lost dit op; browsers negeren xlink:href gewoon als href
+    // er al is, dus daar verandert niets.
+    alleImages.forEach((el) => {
+      const href = el.getAttribute("href");
+      if (href) el.setAttributeNS(xlinkNS, "xlink:href", href);
+    });
 
     kopie.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     kopie.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
