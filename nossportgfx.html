@@ -4782,13 +4782,9 @@ function MedaillespiegelTemplate({ data, setData }) {
             <rect x={bronsL} y={y} width={bronsR - bronsL} height={rowH} fill={fill} />
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize="40" fill={tekstKleur}>{r.pos}</text>
-            {/* Vlag blijft echt (op de code uit de mockdata, geen placeholder
-                nodig voor een kleurtje), maar de naam ernaast is een vaste
-                placeholder — zo kan niemand deze stand per ongeluk als een
-                echte landenstand publiceren. */}
             <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 21} h={42} />
             <FitText x={naamTekstX} y={midY} maxW={countryR - naamTekstX - 12}
-              weight="700" size={40} fill={tekstKleur}>naam land</FitText>
+              weight="700" size={40} fill={tekstKleur}>{landnaam(r.land)}</FitText>
             <text x={goudMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="700" fontSize="40" fill={tekstKleur}>{r.goud}</text>
             <text x={zilverMidX} y={midY} textAnchor="middle" fontFamily={FONT}
@@ -5322,6 +5318,11 @@ const LANDEN_UITSLUITEN = new Set(["asean", "arab", "cefta", "un"]);
 const LANDEN_LIJST = LANDEN_LIJST_RAW
   .filter(([code]) => !LANDEN_UITSLUITEN.has(code))
   .sort((a, b) => a[1].localeCompare(b[1], "nl"));
+
+// Omgekeerde lookup (code -> NL naam), bv. voor de medaillespiegel die per
+// rij alleen een land toont, geen los naamveld zoals bij personen.
+const LANDNAAM_BIJ_CODE = Object.fromEntries(LANDEN_LIJST_RAW.map(([code, naam]) => [code, naam]));
+const landnaam = (code) => LANDNAAM_BIJ_CODE[code] || code;
 
 // Landcode -> 3-letterafkorting (IOC-stijl, bv. "ned" voor Nederland) voor
 // dropdowns in smalle tabellen — scheelt cel-breedte t.o.v. de volle naam,
