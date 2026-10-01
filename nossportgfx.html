@@ -6281,7 +6281,13 @@ function App() {
   // zelf meteen het eindtype — daar volgt geen aparte type-stap op.
   const categorieIsEindtype = heeftCategorieen && !!categorie && categorieCfg && !categorieCfg.types;
   const klaarVoorCategorie = !heeftCategorieen || !!categorie;
-  const klaarVoorType = klaarVoorCategorie && !categorieIsEindtype && (heeftRace ? !!race : true);
+  // Let op: dit sluit "categorieIsEindtype" bewust NIET uit — WK-stand
+  // coureurs/constructeurs hébben al een type (de categorie zelf, zie
+  // hierboven) zodra ze gekozen zijn, dus de exportknoppen (die op deze
+  // vlag leunen) moeten ook dan verschijnen. Het aparte "Type graphic"-
+  // kopje/lijstje hieronder blijft wél verborgen voor dat geval, want de
+  // categorie-lijst erboven dient daar al voor.
+  const klaarVoorType = klaarVoorCategorie && (heeftRace ? !!race : true);
   // Opstelling komt niet uit de mock-datalaag maar uit de editor ernaast.
   const isOpstelling = sport === "voetbal" && competitie === "opstelling";
   const heeftData = !!type && !isOpstelling;
@@ -6514,13 +6520,17 @@ function App() {
 
             {sport && competitie && klaarVoorType && (
               <>
-                <button onClick={heeftRace ? resetRace : (heeftCategorieen ? resetCategorie : resetCompetitie)} style={backBtn}>
-                  ← {heeftRace ? "Race" : (heeftCategorieen ? "Categorie" : "Competitie")}
-                </button>
-                <h3 style={secTitel}>Type graphic</h3>
-                {Object.entries(typesBron || {}).map(([k, v]) => (
-                  <Keuzeknop key={k} label={v.label} actief={type === k} onClick={() => setType(k)} />
-                ))}
+                {!categorieIsEindtype && (
+                  <>
+                    <button onClick={heeftRace ? resetRace : (heeftCategorieen ? resetCategorie : resetCompetitie)} style={backBtn}>
+                      ← {heeftRace ? "Race" : (heeftCategorieen ? "Categorie" : "Competitie")}
+                    </button>
+                    <h3 style={secTitel}>Type graphic</h3>
+                    {Object.entries(typesBron || {}).map(([k, v]) => (
+                      <Keuzeknop key={k} label={v.label} actief={type === k} onClick={() => setType(k)} />
+                    ))}
+                  </>
+                )}
                 {isOpstelling && type && (
                   <>
                     <p style={{ fontSize: 13, color: "#6b7280", margin: "14px 0 0" }}>
