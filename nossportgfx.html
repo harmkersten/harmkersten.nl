@@ -2844,7 +2844,7 @@ function Vlag({ code, x, y, h = 32 }) {
   return (
     <>
       <image href={uri} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
-      <rect x={x} y={y} width={w} height={h} fill="none" stroke="#00000022" strokeWidth="1" />
+      <rect x={x} y={y} width={w} height={h} fill="none" stroke="#00000022" strokeWidth="1" filter="url(#vlagrand)" />
     </>
   );
 }
@@ -2904,6 +2904,18 @@ function hoekkleurenVoorGradient(g) {
   return { tl: kleurVoor(0, 0), tr: kleurVoor(1, 0), bl: kleurVoor(0, 1), br: kleurVoor(1, 1) };
 }
 
+// Zachte rand voor de vlaggetjes (zie Vlag hieronder): een scherpe 1px
+// lijn in vector-vorm (SVG-export, geopend in Illustrator) oogt veel
+// harder dan dezelfde lijn in de PNG-export, die intern op 2x gerenderd en
+// teruggeschaald wordt — dat downsamplen vervaagt een haarlijntje vanzelf
+// al wat. Dit filter in élk <defs>-blok van Achtergrond geeft de SVG-versie
+// diezelfde zachte vervaging, zodat beide exports er gelijk uitzien.
+const vlagRandFilter = (
+  <filter id="vlagrand" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="0.5" />
+  </filter>
+);
+
 function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1350 }) {
   if (foto) {
     // Foto-variant: geen kleurverloop, de eigen (geüploade) foto vult het hele
@@ -2914,7 +2926,7 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
     if (!fotoDim || !fotoDim.w || !fotoDim.h) {
       return (
         <>
-          <defs><style>{fontFaceCss()}</style></defs>
+          <defs><style>{fontFaceCss()}</style>{vlagRandFilter}</defs>
           <rect width={W} height={H} fill="#1e1e1e" />
           <image href={foto} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" />
         </>
@@ -2932,6 +2944,7 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
         <defs>
           <style>{fontFaceCss()}</style>
           <clipPath id="fotoClip"><rect width={W} height={H} /></clipPath>
+          {vlagRandFilter}
         </defs>
         <rect width={W} height={H} fill="#1e1e1e" />
         <g clipPath="url(#fotoClip)">
@@ -2949,7 +2962,7 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
   if (th.achtergrondFoto) {
     return (
       <>
-        <defs><style>{fontFaceCss()}</style></defs>
+        <defs><style>{fontFaceCss()}</style>{vlagRandFilter}</defs>
         <image href={th.achtergrondFoto} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" />
       </>
     );
@@ -2979,6 +2992,7 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
             <stop offset="100%" stopColor={hoeken[id]} stopOpacity="0" />
           </radialGradient>
         ))}
+        {vlagRandFilter}
       </defs>
       <rect width={W} height={H} fill={middenKleur} />
       {hoekPunten.map(([id]) => (
