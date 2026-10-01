@@ -727,28 +727,28 @@ function raceDatumLabel(iso) {
 /* volledige naam voor uitslag, korte naam voor grid, kort team + vol team.     */
 const POOL = {
   wk2026: [
-    { vol: "Lando Norris", kort: "Norris", land: "gb", team: "MCL", teamVol: "McLaren" },
-    { vol: "Oscar Piastri", kort: "Piastri", land: "au", team: "MCL", teamVol: "McLaren" },
-    { vol: "Max Verstappen", kort: "Verstappen", land: "nl", team: "RBR", teamVol: "Red Bull Racing" },
-    { vol: "Isack Hadjar", kort: "Hadjar", land: "fr", team: "RBR", teamVol: "Red Bull Racing" },
-    { vol: "Charles Leclerc", kort: "Leclerc", land: "mc", team: "FER", teamVol: "Ferrari" },
-    { vol: "Lewis Hamilton", kort: "Hamilton", land: "gb", team: "FER", teamVol: "Ferrari" },
-    { vol: "George Russell", kort: "Russell", land: "gb", team: "MER", teamVol: "Mercedes" },
-    { vol: "Kimi Antonelli", kort: "Antonelli", land: "it", team: "MER", teamVol: "Mercedes" },
-    { vol: "Arvid Lindblad", kort: "Lindblad", land: "gb", team: "RCB", teamVol: "Racing Bulls" },
-    { vol: "Liam Lawson", kort: "Lawson", land: "nz", team: "RCB", teamVol: "Racing Bulls" },
-    { vol: "Nico Hülkenberg", kort: "Hülkenberg", land: "de", team: "AUD", teamVol: "Audi" },
-    { vol: "Gabriel Bortoleto", kort: "Bortoleto", land: "br", team: "AUD", teamVol: "Audi" },
-    { vol: "Pierre Gasly", kort: "Gasly", land: "fr", team: "ALP", teamVol: "Alpine" },
-    { vol: "Franco Colapinto", kort: "Colapinto", land: "ar", team: "ALP", teamVol: "Alpine" },
-    { vol: "Esteban Ocon", kort: "Ocon", land: "fr", team: "HAA", teamVol: "Haas" },
-    { vol: "Oliver Bearman", kort: "Bearman", land: "gb", team: "HAA", teamVol: "Haas" },
-    { vol: "Carlos Sainz", kort: "Sainz", land: "es", team: "WIL", teamVol: "Williams" },
-    { vol: "Alex Albon", kort: "Albon", land: "gb", team: "WIL", teamVol: "Williams" },
-    { vol: "Fernando Alonso", kort: "Alonso", land: "es", team: "AMR", teamVol: "Aston Martin" },
-    { vol: "Lance Stroll", kort: "Stroll", land: "ca", team: "AMR", teamVol: "Aston Martin" },
-    { vol: "Valtteri Bottas", kort: "Bottas", land: "fi", team: "CAD", teamVol: "Cadillac" },
-    { vol: "Sergio Perez", kort: "Perez", land: "mx", team: "CAD", teamVol: "Cadillac" },
+    { vol: "coureur x", kort: "coureur x", land: "gb", team: "MCL", teamVol: "McLaren" },
+    { vol: "coureur x", kort: "coureur x", land: "au", team: "MCL", teamVol: "McLaren" },
+    { vol: "coureur x", kort: "coureur x", land: "nl", team: "RBR", teamVol: "Red Bull Racing" },
+    { vol: "coureur x", kort: "coureur x", land: "fr", team: "RBR", teamVol: "Red Bull Racing" },
+    { vol: "coureur x", kort: "coureur x", land: "mc", team: "FER", teamVol: "Ferrari" },
+    { vol: "coureur x", kort: "coureur x", land: "gb", team: "FER", teamVol: "Ferrari" },
+    { vol: "coureur x", kort: "coureur x", land: "gb", team: "MER", teamVol: "Mercedes" },
+    { vol: "coureur x", kort: "coureur x", land: "it", team: "MER", teamVol: "Mercedes" },
+    { vol: "coureur x", kort: "coureur x", land: "gb", team: "RCB", teamVol: "Racing Bulls" },
+    { vol: "coureur x", kort: "coureur x", land: "nz", team: "RCB", teamVol: "Racing Bulls" },
+    { vol: "coureur x", kort: "coureur x", land: "de", team: "AUD", teamVol: "Audi" },
+    { vol: "coureur x", kort: "coureur x", land: "br", team: "AUD", teamVol: "Audi" },
+    { vol: "coureur x", kort: "coureur x", land: "fr", team: "ALP", teamVol: "Alpine" },
+    { vol: "coureur x", kort: "coureur x", land: "ar", team: "ALP", teamVol: "Alpine" },
+    { vol: "coureur x", kort: "coureur x", land: "fr", team: "HAA", teamVol: "Haas" },
+    { vol: "coureur x", kort: "coureur x", land: "gb", team: "HAA", teamVol: "Haas" },
+    { vol: "coureur x", kort: "coureur x", land: "es", team: "WIL", teamVol: "Williams" },
+    { vol: "coureur x", kort: "coureur x", land: "gb", team: "WIL", teamVol: "Williams" },
+    { vol: "coureur x", kort: "coureur x", land: "es", team: "AMR", teamVol: "Aston Martin" },
+    { vol: "coureur x", kort: "coureur x", land: "ca", team: "AMR", teamVol: "Aston Martin" },
+    { vol: "coureur x", kort: "coureur x", land: "fi", team: "CAD", teamVol: "Cadillac" },
+    { vol: "coureur x", kort: "coureur x", land: "mx", team: "CAD", teamVol: "Cadillac" },
   ],
 };
 
@@ -862,17 +862,17 @@ function getMockF1(competitie, type, raceSlug) {
 /* ---- Mock WK-stand: fictieve tussenstand (redacteur plakt de echte tabel) - */
 const WK_STAND_COUREURS = {
   wk2026: [
-    ["Kimi Antonelli", "it", "MER", 242], ["George Russell", "gb", "MER", 183],
-    ["Lewis Hamilton", "gb", "FER", 183], ["Lando Norris", "gb", "MCL", 159],
-    ["Charles Leclerc", "mc", "FER", 155], ["Max Verstappen", "nl", "RBR", 112],
-    ["Oscar Piastri", "au", "MCL", 104], ["Isack Hadjar", "fr", "RBR", 68],
-    ["Liam Lawson", "nz", "RCB", 49], ["Pierre Gasly", "fr", "ALP", 44],
-    ["Arvid Lindblad", "gb", "RCB", 23], ["Franco Colapinto", "ar", "ALP", 19],
-    ["Oliver Bearman", "gb", "HAA", 18], ["Gabriel Bortoleto", "br", "AUD", 10],
-    ["Nico Hülkenberg", "de", "AUD", 6], ["Carlos Sainz", "es", "WIL", 6],
-    ["Alex Albon", "gb", "WIL", 5], ["Esteban Ocon", "fr", "HAA", 3],
-    ["Fernando Alonso", "es", "AMR", 3], ["Lance Stroll", "ca", "AMR", 0],
-    ["Valtteri Bottas", "fi", "CAD", 0], ["Sergio Perez", "mx", "CAD", 0],
+    ["coureur x", "it", "MER", 242], ["coureur x", "gb", "MER", 183],
+    ["coureur x", "gb", "FER", 183], ["coureur x", "gb", "MCL", 159],
+    ["coureur x", "mc", "FER", 155], ["coureur x", "nl", "RBR", 112],
+    ["coureur x", "au", "MCL", 104], ["coureur x", "fr", "RBR", 68],
+    ["coureur x", "nz", "RCB", 49], ["coureur x", "fr", "ALP", 44],
+    ["coureur x", "gb", "RCB", 23], ["coureur x", "ar", "ALP", 19],
+    ["coureur x", "gb", "HAA", 18], ["coureur x", "br", "AUD", 10],
+    ["coureur x", "de", "AUD", 6], ["coureur x", "es", "WIL", 6],
+    ["coureur x", "gb", "WIL", 5], ["coureur x", "fr", "HAA", 3],
+    ["coureur x", "es", "AMR", 3], ["coureur x", "ca", "AMR", 0],
+    ["coureur x", "fi", "CAD", 0], ["coureur x", "mx", "CAD", 0],
   ],
 };
 // Korte teamnamen: geen motorleverancier/sponsor erachter (dus "McLaren"
@@ -880,38 +880,38 @@ const WK_STAND_COUREURS = {
 // Mercedes") — zie ook TEAM_CODE_NAAM, dezelfde korte namen per teamcode.
 const WK_STAND_TEAMS = {
   wk2026: [
-    ["Mercedes", "MER", 425, "de"], ["Ferrari", "FER", 338, "it"], ["McLaren", "MCL", 263, "gb"],
-    ["Red Bull Racing", "RBR", 186, "gb"], ["Racing Bulls", "RCB", 66, "it"],
-    ["Alpine", "ALP", 63, "fr"], ["Haas", "HAA", 21, "us"], ["Audi", "AUD", 16, "de"],
-    ["Williams", "WIL", 11, "gb"], ["Aston Martin", "AMR", 3, "gb"],
-    ["Cadillac", "CAD", 0, "us"],
+    ["team x", "MER", 425, "de"], ["team x", "FER", 338, "it"], ["team x", "MCL", 263, "gb"],
+    ["team x", "RBR", 186, "gb"], ["team x", "RCB", 66, "it"],
+    ["team x", "ALP", 63, "fr"], ["team x", "HAA", 21, "us"], ["team x", "AUD", 16, "de"],
+    ["team x", "WIL", 11, "gb"], ["team x", "AMR", 3, "gb"],
+    ["team x", "CAD", 0, "us"],
   ],
 };
 
 /* ---- Mock voetbal: stand + programma (Eredivisie / Premier League) -------- */
 const VOETBAL_STAND = {
   eredivisie: [
-    ["ADO Den Haag", 28, 21, 3, 3, 65], ["Willem II", 28, 20, 2, 5, 62],
-    ["FC Twente", 28, 18, 1, 5, 60], ["NEC", 28, 18, 5, 5, 58],
-    ["Go Ahead Eagles", 28, 18, 5, 6, 58], ["Ajax", 28, 17, 4, 6, 46],
-    ["Telstar", 28, 17, 7, 7, 45], ["Fortuna Sittard", 27, 17, 6, 8, 32],
-    ["Sparta Rotterdam", 27, 16, 6, 9, 30], ["Feyenoord", 28, 16, 7, 10, 30],
-    ["sc Heerenveen", 28, 16, 8, 10, 30], ["FC Utrecht", 28, 12, 9, 12, 29],
-    ["SC Cambuur", 28, 12, 11, 12, 29], ["FC Groningen", 27, 12, 14, 12, 27],
-    ["PSV", 27, 12, 15, 13, 25], ["Excelsior", 27, 11, 13, 15, 22],
-    ["PEC Zwolle", 27, 8, 14, 15, 19], ["AZ", 27, 8, 12, 15, 19],
+    ["team x", 28, 21, 3, 3, 65], ["team x", 28, 20, 2, 5, 62],
+    ["team x", 28, 18, 1, 5, 60], ["team x", 28, 18, 5, 5, 58],
+    ["team x", 28, 18, 5, 6, 58], ["team x", 28, 17, 4, 6, 46],
+    ["team x", 28, 17, 7, 7, 45], ["team x", 27, 17, 6, 8, 32],
+    ["team x", 27, 16, 6, 9, 30], ["team x", 28, 16, 7, 10, 30],
+    ["team x", 28, 16, 8, 10, 30], ["team x", 28, 12, 9, 12, 29],
+    ["team x", 28, 12, 11, 12, 29], ["team x", 27, 12, 14, 12, 27],
+    ["team x", 27, 12, 15, 13, 25], ["team x", 27, 11, 13, 15, 22],
+    ["team x", 27, 8, 14, 15, 19], ["team x", 27, 8, 12, 15, 19],
   ],
   premierleague: [
-    ["Arsenal", 28, 21, 3, 3, 65], ["Tottenham Hotspur", 28, 20, 2, 5, 62],
-    ["Sunderland", 28, 18, 1, 5, 60], ["Nottingham Forest", 28, 18, 5, 5, 58],
-    ["Newcastle United", 28, 18, 5, 6, 58], ["Manchester United", 28, 17, 4, 6, 46],
-    ["Manchester City", 28, 17, 7, 7, 45], ["Liverpool", 27, 17, 6, 8, 32],
-    ["Leeds United", 27, 16, 6, 9, 30], ["Ipswich Town", 28, 16, 7, 10, 30],
-    ["Hull City", 28, 16, 8, 10, 30], ["Fulham", 28, 12, 9, 12, 29],
-    ["Everton", 28, 12, 11, 12, 29], ["Crystal Palace", 27, 12, 14, 12, 27],
-    ["Coventry City", 27, 12, 15, 13, 25], ["Chelsea", 27, 11, 13, 15, 22],
-    ["Brighton", 27, 8, 14, 15, 19], ["Brentford", 27, 8, 12, 15, 19],
-    ["Bournemouth", 27, 8, 14, 15, 19], ["Aston Villa", 27, 8, 12, 15, 19],
+    ["team x", 28, 21, 3, 3, 65], ["team x", 28, 20, 2, 5, 62],
+    ["team x", 28, 18, 1, 5, 60], ["team x", 28, 18, 5, 5, 58],
+    ["team x", 28, 18, 5, 6, 58], ["team x", 28, 17, 4, 6, 46],
+    ["team x", 28, 17, 7, 7, 45], ["team x", 27, 17, 6, 8, 32],
+    ["team x", 27, 16, 6, 9, 30], ["team x", 28, 16, 7, 10, 30],
+    ["team x", 28, 16, 8, 10, 30], ["team x", 28, 12, 9, 12, 29],
+    ["team x", 28, 12, 11, 12, 29], ["team x", 27, 12, 14, 12, 27],
+    ["team x", 27, 12, 15, 13, 25], ["team x", 27, 11, 13, 15, 22],
+    ["team x", 27, 8, 14, 15, 19], ["team x", 27, 8, 12, 15, 19],
+    ["team x", 27, 8, 14, 15, 19], ["team x", 27, 8, 12, 15, 19],
   ],
   // Nog in te vullen competitie: bewust leeg, geen fictieve clubs — de
   // redacteur plakt of vult zelf de echte stand in.
@@ -921,28 +921,28 @@ const VOETBAL_STAND = {
 const VOETBAL_PROGRAMMA = {
   eredivisie: {
     dagen: [
-      { dag: "vrijdag 3 april", duels: [["ADO Den Haag", "Ajax", "20:00"]] },
+      { dag: "vrijdag 3 april", duels: [["team x", "team x", "20:00"]] },
       { dag: "zaterdag 4 april", duels: [
-        ["Willem II", "NEC", "12:00"], ["FC Twente", "Go Ahead Eagles", "15:00"],
+        ["team x", "team x", "12:00"], ["team x", "team x", "15:00"],
       ] },
       { dag: "zondag 5 april", duels: [
-        ["Telstar", "Fortuna Sittard", "15:00"], ["Sparta Rotterdam", "Feyenoord", "15:00"],
-        ["sc Heerenveen", "FC Utrecht", "15:00"], ["SC Cambuur", "FC Groningen", "17:00"],
-        ["PSV", "Excelsior", "17:00"], ["PEC Zwolle", "AZ", "17:00"],
+        ["team x", "team x", "15:00"], ["team x", "team x", "15:00"],
+        ["team x", "team x", "15:00"], ["team x", "team x", "17:00"],
+        ["team x", "team x", "17:00"], ["team x", "team x", "17:00"],
       ] },
     ],
   },
   premierleague: {
     dagen: [
-      { dag: "vrijdag 3 april", duels: [["Arsenal", "Tottenham Hotspur", "20:00"]] },
+      { dag: "vrijdag 3 april", duels: [["team x", "team x", "20:00"]] },
       { dag: "zaterdag 4 april", duels: [
-        ["Sunderland", "Nottingham Forest", "12:30"], ["Newcastle United", "Manchester United", "15:00"],
+        ["team x", "team x", "12:30"], ["team x", "team x", "15:00"],
       ] },
       { dag: "zondag 5 april", duels: [
-        ["Manchester City", "Liverpool", "14:00"], ["Leeds United", "Ipswich Town", "14:00"],
-        ["Hull City", "Fulham", "14:00"], ["Everton", "Crystal Palace", "14:00"],
-        ["Coventry City", "Chelsea", "16:30"], ["Brighton", "Brentford", "16:30"],
-        ["Bournemouth", "Aston Villa", "16:30"],
+        ["team x", "team x", "14:00"], ["team x", "team x", "14:00"],
+        ["team x", "team x", "14:00"], ["team x", "team x", "14:00"],
+        ["team x", "team x", "16:30"], ["team x", "team x", "16:30"],
+        ["team x", "team x", "16:30"],
       ] },
     ],
   },
@@ -985,33 +985,33 @@ function getMockVoetbal(competitie, type) {
 const TDF_UITSLAG = {
   etappe: 14, route: "Mulhouse - Le Markstein", km: "155,3 km", soort: "berg",
   rijen: [
-    ["Tadej Pogacar", "si", "UAX", "4:00:07"], ["Isaac Del Toro", "mx", "UAX", "+38"],
-    ["Paul Seixas", "fr", "DCT", "+38"], ["Jonas Vingegaard", "dk", "TVL", "+44"],
-    ["Remco Evenepoel", "be", "RBH", "+48"], ["Juan Ayuso", "es", "LTK", "+50"],
-    ["Florian Lipowitz", "de", "RBH", "+50"], ["Richard Carapaz", "ec", "EFE", "+1:18"],
-    ["Tobias Johannessen", "no", "UXM", "+1:40"], ["Mattias Skjelmose", "dk", "LTK", "+3:40"],
+    ["renner x", "si", "UAX", "4:00:07"], ["renner x", "mx", "UAX", "+38"],
+    ["renner x", "fr", "DCT", "+38"], ["renner x", "dk", "TVL", "+44"],
+    ["renner x", "be", "RBH", "+48"], ["renner x", "es", "LTK", "+50"],
+    ["renner x", "de", "RBH", "+50"], ["renner x", "ec", "EFE", "+1:18"],
+    ["renner x", "no", "UXM", "+1:40"], ["renner x", "dk", "LTK", "+3:40"],
   ],
   leiders: [
-    { trui: "geel", naam: "Tadej Pogacar", land: "si", team: "UAX", waarde: "51:18:28" },
-    { trui: "groen", naam: "Mads Pedersen", land: "dk", team: "LTK", waarde: "397" },
-    { trui: "bol", naam: "Valentin Paret-Peintre", land: "fr", team: "QSD", waarde: "52" },
-    { trui: "wit", naam: "Isaac Del Toro", land: "mx", team: "UAX", waarde: "51:23:34" },
+    { trui: "geel", naam: "renner x", land: "si", team: "UAX", waarde: "51:18:28" },
+    { trui: "groen", naam: "renner x", land: "dk", team: "LTK", waarde: "397" },
+    { trui: "bol", naam: "renner x", land: "fr", team: "QSD", waarde: "52" },
+    { trui: "wit", naam: "renner x", land: "mx", team: "UAX", waarde: "51:23:34" },
   ],
 };
 
 const TDF_KLASSEMENT = {
   etappe: 21,
   rijen: [
-    ["Tadej Pogacar", "si", "UAX", "73:56:26", true], ["Remco Evenepoel", "be", "RBH", "+6:26", false],
-    ["Isaac Del Toro", "mx", "UAX", "+9:42", false], ["Paul Seixas", "fr", "DCT", "+11:56", false],
-    ["Lenny Martinez", "fr", "TBV", "+13:02", false], ["Mattias Skjelmose", "dk", "LTK", "+14:59", false],
-    ["Juan Ayuso", "es", "LTK", "+17:48", false], ["Richard Carapaz", "ec", "EFE", "+20:00", false],
-    ["Tom Pidcock", "gb", "PQT", "+29:28", false], ["Jordan Jegat", "fr", "TEN", "+33:21", false],
-    ["Yannis Voisard", "ch", "TUD", "+38:02", false], ["Tobias Johannessen", "no", "UXM", "+56:37", false],
-    ["Sepp Kuss", "us", "TVL", "+1:02:23", false], ["Davide Piganzoli", "it", "TVL", "+1:03:43", false],
-    ["Jai Hindley", "au", "RBH", "+1:23:28", false],
+    ["renner x", "si", "UAX", "73:56:26", true], ["renner x", "be", "RBH", "+6:26", false],
+    ["renner x", "mx", "UAX", "+9:42", false], ["renner x", "fr", "DCT", "+11:56", false],
+    ["renner x", "fr", "TBV", "+13:02", false], ["renner x", "dk", "LTK", "+14:59", false],
+    ["renner x", "es", "LTK", "+17:48", false], ["renner x", "ec", "EFE", "+20:00", false],
+    ["renner x", "gb", "PQT", "+29:28", false], ["renner x", "fr", "TEN", "+33:21", false],
+    ["renner x", "ch", "TUD", "+38:02", false], ["renner x", "no", "UXM", "+56:37", false],
+    ["renner x", "us", "TVL", "+1:02:23", false], ["renner x", "it", "TVL", "+1:03:43", false],
+    ["renner x", "au", "RBH", "+1:23:28", false],
   ],
-  extra: ["Thymen Arensman", "nl", "NCI", "+2:02:42"],
+  extra: ["renner x", "nl", "NCI", "+2:02:42"],
 };
 
 // type: "vlak" | "heuvel" | "berg" | "tijdrit"
@@ -1116,16 +1116,16 @@ function getMockWielrennen(competitie, type) {
 const EENDAAGSE_UITSLAG = {
   route: "Compiègne - Roubaix", km: "253,3 km",
   rijen: [
-    ["Mathieu van der Poel", "nl", "APT", "5:52:23"], ["Wout van Aert", "be", "TVL", "+38"],
-    ["Tadej Pogacar", "si", "UAX", "+1:02"], ["Jasper Philipsen", "be", "APT", "+1:15"],
-    ["Stefan Küng", "ch", "GFC", "+1:40"], ["Mads Pedersen", "dk", "LTK", "+1:52"],
-    ["Filippo Ganna", "it", "IGD", "+2:10"], ["Dylan van Baarle", "nl", "TVL", "+2:25"],
-    ["Jasper Stuyven", "be", "TEN", "+2:48"], ["Nils Politt", "de", "UAX", "+3:05"],
-    ["Alexander Kristoff", "no", "UXM", "+3:22"], ["Jhonatan Narváez", "ec", "UAX", "+3:40"],
-    ["Biniam Girmay", "er", "IGD", "+3:58"], ["Yves Lampaert", "be", "SOQ", "+4:12"],
-    ["Mike Teunissen", "nl", "IGD", "+4:30"],
+    ["renner x", "nl", "APT", "5:52:23"], ["renner x", "be", "TVL", "+38"],
+    ["renner x", "si", "UAX", "+1:02"], ["renner x", "be", "APT", "+1:15"],
+    ["renner x", "ch", "GFC", "+1:40"], ["renner x", "dk", "LTK", "+1:52"],
+    ["renner x", "it", "IGD", "+2:10"], ["renner x", "nl", "TVL", "+2:25"],
+    ["renner x", "be", "TEN", "+2:48"], ["renner x", "de", "UAX", "+3:05"],
+    ["renner x", "no", "UXM", "+3:22"], ["renner x", "ec", "UAX", "+3:40"],
+    ["renner x", "er", "IGD", "+3:58"], ["renner x", "be", "SOQ", "+4:12"],
+    ["renner x", "nl", "IGD", "+4:30"],
   ],
-  extra: ["Fabio Jakobsen", "nl", "DAT", "+6:15"],
+  extra: ["renner x", "nl", "DAT", "+6:15"],
 };
 
 // Competities zonder klassement/etappes — één doorlopende uitslag. Geen
@@ -1204,10 +1204,10 @@ function getMock(sport, competitie, type, raceSlug) {
 const SCHAATSEN_RESULTATEN_MOCK = {
   onderdeel: "500m mannen",
   rijen: [
-    ["nl", "Jenning de Boo", "34,21"], ["nl", "Wesly Dijs", "34,45"],
-    ["no", "Håvard Holmefjord Lorentzen", "34,58"], ["jp", "Yuma Murakami", "34,61"],
-    ["kr", "Kim Min-seok", "34,70"], ["us", "Jordan Stolz", "34,74"],
-    ["de", "Moritz Klein", "34,88"], ["cn", "Gao Tingyu", "34,95"],
+    ["nl", "schaatser x", "34,21"], ["nl", "schaatser x", "34,45"],
+    ["no", "schaatser x", "34,58"], ["jp", "schaatser x", "34,61"],
+    ["kr", "schaatser x", "34,70"], ["us", "schaatser x", "34,74"],
+    ["de", "schaatser x", "34,88"], ["cn", "schaatser x", "34,95"],
   ],
 };
 const SCHAATSEN_WERELDBEKERSTAND_MOCK = {
@@ -1216,12 +1216,12 @@ const SCHAATSEN_WERELDBEKERSTAND_MOCK = {
   // wedstrijden waarna deze stand is (dat wisselt toch elke keer) niet.
   subkop: "eindstand 500m mannen",
   rijen: [
-    ["nl", "Jenning de Boo", 420], ["us", "Jordan Stolz", 385],
-    ["nl", "Wesly Dijs", 360], ["no", "Håvard Holmefjord Lorentzen", 305],
-    ["jp", "Yuma Murakami", 280], ["kr", "Kim Min-seok", 255],
-    ["de", "Moritz Klein", 220], ["cn", "Gao Tingyu", 195],
+    ["nl", "schaatser x", 420], ["us", "schaatser x", 385],
+    ["nl", "schaatser x", 360], ["no", "schaatser x", 305],
+    ["jp", "schaatser x", 280], ["kr", "schaatser x", 255],
+    ["de", "schaatser x", 220], ["cn", "schaatser x", 195],
   ],
-  extra: ["nl", "Thomas Krol", 140],
+  extra: ["nl", "schaatser x", 140],
 };
 const SCHAATSEN_PROGRAMMA_MOCK = {
   rijen: [
