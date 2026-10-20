@@ -379,7 +379,7 @@ const sitTitle = S => {
 };
 const KIND = {fly:['Honkslag','Single'],ground:['Grondbal','Ground ball'],xbh:['Extra-base hit','Extra-base hit'],tag:['Vangbal + tag-up','Fly out + tag-up'],pop:['Pop-up','Pop-up'],bunt:['Stootslag','Bunt']};
 const kindTxt = S => KIND[S.type][LANG==='en'?1:0];
-const SRC = {TRC:'TRC Baseball – Defensive Situations',WR:'White Rock South Surrey – Cut-offs and Relays',BD:'Baseball Dudes – 30 Fundamental Situations',PH:'Perry Hill Infield System',CO:'Defensive situations and strategies (cut-off)'};
+const SRC = {get EXP(){return L('Correctie op basis van algemene honkbalpraktijk','Correction based on standard baseball practice')},TRC:'TRC Baseball – Defensive Situations',WR:'White Rock South Surrey – Cut-offs and Relays',BD:'Baseball Dudes – 30 Fundamental Situations',PH:'Perry Hill Infield System',CO:'Defensive situations and strategies (cut-off)'};
 
 /* ---------- situaties uit het boekje (TRC Defensive Situations) ---------- */
 const N1 = 'After seeing the runner touch 1B, cover the bag.';
@@ -434,9 +434,11 @@ const SIT = [
   SS:['field_1B','Field ball and throw to 1B.'], '3B':['backup_SS','Back up SS.'], LF:['backup_SS','Move into back up position behind SS.'],
   CF:['backup_2B','Move into back up position behind 2B.'], RF:['backup_1B','Move into back up position behind 1B.']}},
  {type:'ground',ball:'2B',run:[],to:'1B',d:{
-  P:['cover_home','Move into position to cover Home Plate.'], C:['follow_runner_1B',FOL2], '1B':['cover1B','Cover 1B.'], '2B':['field_1B','Field ball and throw to 1B.'],
+  P:['cover_backup_1B','On every ball hit to your left, break toward first base.','EXP'], C:['follow_runner_1B',FOL2], '1B':['cover1B','Cover 1B.'], '2B':['field_1B','Field ball and throw to 1B.'],
   SS:['cover2B','Cover 2B.'], '3B':['cover3B','Cover 3B.'], LF:['backup_SS','Move into back up position behind SS.'],
-  CF:['backup_2B','Move into back up position behind 2B.'], RF:['backup_2B','Move into back up position behind 2B.']}},
+  CF:['backup_2B','Move into back up position behind 2B.'], RF:['backup_2B','Move into back up position behind 2B.']},
+  w:{P:['Vuistregel voor werpers: gaat een grondbal naar jouw linkerkant, dan sprint je richting het eerste honk. De eerste honkman kan van zijn honk weggelokt worden; dan dek jij het, anders sta je als back-up. Zonder lopers hoeft niemand de thuisplaat te dekken. (Het TRC-boekje laat de werper hier de thuisplaat dekken.)',
+        'Rule of thumb for pitchers: on any ground ball to your left, break toward first base. The first baseman may be pulled off the bag; then you cover it, otherwise you back up. With no runners nobody needs to cover home. (The TRC booklet has the pitcher cover home here.)']}},
  {type:'ground',ball:'1B',run:[],to:'1B',d:{
   P:['cover1B','Move into position to cover 1B.'], C:['follow_runner_1B',FOL2], '1B':['field_run1B','Field ball and run/throw to 1B.'], '2B':['backup_1B','Back up 1B.'],
   SS:['cover2B','Cover 2B.'], '3B':['cover3B','Cover 3B.'], LF:['backup_SS','Move into back up position behind SS.'],
@@ -496,10 +498,12 @@ const SIT = [
   P:['backup_3B','Move into position to back up 3B.'], C:['protect_home',PH], '1B':['cover1B','Cover 1B.'], '2B':['cover2B','Cover 2B.'],
   SS:['field_3B','Field ball and throw to 3B.'], '3B':['cover3B','Cover 3B.'], LF:['backup_SS','Move into back up position behind SS.'],
   CF:['backup_2B','Move into back up position behind 2B for over throw.'], RF:['backup_2B','Move into back up position behind 2B.']}},
- {type:'ground',ball:'2B',run:[1,2],to:'3B',d:{
-  P:['backup_3B','Move into position to back up 3B.'], C:['protect_home',PH], '1B':['cover1B','Cover 1B.'], '2B':['field_3B','Field ball and throw to 3B.'],
-  SS:['cover2B','Cover 2B.'], '3B':['cover3B','Cover 3B.'], LF:['backup_3B','Move into back up position behind 3B.'],
-  CF:['backup_2B','Move into back up position behind 2B for over throw.'], RF:['backup_2B','Move into back up position behind 2B.']}},
+ {type:'ground',ball:'2B',run:[1,2],to:'2B',src:'EXP',d:{
+  P:['cover_backup_1B','Break toward first base on a ball to your left.'], C:['protect_home','Protect home plate.'], '1B':['cover1B','Cover 1B for the double play.'], '2B':['field_2B','Field the ball and feed second base to start the 4-6-3 double play.'],
+  SS:['cover2B','Cover 2B, take the feed and relay to first.'], '3B':['cover3B','Cover 3B.'], LF:['backup_3B','Back up 3B.'],
+  CF:['backup_2B','Back up the throw to 2B.'], RF:['backup_2B','Back up 2B.']},
+  w:{P:['De tweede honkman start een dubbelspel en de eerste honkman moet op zijn honk staan voor de tweede uit. Jij sprint richting het eerste honk als back-up, of om te dekken als de eerste honkman naar de bal moest.',
+        'The second baseman starts a double play and the first baseman must be on his bag for the second out. You break toward first as back-up, or to cover if the first baseman had to go for the ball.']}},
  {type:'ground',ball:'1B',run:[1,2],to:'1B',d:{
   P:['cover1B','Move into position to cover 1B.'], C:['protect_home',PH], '1B':['field_run1B_check3','Field ball and run/throw to 1B. Watch runner at 3B.'],
   '2B':['backup_1B','Back up 1B.'], SS:['cover2B','Cover 2B.'], '3B':['cover3B','Cover 3B.'], LF:['backup_3B','Move into back up position behind 3B.'],
@@ -643,6 +647,10 @@ function idea(S){
                              'Both runners are forced, but the first baseman is far from third base. He takes the sure out at first and keeps an eye on the runner heading to third.');
   if(S.ball==='3B') return L('Beide lopers zijn gedwongen. Pak de voorste loper: de derde honkman staat er zelf het dichtst bij en tikt de loper uit of stapt op het honk.',
                              'Both runners are forced. Get the lead runner: the third baseman is closest, so he tags the runner or steps on the bag.');
+  if(S.ball==='2B') return L('Beide lopers zijn gedwongen. De tweede honkman staat ver van het derde honk, maar vlak bij het tweede: hij start het dubbelspel 4-6-3 (tweede honk, dan eerste honk). Een lange worp dwars over het veld naar het derde honk is te riskant.',
+                             'Both runners are forced. The second baseman is far from third but close to second: he starts the 4-6-3 double play (second, then first). A long throw across the diamond to third is too risky.');
+  if(S.ball==='SS') return L('Beide lopers zijn gedwongen. Pak de voorste loper: force out op het derde honk. Met minder dan twee uit is een dubbelspel via het tweede honk (6-4-3) ook een goede keuze; dit boekje kiest voor de voorste loper.',
+                             'Both runners are forced. Get the lead runner: force out at third. With less than two outs a double play through second (6-4-3) is also a good choice; this booklet goes for the lead runner.');
   return L('Beide lopers zijn gedwongen. Pak de voorste loper: force out op het derde honk.','Both runners are forced. Get the lead runner: force out at third base.');
 }
 const cutPos = S => POS.find(p=>['cutoff','cover2B_or_cut','relay_lead'].includes(S.d[p][0]));
@@ -719,8 +727,10 @@ const A = {
     why:S=>L('De bal komt naar jou en er staat een loper op het tweede honk. Die loper is niet gedwongen om te lopen. Kijk hem eerst even terug (vasthouden met je ogen) zodat hij niet doorloopt naar het derde honk, en gooi daarna de slagman uit op het eerste honk.',
              'The ball comes to you and there is a runner on second. That runner is not forced to run. Look him back first (hold him with your eyes) so he doesn\'t go to third, then throw the batter out at first.')},
   field_2B:{l:()=>L('De bal fielden en naar het tweede honk gooien','Field the ball and throw to second base'),g:['f2'],field:'2B',
-    why:S=>L('De bal komt naar jou en de loper op het eerste honk moet doorlopen. Gooi naar het tweede honk voor de force out op de voorste loper. Met wat tijd over lukt misschien nog een dubbelspel.',
-             'The ball comes to you and the runner on first is forced. Throw to second for the force out on the lead runner. With time to spare you may even turn a double play.')},
+    why:S=>S.run.includes(2)?L('De bal komt naar jou en beide lopers zijn gedwongen. Het derde honk ligt ver weg en de worp ernaartoe gaat dwars over het veld. Gooi daarom naar het tweede honk: de korte stop maakt de force out en gooit door naar het eerste honk voor het dubbelspel.',
+                                 'The ball comes to you and both runners are forced. Third base is far away and the throw goes across the diamond. So feed second: the shortstop makes the force out and relays to first for the double play.')
+      :L('De bal komt naar jou en de loper op het eerste honk moet doorlopen. Gooi naar het tweede honk voor de force out op de voorste loper. Met wat tijd over lukt misschien nog een dubbelspel.',
+         'The ball comes to you and the runner on first is forced. Throw to second for the force out on the lead runner. With time to spare you may even turn a double play.')},
   field_3B:{l:()=>L('De bal fielden en naar het derde honk gooien','Field the ball and throw to third base'),g:['f3'],field:'3B',
     why:S=>L('De bal komt naar jou en beide lopers zijn gedwongen. De voorste loper komt van het tweede honk: gooi naar het derde honk voor de force out. Zo blijft er geen loper in scoringspositie staan.',
              'The ball comes to you and both runners are forced. The lead runner is coming from second: throw to third for the force out. That way no runner is left in scoring position.')},
@@ -764,7 +774,7 @@ const A = {
       'The shortstop and second baseman both go after the pop-up, so second base is empty. As the pitcher you cover it, in case the runner from first keeps going.');
     if(S.type==='bunt') return L('Bij een stootslag stormen de binnenvelders naar de bal en dekt de tweede honkman het eerste honk. Jij dekt het tweede honk: bij een slechte bunt kan de worp naar jou voor de voorste loper.',
       'On a bunt the infielders charge and the second baseman covers first. You cover second: on a bad bunt the throw can come to you for the lead runner.');
-    if(S.type==='tag' || (S.type==='fly' && S.to==='H')) return L('De eerste honkman is de cut-off en de tweede honkman dekt het eerste honk. Jij dekt het tweede honk, zodat de loper daar niet zomaar heen kan en de cut-off een honk heeft om naar te gooien.',
+    if((S.type==='tag' || (S.type==='fly' && S.to==='H')) && cutPos(S)==='1B') return L('De eerste honkman is de cut-off en de tweede honkman dekt het eerste honk. Jij dekt het tweede honk, zodat de loper daar niet zomaar heen kan en de cut-off een honk heeft om naar te gooien.',
       'The first baseman is the cut-off and the second baseman covers first. You cover second, so no runner gets there for free and the cut-off has a base to throw to.');
     if(S.to==='2B') return S.type==='ground'
       ? L(`De worp gaat naar het tweede honk voor de force out op de loper van het eerste honk. ${cap(de(S.ball))} is met de bal bezig, dus jij neemt het honk. Jij staat op het honk om die worp te ontvangen.`,
@@ -1174,8 +1184,8 @@ const TH = [
   o:[['Zo diep mogelijk achter het honk, in lijn met de worp','As deep as possible behind the base, in line with the throw'],['Vlak achter de honkman','Right behind the baseman'],['Op de heuvel','On the mound'],['Naast het honk, in de looplijn','Next to the base, in the runner\'s path']],
   why:['Diep staan geeft je tijd om op een afgeketste bal te reageren. Blijf ook uit de looplijn van de loper.','Standing deep gives you time to react to a deflected ball. Also stay out of the runner\'s path.']},
  {src:'BD',q:['Je loopt naar een honk om te dekken en de loper komt eraan. Waar let je op?','You run to cover a base and the runner is coming. What do you watch out for?'],
-  o:[['Blijf uit de looplijn van de loper, anders krijgt hij het honk toegewezen','Stay out of the runner\'s path, or he will be awarded the base'],['Ga midden op de looplijn staan om hem te blokkeren','Stand in the base path to block him'],['Duw hem weg','Push him away'],['Niets, de loper moet om jou heen','Nothing, the runner has to go around you']],
-  why:['Loopt de loper tegen je aan terwijl je de bal niet hebt, dan is het obstructie en krijgt hij het volgende honk, wat er ook gebeurt.','If the runner runs into you while you don\'t have the ball, it is obstruction and he gets the next base no matter what.']},
+  o:[['Blijf uit de looplijn van de loper, anders kan hij een honk toegewezen krijgen','Stay out of the runner\'s path, or he can be awarded a base'],['Ga midden op de looplijn staan om hem te blokkeren','Stand in the base path to block him'],['Duw hem weg','Push him away'],['Niets, de loper moet om jou heen','Nothing, the runner has to go around you']],
+  why:['Hinder je de loper terwijl je de bal niet hebt, dan is het obstructie: de scheidsrechter kent hem dan een honk toe, ook als hij anders uit zou zijn.','If you hinder the runner while you don\'t have the ball, it is obstruction: the umpire awards him a base, even if he would otherwise have been out.']},
  {src:'PH',q:['Je bent binnenvelder en doet niet mee aan de relay. Waar ga je staan?','You are an infielder not involved in the relay. Where do you go?'],
   o:[['Net binnen je honk, en kijken of de lopers het honk aantikken','Just inside your base, watching the runners touch it'],['Midden op het honk, zodat de loper er niet op kan','Right on the base, so the runner can\'t touch it'],['Naar de dug-out','To the dugout'],['Achter de relay-man aan','Following the relay man']],
   why:['Net binnen het honk staan dwingt de loper vaak een wijdere bocht te maken. Let op dat je hem niet hindert.','Standing just inside the base often makes the runner take a wider turn. Be careful not to interfere with him.']},
