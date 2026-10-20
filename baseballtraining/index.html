@@ -392,7 +392,7 @@ const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 const runKey = S => S.run.join('') || '0';
 const RUNTXT = {'0':['Geen lopers op de honken','No runners on base'],'1':['Loper op het eerste honk','Runner on first base'],'2':['Loper op het tweede honk','Runner on second base'],
   '12':['Lopers op het eerste en tweede honk','Runners on first and second base'],'3':['Loper op het derde honk','Runner on third base'],'13':['Lopers op het eerste en derde honk','Runners on first and third base']};
-const runTxt = S => RUNTXT[runKey(S)][LANG==='en'?1:0] + (S.outs?L(', minder dan 2 uit',', less than 2 outs'):'') + (S.outN!==undefined?' · '+OUTS(S.outN):'');
+const runTxt = S => RUNTXT[runKey(S)][LANG==='en'?1:0] + (S.outN!==undefined?' · '+OUTS(S.outN):S.outs?L(', minder dan 2 uit',', less than 2 outs'):'');
 const WHERE = {LFline:['langs de linkerlijn','down the left-field line'],LCgap:['in het gat links-midden','to the left-center gap'],
   RCgap:['in het gat rechts-midden','to the right-center gap'],RFline:['langs de rechterlijn','down the right-field line']};
 const POPW = {LF:['langs de linkerlijn','down the left-field line'],CF:['achter het tweede honk','to shallow center field'],RF:['langs de rechterlijn','down the right-field line']};
@@ -663,6 +663,12 @@ function withOuts(S,n){
   const eq=n===2||(n===0&&runKey(S)==='12');   // alle goede antwoorden even goed
   return Object.assign({},S,{base:S,outN:n,to:v.to,ok:v.ok,okEq:eq,d:Object.assign({},S.d,{[f]:same?S.d[f]:[v.ok[0],null,'EXP']})});
 }
+/* realistisch aantal uit per soort situatie */
+const outsFor = S => S.type==='bunt' ? (S.to==='H'?[0,1]:[0]) : (S.type==='tag'||S.type==='pop') ? [0,1] : [0,1,2];
+function playAs(S){
+  const opts=outsFor(S), n=opts[Math.random()*opts.length|0];
+  return S.ov ? withOuts(S,n) : Object.assign({},S,{base:S,outN:n});
+}
 /* welke antwoorden goed zijn voor deze positie */
 const okSet = (S,p) => (S.ok && p===S.ball) ? S.ok : [S.d[p][0]];
 const OUTS = n => L(`${n} uit`, n===1?'1 out':`${n} outs`);
@@ -707,9 +713,16 @@ function outsSummary(S){
 }
 
 /* ---------- het idee achter een situatie ---------- */
+/* bij 2 uit en een slag naar het outfield lopen de lopers al bij contact */
 function idea(S){
+  const extra = S.outN===2 && S.run.length && ['fly','xbh'].includes(S.type)
+    ? L(' Met 2 uit lopen de lopers al bij contact, dus ze hebben extra voorsprong en gaan bijna altijd door. De worp moet daarom snel en zuiver binnenkomen.',
+        ' With 2 outs the runners go on contact, so they have an extra head start and almost always keep going. The throw has to come in fast and accurate.') : '';
+  return ideaBase(S)+extra;
+}
+function ideaBase(S){
   const k = runKey(S);
-  if(S.outN!==undefined){
+  if(S.ov && S.outN!==undefined){
     const n=S.outN;
     if(k==='1') return n<2?L('De loper op het eerste honk moet doorlopen. Met minder dan 2 uit is het dubbelspel het doel: force out op het tweede honk en door naar het eerste.','The runner on first is forced. With less than 2 outs the goal is the double play: force out at second and on to first.')
                           :L('Met 2 uit is één uit genoeg om de inning te beëindigen. Neem de zekerste uit.','With 2 outs one out ends the inning. Take the surest out.');
@@ -1342,7 +1355,7 @@ function pool(){
   if(state.mode==='theory') return TH.map(T=>({T}));
   const sits=SIT.filter(S=>state.types.has(S.type)&&runMatch(S));
   if(!state.pos) return [];
-  const v=S=>S.ov?withOuts(S,Math.random()*3|0):S;
+  const v=playAs;
   if(state.pos==='ALL') return sits.flatMap(S=>POS.map(p=>({S:v(S),pos:p})));
   return sits.map(S=>({S:v(S),pos:state.pos}));
 }
@@ -1374,7 +1387,7 @@ document.querySelectorAll('#fLen .chip').forEach(c=>c.onclick=()=>{state.len=+c.
 /* ---------- spel ---------- */
 let round=null;
 const whyFor = (S,p) => {
-  if(S.outN!==undefined && p===S.ball) return outsWhy(S,S.outN);
+  if(S.ov && S.outN!==undefined && p===S.ball) return outsWhy(S,S.outN);
   if(S.ov && S.outN===undefined && p===S.ball) return L('Dit hangt af van het aantal uit. ','This depends on the number of outs. ')+outsSummary(S);
   return S.w&&S.w[p] ? L(S.w[p][0],S.w[p][1]) : A[S.d[p][0]].why(S,p);
 };
