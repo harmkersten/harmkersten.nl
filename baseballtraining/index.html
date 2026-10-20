@@ -600,7 +600,7 @@ const SIT = [
   '1B':['bunt_charge_1B','Cover the right side of the infield. If you field the ball, listen for catcher\'s instructions, and then throw to the appropriate base.'],
   '2B':['cover1B','Cover first base.'], SS:['cover2B','Cover second base.'],
   '3B':['bunt_charge_3B','Charge toward home plate and cover the left side of the infield. If you field the ball, listen for the catcher\'s instructions, and then throw to the appropriate base.'],
-  LF:['backup_2B','Back up any throw to second base.'], CF:['backup_2B','Back up any throw to second base.'], RF:['backup_1B','Back up any throw to first base.']}},
+  LF:['backup_3B','Back up any throw to third base.','EXP'], CF:['backup_2B','Back up any throw to second base.'], RF:['backup_1B','Back up any throw to first base.']}},
  {type:'bunt',ball:null,run:[3],to:'H',src:'PH',d:{
   P:['bunt_pitcher','Breaks straight to home plate.'], C:['protect_home','Protects home plate.'], '1B':['bunt_charge_1B','As the hitter squares to bunt, breaks to home plate or cover first base.'],
   '2B':['cover1B','Cover first base/Read first baseman or cover second base.'], SS:['cover3B','Cover third base.'],
@@ -912,8 +912,8 @@ const NS='http://www.w3.org/2000/svg';
 const H=[200,385], B={'1B':[266,319],'2B':[200,253],'3B':[134,319],H:[200,385]};
 const START={P:[200,326],C:[200,402],'1B':[279,293],'2B':[240,247],SS:[160,247],'3B':[121,293],LF:[92,196],CF:[200,158],RF:[308,196]};
 const SPOT_FLY={LF:[84,176],CF:[200,138],RF:[316,176]};
-const SPOT_GR={'3B':[127,301],SS:[166,262],'2B':[234,262],'1B':[273,303],P:[207,349]};
-const SPOT_XBH={LFline:[38,214],LCgap:[108,150],RCgap:[292,150],RFline:[362,214]};
+const SPOT_GR={'3B':[127,301],SS:[166,262],'2B':[234,262],'1B':[246,290],P:[207,349]};
+const SPOT_XBH={LFline:[38,214],LCgap:[140,134],RCgap:[260,134],RFline:[362,214]};
 const SPOT_POP={LF:[118,250],CF:[200,212],RF:[282,250]};
 const AIR=['fly','xbh','tag','pop'];
 const spot = S => S.type==='xbh'?SPOT_XBH[S.where]:S.type==='pop'?SPOT_POP[S.ball]:S.type==='bunt'?[200,356]
@@ -924,7 +924,16 @@ const len=v=>Math.hypot(v[0],v[1]);
 const unit=v=>{const l=len(v)||1;return [v[0]/l,v[1]/l];};
 const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
 const DEF={'1B':[.85,.55],'2B':[0,-1],'3B':[-.85,.55],H:[0,1]};
-function behindBase(base,S){const b=B[base];const v=sub(b,spot(S));return add2(b,len(v)<40?unit(DEF[base]):unit(v),30);}
+/* waar komt de worp naar dit honk vandaan? de back-up staat daarachter, in het verlengde van die worp */
+function throwFrom(base,S){
+  const sp=spot(S), cp=cutPos(S);
+  if(S.to===base) return (['fly','xbh','tag'].includes(S.type)&&cp)?target(cp,S):sp;
+  if(S.type==='ground' && S.to==='2B' && base==='1B') return B['2B'];   // tweede worp van het dubbelspel
+  return H;   // geen worp verwacht: dan achter het honk aan de buitenveldkant
+}
+/* buitenvelders backuppen dieper dan binnenvelders, zodat ze niet op elkaar staan */
+const OF=['LF','CF','RF'];
+function behindBase(base,S,pos){const b=B[base];const v=sub(b,throwFrom(base,S));return add2(b,len(v)<25?unit(DEF[base]):unit(v),OF.includes(pos)?55:30);}
 function behind(p){return add2(p,unit(sub(p,H)),30);}
 
 function target(pos,S){
@@ -937,12 +946,12 @@ function target(pos,S){
     case 'cover_backup_3B': return [140,334];
     case 'cover_home': return [190,377];
     case 'protect_home': return [200,393];
-    case 'follow_runner_1B': return [276,355];
+    case 'follow_runner_1B': return [257,343];
     case 'cutoff': return lerp(B[S.to],sp,.45);
     case 'cover2B_or_cut': return add2(lerp(B['2B'],sp,.22),[pos==='2B'?12:-12,0]);
-    case 'backup_1B': return (S.type==='ground'&&S.ball==='1B')?add2(B['1B'],unit(DEF['1B']),30):behindBase('1B',S);
-    case 'backup_2B': return behindBase('2B',S);
-    case 'backup_3B': return (S.type==='ground'&&S.ball==='3B')?behind(sp):behindBase('3B',S);
+    case 'backup_1B': return behindBase('1B',S,pos);
+    case 'backup_2B': return (S.type==='ground'&&S.ball==='2B'&&!(S.to==='2B'&&pos==='CF'))?behind(sp):behindBase('2B',S,pos);
+    case 'backup_3B': return (S.type==='ground'&&S.ball==='3B')?behind(sp):behindBase('3B',S,pos);
     case 'backup_SS': return S.ball==='SS'?behind(sp):behind(START.SS);
     case 'backup_P': return add2(sp,[8,-28]);
     case 'backup_LF': case 'backup_CF': case 'backup_RF': {
@@ -952,7 +961,8 @@ function target(pos,S){
     case 'p_backup_3B_home': return [152,360];
     case 'p_backup_1B_home': return [248,360];
     case 'rf_toward_infield': return add2(st,unit(sub(B['2B'],st)),45);
-    case 'backup_home': return [214,409];
+    case 'backup_home': { const cp=cutPos(S), from=(cp&&['fly','xbh','tag'].includes(S.type))?target(cp,S):sp;
+      const t=add2(H,unit(sub(H,from)),26); return [t[0],Math.min(t[1],410)]; }
     case 'relay_lead': return lerp(B[S.to],sp,.55);
     case 'trailer': return lerp(B[S.to],sp,.36);
     case 'trail_runner_2B': return add2(B['2B'],[12,6]);
@@ -1075,6 +1085,7 @@ function drawField(svg,{S,me,mode,onPick,animate=true}){
     let pts=[sp];
     if(['fly','xbh','tag'].includes(S.type) && cp) pts.push(T[cp]);
     if(S.to) pts.push(fieldAct==='field_tag3'?B['3B']:dest);
+    if(S.type==='ground' && S.to==='2B') pts.push(B['1B']);   // dubbelspel: door naar het eerste honk
     if(S.to && len(sub(pts[pts.length-1],sp))>8){
       const tp=el('path',{d:'M'+pts.map(q=>q.join(',')).join(' L'),class:'throw','marker-end':`url(#${id}r)`},lay.thr);
       if(animate){tp.style.opacity=0;tp.style.transition='opacity .4s';setTimeout(()=>tp.style.opacity=1,1000);}
