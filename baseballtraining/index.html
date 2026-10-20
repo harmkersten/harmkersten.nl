@@ -697,10 +697,12 @@ const A = {
              'The throw goes home. Get as deep as possible behind the catcher, in line with the throw. If the ball gets past him, you stop it and the other runners can\'t advance.')},
   relay_lead:{l:()=>L('Als relay-man naar buiten sprinten, in lijn tussen de bal en het honk','Sprint out as the relay man, in line between the ball and the base'),g:['cut'],
     why:S=>L(`De bal ligt diep in het veld: te ver voor één worp. Jij sprint naar buiten en gaat in één lijn staan tussen de bal en ${BN(S.to)}, met je handen omhoog als doel. Vang de bal aan je handschoenkant, draai en gooi door. De trailer achter je roept waar de bal heen moet.`,
-             `The ball is deep in the outfield: too far for one throw. You sprint out and line up between the ball and ${BN(S.to)}, hands up as a target. Catch it on your glove side, turn and relay it. The trailer behind you calls where the ball should go.`)},
+             `The ball is deep in the outfield: too far for one throw. You sprint out and line up between the ball and ${BN(S.to)}, hands up as a target. Catch it on your glove side, turn and relay it. The trailer behind you calls where the ball should go.`)
+      +(()=>{const t=POS.find(p=>S.d[p][0]==='trailer');return t?L(` Hier is ${de(t)} de trailer.`,` Here ${de(t)} is the trailer.`):'';})()},
   trailer:{l:()=>L('Als trailer zo\'n 10 meter achter de relay-man gaan staan en roepen waar de bal heen moet','Trail about 30 feet behind the relay man and call where the ball goes'),g:['trail'],
-    why:S=>L(`Jij bent de tweede cut-off (trailer). Je staat zo'n 10 meter (30 ft) achter de relay-man, in lijn met ${BN(S.to)}. Vliegt de worp over hem heen of stuitert hij voor zijn voeten, dan pak jij hem. Omdat je het hele spel voor je ziet, roep jij waar de relay heen moet gooien.`,
-             `You are the second cut-off (trailer). You stand about 30 feet behind the relay man, in line with ${BN(S.to)}. If the throw sails over him or bounces at his feet, you take it. Because you see the whole play in front of you, you call where the relay should throw.`)},
+    why:(S,pos)=>{const r=POS.find(p=>S.d[p][0]==='relay_lead'), call=S.to==='H'?'"Four!"':'"Three!"';
+      return L(`De bal ligt diep in het veld, te ver voor één worp. ${cap(de(r))} staat het dichtst bij en sprint naar buiten als relay-man. Jij bent de tweede man van de "double cut": je volgt hem en gaat zo'n 10 meter (30 ft) achter hem staan, in dezelfde lijn naar ${BN(S.to)}. Je hebt twee taken: (1) vliegt de worp over de relay heen of stuitert hij weg, dan pak jij hem; (2) jij ziet de lopers en het hele spel voor je, dus jij roept wat de relay moet doen: ${call} (doorgooien naar ${BN(S.to)}) of "Cut!" (bal vasthouden).${pos==='SS'&&S.to==='H'?' Zie je dat de relay de bal goed vangt, ga dan snel terug om het tweede honk te dekken.':''}`,
+               `The ball is deep in the outfield, too far for one throw. ${cap(de(r))} is closest and sprints out as the relay man. You are the second man of the "double cut": you follow him and stand about 30 feet behind him, in the same line to ${BN(S.to)}. You have two jobs: (1) if the throw sails over the relay or bounces away, you take it; (2) you see the runners and the whole play in front of you, so you call what the relay should do: ${call} (relay it to ${BN(S.to)}) or "Cut!" (hold the ball).${pos==='SS'&&S.to==='H'?' Once you see the relay catch it cleanly, hurry back to cover second base.':''}`);}},
   trail_runner_2B:{l:()=>L('Kijken of de slagman het eerste honk aanraakt en hem dan volgen naar het tweede honk','Check the batter touches first, then trail him to second base'),g:['c2','trl2'],
     why:S=>L('De korte stop en de tweede honkman zijn allebei bezig met de relay, dus het tweede honk is leeg. Kijk eerst of de slagman het eerste honk aanraakt en loop dan achter hem aan naar het tweede honk: zo is daar toch iemand als hij te ver uitloopt.',
              'The shortstop and second baseman are both busy with the relay, so second base is empty. First check that the batter touches first, then trail him to second: that way someone is there if he rounds the bag too far.')},
@@ -990,7 +992,7 @@ function target(pos,S){
     case 'backup_home': { const cp=cutPos(S), from=(cp&&['fly','xbh','tag'].includes(S.type))?target(cp,S):sp;
       const t=add2(H,unit(sub(H,from)),36); return [t[0],Math.min(t[1],410)]; }
     case 'relay_lead': return lerp(B[S.to],sp,.55);
-    case 'trailer': return lerp(B[S.to],sp,.36);
+    case 'trailer': { const r=lerp(B[S.to],sp,.55); return add2(r,unit(sub(B[S.to],r)),32); }
     case 'trail_runner_2B': return add2(B['2B'],[12,6]);
     case 'second_cut_home': return lerp(H,sp,.2);
     case 'popup_priority': return sp;
