@@ -387,7 +387,7 @@ const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 const runKey = S => S.run.join('') || '0';
 const RUNTXT = {'0':['Geen lopers op de honken','No runners on base'],'1':['Loper op het eerste honk','Runner on first base'],'2':['Loper op het tweede honk','Runner on second base'],
   '12':['Lopers op het eerste en tweede honk','Runners on first and second base'],'3':['Loper op het derde honk','Runner on third base'],'13':['Lopers op het eerste en derde honk','Runners on first and third base']};
-const runTxt = S => RUNTXT[runKey(S)][LANG==='en'?1:0] + (S.outs?L(', minder dan 2 uit',', less than 2 outs'):'');
+const runTxt = S => RUNTXT[runKey(S)][LANG==='en'?1:0] + (S.outs?L(', minder dan 2 uit',', less than 2 outs'):'') + (S.outN!==undefined?' · '+OUTS(S.outN):'');
 const WHERE = {LFline:['langs de linkerlijn','down the left-field line'],LCgap:['in het gat links-midden','to the left-center gap'],
   RCgap:['in het gat rechts-midden','to the right-center gap'],RFline:['langs de rechterlijn','down the right-field line']};
 const POPW = {LF:['langs de linkerlijn','down the left-field line'],CF:['achter het tweede honk','to shallow center field'],RF:['langs de rechterlijn','down the right-field line']};
@@ -634,9 +634,86 @@ const SIT = [
 ];
 SIT.forEach((S,i)=>{S.id=i;S.src=S.src||'TRC';});
 
+/* ---------- aantal uit: bij grondballen met lopers hangt de keuze van de veldspeler ervan af ----------
+   per aantal uit: waar de worp heen gaat (to) en welke antwoorden goed zijn (ok; de eerste is de beste) */
+function outsPlan(S){
+  const k=runKey(S), f=S.ball, orig=S.d[f][0];
+  if(k==='1') return {0:{to:'2B',ok:['field_2B']},1:{to:'2B',ok:['field_2B']},
+    2:f==='1B'?{to:'1B',ok:['field_run1B','field_2B']}:{to:'2B',ok:['field_2B','field_1B']}};
+  if(k==='2') return {0:{to:'1B',ok:[orig]},1:{to:'1B',ok:[orig]},
+    2:{to:'1B',ok:f==='1B'?['field_run1B',orig]:['field_1B',orig]}};
+  if(k==='12') return {
+    '3B':{0:{to:'3B',ok:['field_tag3','field_2B']},1:{to:'2B',ok:['field_2B','field_tag3']},2:{to:'3B',ok:['field_tag3','field_2B','field_1B']}},
+    SS:{0:{to:'3B',ok:['field_3B','field_2B']},1:{to:'2B',ok:['field_2B','field_3B']},2:{to:'2B',ok:['field_2B','field_3B','field_1B']}},
+    '2B':{0:{to:'2B',ok:['field_2B']},1:{to:'2B',ok:['field_2B']},2:{to:'2B',ok:['field_2B','field_1B']}},
+    '1B':{0:{to:'1B',ok:['field_run1B_check3','field_2B']},1:{to:'2B',ok:['field_2B','field_run1B_check3']},2:{to:'1B',ok:['field_run1B_check3','field_2B']}},
+    P:{0:{to:'3B',ok:['field_3B','field_2B']},1:{to:'2B',ok:['field_2B','field_3B']},2:{to:'3B',ok:['field_3B','field_2B','field_1B']}},
+  }[f];
+  return null;
+}
+SIT.forEach(S=>{ if(S.type==='ground' && S.run.length) S.ov=outsPlan(S); });
+/* de situatie zoals hij met n uit gespeeld wordt */
+function withOuts(S,n){
+  const v=S.ov[n], f=S.ball, same=v.ok[0]===S.d[f][0];
+  const eq=n===2||(n===0&&runKey(S)==='12');   // alle goede antwoorden even goed
+  return Object.assign({},S,{base:S,outN:n,to:v.to,ok:v.ok,okEq:eq,d:Object.assign({},S.d,{[f]:same?S.d[f]:[v.ok[0],null,'EXP']})});
+}
+/* welke antwoorden goed zijn voor deze positie */
+const okSet = (S,p) => (S.ok && p===S.ball) ? S.ok : [S.d[p][0]];
+const OUTS = n => L(`${n} uit`, n===1?'1 out':`${n} outs`);
+/* uitleg voor de veldspeler bij n uit */
+function outsWhy(S,n){
+  const k=runKey(S), f=S.ball;
+  if(k==='1'){
+    if(n<2) return L(`Met ${n} uit ga je voor het dubbelspel: force out op het tweede honk en dan door naar het eerste. Twee uit in één keer.`,
+                     `With ${n} out${n===1?'':'s'} you go for the double play: force out at second, then on to first. Two outs at once.`);
+    return f==='1B'?L('Met 2 uit heb je maar één uit nodig om de inning te beëindigen. Jij staat vlak bij het eerste honk: stap er zelf op of gooi naar de werper. Naar het tweede honk gooien mag ook.',
+                      'With 2 outs you only need one out to end the inning. You are right next to first base: step on it yourself or flip to the pitcher. Throwing to second is fine too.')
+      :L('Met 2 uit heb je maar één uit nodig om de inning te beëindigen. Neem de zekerste: de force out op het tweede honk of de slagman op het eerste honk. Kies wat het kortst en veiligst is.',
+         'With 2 outs you only need one out to end the inning. Take the surest one: the force out at second or the batter at first. Pick whatever is shortest and safest.');
+  }
+  if(k==='2'){
+    if(n<2) return L(`Met ${n} uit telt de loper op het tweede honk: hij mag niet zomaar naar het derde. `,`With ${n} out${n===1?'':'s'} the runner on second matters: he can't just walk to third. `)+A[S.d[f][0]].why(S,f);
+    return L('Met 2 uit maakt de loper op het tweede honk niet meer uit: een uit op het eerste honk beëindigt de inning voordat hij kan scoren. Gooi meteen en zeker naar het eerste honk. Eerst even terugkijken mag ook, maar is niet nodig.',
+             'With 2 outs the runner on second no longer matters: an out at first ends the inning before he can score. Throw straight and sure to first. Looking him back first is fine too, but not needed.');
+  }
+  if(n===0){
+    if(f==='2B') return L('Met 0 uit wil je een dubbelspel. Voor jou is de worp naar het derde honk lang en dwars over het veld, dus start je het dubbelspel via het tweede honk (4-6-3).',
+                          'With 0 outs you want a double play. For you the throw to third is long and across the diamond, so you start the double play through second (4-6-3).');
+    if(f==='1B') return L('Met 0 uit heb je twee goede keuzes: de zekere uit op het eerste honk (en de loper richting het derde in de gaten houden), of het dubbelspel 3-6-1 via het tweede honk. Allebei goed.',
+                          'With 0 outs you have two good options: the sure out at first (and watch the runner heading to third), or the 3-6-1 double play through second. Both are fine.');
+    return L(`Met 0 uit heb je twee goede keuzes. De voorste loper uitmaken op het derde honk: dan staat er straks geen loper op het derde met maar 1 uit. Of het dubbelspel via het tweede honk: twee uit, maar wel een loper op het derde. Beide zijn goed; coaches verschillen hierin van mening.`,
+             `With 0 outs you have two good options. Get the lead runner at third: then there is no runner on third with just 1 out. Or turn the double play through second: two outs, but a runner ends up on third. Both are fine; coaches differ on this.`);
+  }
+  if(n===1) return f==='2B'?L('Met 1 uit beëindigt een dubbelspel de inning. Start het via het tweede honk (4-6-3).','With 1 out a double play ends the inning. Start it through second (4-6-3).')
+    :L(`Met 1 uit beëindigt een dubbelspel de inning, dus dat is de beste keuze: via het tweede honk en door naar het eerste.${f==='1B'?'':' De voorste loper op het derde honk uitmaken kan ook, maar dan gaat de inning door.'}`,
+       `With 1 out a double play ends the inning, so that is the best choice: through second and on to first.${f==='1B'?'':' Getting the lead runner at third also works, but then the inning goes on.'}`);
+  const near={'3B':['Voor jou is dat gewoon zelf op het derde honk stappen.','For you that is simply stepping on third yourself.'],
+    SS:['Voor jou is dat meestal het tweede honk (korte worp), maar het derde of eerste honk is ook goed.','For you that is usually second base (short throw), but third or first is fine too.'],
+    '2B':['Voor jou is dat het tweede honk (korte worp) of het eerste honk.','For you that is second base (short throw) or first base.'],
+    '1B':['Voor jou is dat gewoon zelf op het eerste honk stappen.','For you that is simply stepping on first yourself.'],
+    P:['Voor jou is dat het derde of het tweede honk; het eerste honk is ook goed.','For you that is third or second base; first base is fine too.']}[f];
+  return L(`Met 2 uit heb je maar één uit nodig. Neem de makkelijkste force out: het honk dat het dichtstbij is of waar de worp het kortst is. ${near[0]}`,
+           `With 2 outs you only need one out. Take the easiest force out: the closest base or the shortest throw. ${near[1]}`);
+}
+/* in de studeermodus: overzicht per aantal uit */
+function outsSummary(S){
+  return [0,1,2].map(n=>`${OUTS(n)}: ${S.ov[n].ok.map(a=>lbl(a).toLowerCase()).join(L(' — of — ',' — or — '))}`).join('. ')+'.';
+}
+
 /* ---------- het idee achter een situatie ---------- */
 function idea(S){
   const k = runKey(S);
+  if(S.outN!==undefined){
+    const n=S.outN;
+    if(k==='1') return n<2?L('De loper op het eerste honk moet doorlopen. Met minder dan 2 uit is het dubbelspel het doel: force out op het tweede honk en door naar het eerste.','The runner on first is forced. With less than 2 outs the goal is the double play: force out at second and on to first.')
+                          :L('Met 2 uit is één uit genoeg om de inning te beëindigen. Neem de zekerste uit.','With 2 outs one out ends the inning. Take the surest out.');
+    if(k==='2') return n<2?L('De loper op het tweede honk is níet gedwongen. Kijk hem terug zodat hij niet naar het derde gaat, en maak de zekere uit op het eerste honk.','The runner on second is NOT forced. Look him back so he doesn\'t go to third, then take the sure out at first.')
+                          :L('Met 2 uit beëindigt een uit op het eerste honk de inning; de loper op het tweede telt dan niet meer.','With 2 outs an out at first ends the inning; the runner on second no longer matters.');
+    return [L('Lopers op 1 en 2, 0 uit: zowel de voorste loper op het derde honk als een dubbelspel via het tweede honk is een goede keuze.','Runners on 1st and 2nd, 0 outs: both the lead runner at third and a double play through second are good choices.'),
+            L('Lopers op 1 en 2, 1 uit: een dubbelspel beëindigt de inning, dus dat heeft de voorkeur.','Runners on 1st and 2nd, 1 out: a double play ends the inning, so that is preferred.'),
+            L('Lopers op 1 en 2, 2 uit: één uit is genoeg. Neem de makkelijkste force out.','Runners on 1st and 2nd, 2 outs: one out is enough. Take the easiest force out.')][n];
+  }
   if(S.type==='fly'){
     if(k==='0') return L('Geen lopers: alleen de slagman loopt. De bal moet zo snel mogelijk naar het tweede honk, zodat de slagman niet verder komt dan het eerste honk.',
                          'No runners: only the batter is running. The ball has to get to second base as fast as possible, so the batter stops at first.');
@@ -1122,7 +1199,7 @@ function drawField(svg,{S,me,mode,onPick,animate=true}){
     let pts=[sp];
     if(['fly','xbh','tag'].includes(S.type) && cp) pts.push(T[cp]);
     if(S.to) pts.push(fieldAct==='field_tag3'?B['3B']:dest);
-    if(S.type==='ground' && S.to==='2B') pts.push(B['1B']);   // dubbelspel: door naar het eerste honk
+    if(S.type==='ground' && S.to==='2B' && S.outN!==2) pts.push(B['1B']);   // dubbelspel: door naar het eerste honk
     if(S.to && len(sub(pts[pts.length-1],sp))>8){
       const tp=el('path',{d:'M'+pts.map(q=>q.join(',')).join(' L'),class:'throw','marker-end':`url(#${id}r)`},lay.thr);
       if(animate){tp.style.opacity=0;tp.style.transition='opacity .4s';setTimeout(()=>tp.style.opacity=1,1000);}
@@ -1260,8 +1337,9 @@ function pool(){
   if(state.mode==='theory') return TH.map(T=>({T}));
   const sits=SIT.filter(S=>state.types.has(S.type)&&runMatch(S));
   if(!state.pos) return [];
-  if(state.pos==='ALL') return sits.flatMap(S=>POS.map(p=>({S,pos:p})));
-  return sits.map(S=>({S,pos:state.pos}));
+  const v=S=>S.ov?withOuts(S,Math.random()*3|0):S;
+  if(state.pos==='ALL') return sits.flatMap(S=>POS.map(p=>({S:v(S),pos:p})));
+  return sits.map(S=>({S:v(S),pos:state.pos}));
 }
 function renderSetup(){
   const th=state.mode==='theory';
@@ -1290,7 +1368,11 @@ document.querySelectorAll('#fLen .chip').forEach(c=>c.onclick=()=>{state.len=+c.
 
 /* ---------- spel ---------- */
 let round=null;
-const whyFor = (S,p) => S.w&&S.w[p] ? L(S.w[p][0],S.w[p][1]) : A[S.d[p][0]].why(S,p);
+const whyFor = (S,p) => {
+  if(S.outN!==undefined && p===S.ball) return outsWhy(S,S.outN);
+  if(S.ov && S.outN===undefined && p===S.ball) return L('Dit hangt af van het aantal uit. ','This depends on the number of outs. ')+outsSummary(S);
+  return S.w&&S.w[p] ? L(S.w[p][0],S.w[p][1]) : A[S.d[p][0]].why(S,p);
+};
 const srcOf = (S,p) => SRC[S.d[p][2]||S.src];
 const tx = a => a[LANG==='en'?1:0];
 function startRound(items){
@@ -1300,7 +1382,7 @@ function startRound(items){
 $('#startBtn').onclick=()=>{
   const p=shuffle(pool());
   // bij "alle posities": niet twee keer achter elkaar dezelfde situatie
-  if(state.mode==='sit'&&state.pos==='ALL'){for(let i=1;i<p.length;i++)if(p[i].S===p[i-1].S){const j=p.findIndex((x,k)=>k>i&&x.S!==p[i-1].S);if(j>0)[p[i],p[j]]=[p[j],p[i]];}}
+  if(state.mode==='sit'&&state.pos==='ALL'){for(let i=1;i<p.length;i++)if((p[i].S.base||p[i].S)===(p[i-1].S.base||p[i-1].S)){const j=p.findIndex((x,k)=>k>i&&x.S!==p[i-1].S);if(j>0)[p[i],p[j]]=[p[j],p[i]];}}
   startRound(p.slice(0,state.len));
 };
 function nextQ(){
@@ -1346,7 +1428,7 @@ function answer(i){
   if(round.pick!==null) return;
   round.pick=i;
   const it=round.items[round.i];
-  const good=it.T?round.opts[i]===0:round.opts[i]===it.S.d[it.pos][0];
+  const good=it.T?round.opts[i]===0:okSet(it.S,it.pos).includes(round.opts[i]);
   if(good) round.score++; else round.miss.push(it);
   const key=it.T?'THEORY':it.pos;
   const st=stats[key]||(stats[key]={c:0,t:0});st.t++;if(good)st.c++;store.save(stats);
@@ -1359,11 +1441,11 @@ function answer(i){
 function renderFeedback(){
   const it=round.items[round.i];
   const i=round.pick, pick=round.opts[i];
-  const correct=it.T?0:it.S.d[it.pos][0], good=pick===correct;
+  const correct=it.T?0:it.S.d[it.pos][0], oks=it.T?[0]:okSet(it.S,it.pos), good=oks.includes(pick), alt=good&&pick!==correct&&!it.S.okEq;
   [...$('#opts').children].forEach((b,k)=>{b.disabled=true;const a=round.opts[k];
-    if(a===correct)b.classList.add('ok');else if(k===i)b.classList.add('no');else b.classList.add('fade');});
+    if(oks.includes(a))b.classList.add('ok');else if(k===i)b.classList.add('no');else b.classList.add('fade');});
   const last=round.i+1>=round.items.length;
-  const head=`<h3>${good?L('Goed!','Correct!'):L('Niet helemaal','Not quite')}</h3>`;
+  const head=`<h3>${alt?L('Goed, kan ook','Correct, that works'):good?L('Goed!','Correct!'):L('Niet helemaal','Not quite')}</h3>`;
   const next=`<div class="next"><button class="btn pri" id="nextBtn">${last?L('Bekijk resultaat','See result'):L(it.T?'Volgende vraag':'Volgende situatie',it.T?'Next question':'Next situation')} →</button></div>`;
   if(it.T){
     $('#fb').innerHTML=`<div class="fb ${good?'ok':'no'}">${head}
@@ -1375,9 +1457,12 @@ function renderFeedback(){
     $('#fb').innerHTML=`
     <div class="fb ${good?'ok':'no'}">${head}
       ${good?'':`<p><b>${L('Jij koos:','You chose:')}</b> ${esc(lbl(pick).toLowerCase())}. ${esc(wrongWhy(S,pos,pick))}</p>`}
-      <p><b>${L(`Jouw taak als ${nm(pos).toLowerCase()}:`,`Your job as ${nm(pos).toLowerCase()}:`)}</b> ${esc(lbl(correct).toLowerCase())}.</p>
+      ${alt?`<p>${esc(L(`Jouw keuze kan ook met ${OUTS(S.outN)}. De beste keuze is:`,`Your choice also works with ${OUTS(S.outN)}. The best choice is:`))} <b>${esc(lbl(correct).toLowerCase())}</b>.</p>`
+           :`<p><b>${L(`Jouw taak als ${nm(pos).toLowerCase()}:`,`Your job as ${nm(pos).toLowerCase()}:`)}</b> ${esc(lbl(good?pick:correct).toLowerCase())}.</p>`}
+      ${oks.length>1&&!alt&&good?`<p>${esc(L('Ook goed: ','Also fine: ')+oks.filter(a=>a!==pick).map(a=>lbl(a).toLowerCase()).join(L(' of ',' or ')))}.</p>`:''}
+      ${oks.length>1&&!good?`<p>${esc(L('Ook goed: ','Also fine: ')+oks.filter(a=>a!==correct).map(a=>lbl(a).toLowerCase()).join(L(' of ',' or ')))}.</p>`:''}
       <p>${esc(whyFor(S,pos))}</p>
-      <p class="quote">${L('Bron','Source')} (${esc(srcOf(S,pos))}): “${esc(S.d[pos][1])}”</p>
+      ${S.d[pos][1]?`<p class="quote">${L('Bron','Source')} (${esc(srcOf(S,pos))}): “${esc(S.d[pos][1])}”</p>`:`<p class="srcl">${L('Bron','Source')}: ${esc(srcOf(S,pos))}</p>`}
       <div class="idea"><b>${L('Het idee van deze situatie:','The idea of this situation:')}</b> ${esc(idea(S))}</div>
       <details><summary>${L('Wie doet wat?','Who does what?')}</summary>${whoList(S,pos)}</details>
     </div>${next}`;
