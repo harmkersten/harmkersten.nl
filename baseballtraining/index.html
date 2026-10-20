@@ -149,6 +149,14 @@ summary{cursor:pointer;font-weight:700;font-size:14.5px}
 .stickyfield{position:sticky;top:70px}
 @media (max-width:820px){.stickyfield{position:static}#play .field{max-height:36vh}#play .card.fieldbox{padding:10px}#play .legend{font-size:11.5px;margin-top:6px}}
 @media (prefers-reduced-motion: reduce){.pl,.mv{transition:none!important}.pl .ring{animation:none}}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.modes button{border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.modes button b{font-size:15px}
+.modes button span{font-size:12px;color:var(--muted)}
+.modes button.on{border-color:var(--accent);background:var(--accent-soft)}
+.grid2.solo{grid-template-columns:minmax(0,1fr);max-width:760px;margin:0 auto}
+.grid2.solo .stickyfield{display:none}
+.srcl{font-size:12px;color:var(--muted);margin-top:4px}
 .langtg{display:flex;background:var(--chip);padding:3px;border-radius:999px;margin-left:6px}
 .langtg button{border:0;background:none;padding:6px 9px;border-radius:999px;font-weight:700;font-size:12.5px;cursor:pointer;color:var(--muted)}
 .langtg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
@@ -187,12 +195,21 @@ summary{cursor:pointer;font-weight:700;font-size:14.5px}
       </div>
       <div>
         <div class="card">
-          <div class="lbl" style="margin-top:0" data-i18n="lblPos"></div>
+          <div class="modes" id="modeSw">
+            <button data-m="sit" class="on"><b data-i18n="modeSit"></b><span data-i18n="modeSitSub"></span></button>
+            <button data-m="theory"><b data-i18n="modeTh"></b><span data-i18n="modeThSub"></span></button>
+          </div>
+          <div id="sitOpts">
+          <div class="lbl" data-i18n="lblPos"></div>
           <div class="posgrid" id="posGrid"></div>
           <div class="lbl" data-i18n="lblType"></div>
           <div class="chips" id="fType">
             <button class="chip on" data-v="fly" data-i18n="chipFly"></button>
             <button class="chip on" data-v="ground" data-i18n="chipGround"></button>
+            <button class="chip on" data-v="xbh" data-i18n="chipXbh"></button>
+            <button class="chip on" data-v="tag" data-i18n="chipTag"></button>
+            <button class="chip on" data-v="pop" data-i18n="chipPop"></button>
+            <button class="chip on" data-v="bunt" data-i18n="chipBunt"></button>
           </div>
           <div class="lbl" data-i18n="lblRun"></div>
           <div class="chips" id="fRun">
@@ -200,7 +217,10 @@ summary{cursor:pointer;font-weight:700;font-size:14.5px}
             <button class="chip on" data-v="1" data-i18n="chipR1"></button>
             <button class="chip on" data-v="2" data-i18n="chipR2"></button>
             <button class="chip on" data-v="12" data-i18n="chipR12"></button>
+            <button class="chip on" data-v="3" data-i18n="chipR3"></button>
           </div>
+          </div>
+          <p class="note" id="thNote" style="display:none" data-i18n="thNote"></p>
           <div class="lbl" data-i18n="lblLen"></div>
           <div class="chips" id="fLen">
             <button class="chip" data-v="5">5</button>
@@ -300,8 +320,13 @@ const UI = {
             'You get a game situation. Choose what you do at your position. After every answer the guide explains why it is right or wrong.'],
   pickNote:['Tik op een speler in het veld of kies een positie uit de lijst.','Tap a player on the field or pick a position from the list.'],
   lblPos:['Positie','Position'], lblType:['Soort slag','Type of hit'], lblRun:['Lopers op de honken','Runners on base'], lblLen:['Aantal vragen','Number of questions'],
-  chipFly:['Fly balls','Fly balls'], chipGround:['Grondballen','Ground balls'],
-  chipR0:['Geen','None'], chipR1:['Op 1','On 1st'], chipR2:['Op 2','On 2nd'], chipR12:['Op 1 en 2','On 1st & 2nd'], chipAll:['Alles','All'],
+  chipFly:['Honkslagen','Singles'], chipGround:['Grondballen','Ground balls'], chipXbh:['Extra-base hits','Extra-base hits'],
+  chipTag:['Vangbal + tag-up','Fly out + tag-up'], chipPop:['Pop-ups','Pop-ups'], chipBunt:['Stootslagen','Bunts'],
+  chipR0:['Geen','None'], chipR1:['Op 1','On 1st'], chipR2:['Op 2','On 2nd'], chipR12:['Op 1 en 2','On 1st & 2nd'], chipR3:['Op 3','On 3rd'], chipAll:['Alles','All'],
+  modeSit:['Situaties','Situations'], modeSitSub:['Wat doe jij op jouw positie?','What do you do at your position?'],
+  modeTh:['Theorie','Theory'], modeThSub:['Regels, roepen en techniek','Rules, calls and technique'],
+  thNote:['Kennisvragen over cut-offs en relays, wie de bal roept bij een pop-up, stootslag-verdediging, rundowns en de veldtechniek (de Six Fs van Perry Hill).',
+          'Knowledge questions on cut-offs and relays, who calls a pop-up, bunt defense, rundowns and fielding technique (Perry Hill\'s Six Fs).'],
   stop:['Stoppen','Stop'], lgYou:['Jij','You'], lgRunner:['Loper','Runner'], lgBall:['Bal','Ball'], lgMove:['Looprichting','Movement'], lgThrow:['Worp','Throw'],
   lgChosen:['Gekozen positie','Selected position'],
   kbd:['Toetsen 1–4 om te kiezen · Enter voor volgende','Keys 1–4 to answer · Enter for next'],
@@ -335,10 +360,26 @@ const BN = b => BNS[b][LANG==='en'?1:0];
 const AREA = {LF:['het linksveld','left field'],CF:['het midveld','center field'],RF:['het rechtsveld','right field']};
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 const runKey = S => S.run.join('') || '0';
-const RUNTXT = {'0':['Geen lopers op de honken','No runners on base'],'1':['Loper op het eerste honk','Runner on first base'],'2':['Loper op het tweede honk','Runner on second base'],'12':['Lopers op het eerste en tweede honk','Runners on first and second base']};
-const runTxt = S => RUNTXT[runKey(S)][LANG==='en'?1:0];
-const sitTitle = S => S.type==='fly' ? L(`Fly ball naar ${AREA[S.ball][0]}`,`Fly ball to ${AREA[S.ball][1]}`) : L(`Grondbal naar ${de(S.ball)}`,`Ground ball to ${de(S.ball)}`);
-const kindTxt = S => S.type==='fly'?'Fly ball':L('Grondbal','Ground ball');
+const RUNTXT = {'0':['Geen lopers op de honken','No runners on base'],'1':['Loper op het eerste honk','Runner on first base'],'2':['Loper op het tweede honk','Runner on second base'],
+  '12':['Lopers op het eerste en tweede honk','Runners on first and second base'],'3':['Loper op het derde honk','Runner on third base'],'13':['Lopers op het eerste en derde honk','Runners on first and third base']};
+const runTxt = S => RUNTXT[runKey(S)][LANG==='en'?1:0] + (S.outs?L(', minder dan 2 uit',', less than 2 outs'):'');
+const WHERE = {LFline:['langs de linkerlijn','down the left-field line'],LCgap:['in het gat links-midden','to the left-center gap'],
+  RCgap:['in het gat rechts-midden','to the right-center gap'],RFline:['langs de rechterlijn','down the right-field line']};
+const POPW = {LF:['langs de linkerlijn','down the left-field line'],CF:['achter het tweede honk','to shallow center field'],RF:['langs de rechterlijn','down the right-field line']};
+const sitTitle = S => {
+  const i=LANG==='en'?1:0;
+  switch(S.type){
+    case 'fly': return L(`Honkslag naar ${AREA[S.ball][0]}`,`Single to ${AREA[S.ball][1]}`);
+    case 'ground': return L(`Grondbal naar ${de(S.ball)}`,`Ground ball to ${de(S.ball)}`);
+    case 'xbh': return L(`Tweehonkslag ${WHERE[S.where][0]}`,`Extra-base hit ${WHERE[S.where][1]}`);
+    case 'tag': return L(`Vangbal in ${AREA[S.ball][0]}`,`Fly out to ${AREA[S.ball][1]}`);
+    case 'pop': return L(`Korte pop-up ${POPW[S.ball][0]}`,`Shallow pop fly ${POPW[S.ball][1]}`);
+    case 'bunt': return S.to==='H'?L('Squeeze play','Squeeze play'):L('Opofferingsstootslag','Sacrifice bunt');
+  }
+};
+const KIND = {fly:['Honkslag','Single'],ground:['Grondbal','Ground ball'],xbh:['Extra-base hit','Extra-base hit'],tag:['Vangbal + tag-up','Fly out + tag-up'],pop:['Pop-up','Pop-up'],bunt:['Stootslag','Bunt']};
+const kindTxt = S => KIND[S.type][LANG==='en'?1:0];
+const SRC = {TRC:'TRC Baseball – Defensive Situations',WR:'White Rock South Surrey – Cut-offs and Relays',BD:'Baseball Dudes – 30 Fundamental Situations',PH:'Perry Hill Infield System',CO:'Defensive situations and strategies (cut-off)'};
 
 /* ---------- situaties uit het boekje (TRC Defensive Situations) ---------- */
 const N1 = 'After seeing the runner touch 1B, cover the bag.';
@@ -371,18 +412,18 @@ const SIT = [
   P:['p_backup_3B_home','Move into back up position between 3B and Home plate.'], C:['protect_home','Protect home plate.'], '1B':['cover1B_after_touch',N1],
   '2B':['cover2B','Cover 2B.'], SS:['cutoff','You are the cut off.'], '3B':['cover3B','Cover 3B bag.'],
   LF:['backup_3B','Back up 3B.'], CF:['backup_RF','Back up RF.'], RF:['throw_3B_or_cut','Make throw to 3B or cut off.']}},
- {type:'fly',ball:'LF',run:[2],to:'H',d:{
-  P:['p_backup_1B_home','Move into back up position between 1B and Home plate.'], C:['protect_home','Protect home plate. Be ready for throw.'], '1B':['cover1B_after_touch',N1],
-  '2B':['cover2B','Cover 2B.'], SS:['cutoff','You are the cut off.'], '3B':['cover3B','Cover 3B bag.'],
-  LF:['throw_home_or_cut','Make throw to home or cut off.'], CF:['backup_LF','Back up LF.'], RF:['rf_toward_infield','Move towards infield for possible back up.']}},
- {type:'fly',ball:'CF',run:[2],to:'H',d:{
-  P:['p_backup_1B_home','Move into back up position between 1B and Home plate.'], C:['protect_home','Protect home plate. Be ready for throw.'], '1B':['cover1B_after_touch',N1],
-  '2B':['cover2B','Cover 2B.'], SS:['cutoff','You are the cut off.'], '3B':['cover3B','Cover 3B bag.'],
-  LF:['backup_CF','Back up CF.'], CF:['throw_home_or_cut','Make throw to home or cut off.'], RF:['backup_CF','Back up CF.']}},
- {type:'fly',ball:'RF',run:[2],to:'H',d:{
-  P:['p_backup_3B_home','Move into back up position between 3B and Home plate.'], C:['protect_home','Protect home plate. Be ready for throw.'], '1B':['cover1B_after_touch',N1],
-  '2B':['cutoff','You are the cut off.'], SS:['cover2B','Cover 2B.'], '3B':['cover3B','Cover 3B bag.'],
-  LF:['backup_3B','Move into back up position behind 3B.'], CF:['backup_RF','Back up RF.'], RF:['throw_home_or_cut','Make throw to home or cut off.']}},
+ {type:'fly',ball:'LF',run:[2],to:'H',src:'BD',d:{
+  P:['backup_home','Back up home plate by going between home and first.'], C:['protect_home','Protect home plate. Be ready for throw. Give the runner a lane.'], '1B':['cover1B_after_touch','After seeing the runner touch 1B, cover the bag.'],
+  '2B':['cover2B','Cover 2B. Be ready for possible throw from cut-off.'], SS:['cover3B','Cover 3B. Be ready for possible throw from cut-off.'], '3B':['cutoff','Become primary cut-off man. Move between the mound and 3B.'],
+  LF:['throw_home_or_cut','Make a good, hard, low throw through the cut-off man.'], CF:['backup_LF','Back up LF.'], RF:['rf_toward_infield','Move towards the infield for possible back up.']}},
+ {type:'fly',ball:'CF',run:[2],to:'H',src:'BD',d:{
+  P:['backup_home','Back up home plate by going between home and first.'], C:['protect_home','Protect home plate. Be ready for throw. Give the runner a lane.'], '1B':['cutoff','Become the primary cut-off man positioned between the mound and 2B.'],
+  '2B':['cover1B','Cover 1B. Be ready for possible throw from cut-off.'], SS:['cover2B','Cover 2B. Be ready for possible throw from cut-off.'], '3B':['cover3B','Cover 3B. Be ready for possible throw from cut-off.'],
+  LF:['backup_CF','Back up CF.'], CF:['throw_home_or_cut','Make a good, hard, low throw through the cut-off man.'], RF:['backup_CF','Back up CF.']}},
+ {type:'fly',ball:'RF',run:[2],to:'H',src:'BD',d:{
+  P:['backup_home','Back up home plate by going between home and third.'], C:['protect_home','Protect home plate. Be ready for throw. Give the runner a lane.'], '1B':['cutoff','Become primary cut-off man between mound and 1B.'],
+  '2B':['cover1B','Cover 1B. Be ready for possible throw from cut-off.'], SS:['cover2B','Cover 2B. Be ready for possible throw from cut-off.'], '3B':['cover3B','Cover 3B. Be ready for possible throw from cut-off.'],
+  LF:['backup_3B','Move into back up position behind 3B.'], CF:['backup_RF','Back up RF.'], RF:['throw_home_or_cut','Make a good, hard, low throw through the cut-off man.']}},
 
  {type:'ground',ball:'3B',run:[],to:'1B',d:{
   P:['cover_home','Move into position to cover Home plate.'], C:['follow_runner_1B',FOL2], '1B':['cover1B','Cover 1B.'], '2B':['cover2B','Cover 2B.'],
@@ -467,8 +508,102 @@ const SIT = [
   P:['field_3B','Field ball and throw to 3B.'], C:['protect_home',PH], '1B':['cover1B','Cover 1B.'], '2B':['backup_P','Back up P.'],
   SS:['cover2B','Cover 2B.'], '3B':['cover3B','Cover 3B.'], LF:['backup_3B','Move into back up position behind 3B.'],
   CF:['backup_2B','Move into back up position behind 2B for over throw.'], RF:['backup_1B','Move into back up position behind 1B.']}},
+ /* ---- extra-base hits (Perry Hill) ---- */
+ {type:'xbh',where:'LFline',ball:'LF',run:[],to:'3B',src:'PH',d:{
+  P:['backup_3B','Back up third base.'], C:['protect_home','Protect home plate.'], '1B':['trail_runner_2B','Make sure hitter touches first base, then trail to second base.'],
+  '2B':['trailer','Hang at second base until the ball clears the leftfielder, then trail about 30 feet behind shortstop in line with third base and call the play.'],
+  SS:['relay_lead','Move into a relay position in line with third base, listen for call.'], '3B':['cover3B','Cover third base.'],
+  LF:['throw_relay','Field ball and make a strong, accurate throw to the relay man.'], CF:['backup_LF','Back up leftfielder.'], RF:['backup_2B','Move into a possible backup position behind second base.']}},
+ {type:'xbh',where:'LCgap',ball:'CF',run:[],to:'3B',src:'PH',d:{
+  P:['backup_3B','Back up third base.'], C:['protect_home','Protect home plate.'], '1B':['trail_runner_2B','Make sure hitter touches first base, then trail to second base.'],
+  '2B':['trailer','Hang at second base until the ball clears the outfielders, then trail about 30 feet behind shortstop in line with third base and call the play.'],
+  SS:['relay_lead','Move into a relay position in line with third base, listen for call.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_CF','LF/CF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.'],
+  CF:['throw_relay','LF/CF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.'], RF:['rf_toward_infield','Move into a possible backup position toward first base.']}},
+ {type:'xbh',where:'RCgap',ball:'CF',run:[],to:'3B',src:'PH',d:{
+  P:['backup_3B','Back up third base.'], C:['protect_home','Protect home plate.'], '1B':['trail_runner_2B','Make sure hitter touches first base, then trail to second base.'],
+  '2B':['relay_lead','Move into a relay position in line with third base, listen for call.'],
+  SS:['trailer','Hang at second base until the ball clears the outfielder, then trail about 30 feet behind second baseman in line with third base and call the play.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_3B','Move into a possible backup position toward third base.'],
+  CF:['throw_relay','CF/RF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.'], RF:['backup_CF','CF/RF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.']}},
+ {type:'xbh',where:'RFline',ball:'RF',run:[],to:'3B',src:'PH',d:{
+  P:['backup_3B','Back up third base.'], C:['protect_home','Protect home plate.'],
+  '1B':['trailer','Hang at first base until the ball clears the right fielder, then trail about 30 feet behind the second baseman in line with third base and call the play.'],
+  '2B':['relay_lead','Move into a relay position in line with third base, listen for call.'],
+  SS:['cover2B','Move into a second relay position to third base: “read” the play, cover second base if necessary.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_3B','Move into a possible backup position towards third base.'], CF:['backup_RF','Break toward infield, cover second base if shortstop remains in a cut-off position. Back up right fielder.'],
+  RF:['throw_relay','Field ball and make a strong, accurate throw to the relay man.']},
+  w:{SS:['De tweede honkman is de relay en de eerste honkman de trailer. Jij leest het spel: zolang de slagman naar het tweede honk kan, dek jij dat honk. Gaat hij door naar het derde honk, dan kun je een tweede relay-positie innemen.',
+         'The second baseman is the relay and the first baseman is the trailer. You read the play: as long as the batter can reach second, you cover that base. If he heads for third, you can take a second relay position.']}},
+ {type:'xbh',where:'LFline',ball:'LF',run:[1],to:'H',src:'PH',d:{
+  P:['backup_home','Back up home plate.'], C:['protect_home','Cover home plate.'],
+  '1B':['second_cut_home','When the second baseman leaves to back up the shortstop, move into the second relay position to home plate, then trail to second base, if necessary.'],
+  '2B':['trailer','Hang at second base until the ball clears the leftfielder, then trail about 30 feet behind the shortstop and call the play.'],
+  SS:['relay_lead','Move into relay position, in fair territory, down the line and listen for call.'], '3B':['cover3B','Cover third base or move into cut-off position to home plate.'],
+  LF:['throw_relay','Field ball and make a strong, accurate throw to the relay man.'], CF:['backup_LF','Back up leftfielder.'], RF:['cover2B','Cover or back up second base.']},
+  w:{RF:['De korte stop en de tweede honkman staan allebei in de relay en de eerste honkman is de tweede cut-off naar huis. Het tweede honk is dus leeg: jij komt als rechtsvelder binnen om het te dekken (of te backuppen).',
+         'The shortstop and second baseman are both out on the relay and the first baseman is the second cut-off to home. So second base is empty: as right fielder you come in to cover (or back up) second.']}},
+ {type:'xbh',where:'RCgap',ball:'CF',run:[1],to:'H',src:'PH',d:{
+  P:['p_backup_3B_home','Go halfway between home plate and third base and read the play and back up the appropriate base.'], C:['protect_home','Cover home plate.'],
+  '1B':['second_cut_home','When the shortstop leaves to back up the second baseman, move into the second relay position to home plate.'],
+  '2B':['relay_lead','Move into relay position in line with home plate, listen for call.'],
+  SS:['trailer','Hang at second base until the ball clears the outfielders, then trail about 30 feet behind the second baseman and call the play.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_3B','Move into a possible backup position behind third base.'],
+  CF:['throw_relay','CF/RF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.'], RF:['backup_CF','CF/RF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.']}},
+
+ /* ---- vangbal met tag-up, lopers op 1 en 3 (Perry Hill) ---- */
+ {type:'tag',ball:'LF',run:[1,3],outs:true,to:'H',src:'PH',d:{
+  P:['backup_home','Move into a backup position behind the catcher.'], C:['protect_home','Protect home plate.'], '1B':['cover1B','Cover first base.'],
+  '2B':['cover2B','Cover second base.'], SS:['cover3B','Cover third base.'], '3B':['cutoff','Move into a cut-off/relay position to home plate.'],
+  LF:['catch_throw_home','Get behind the ball and give the catcher a good one-hop throw. No short hops. NEVER allow the tying or winning run to advance to second base on this play.'],
+  CF:['backup_LF','Back up the leftfielder. Let him know which base to throw to and what the runners are doing.'], RF:['rf_toward_infield','Move into a possible backup position toward first base.']}},
+ {type:'tag',ball:'CF',run:[1,3],outs:true,to:'H',src:'PH',d:{
+  P:['backup_home','Move into a backup position behind the catcher.'], C:['protect_home','Protect home plate.'], '1B':['cutoff','Move into a cut-off/relay position to home plate.'],
+  '2B':['cover1B','Cover first base.'], SS:['cover2B','Cover second base.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_3B','Move into a possible backup position towards third base.'],
+  CF:['catch_throw_home','Get behind the ball and give the catcher a good one-hop throw. No short hops.'], RF:['backup_CF','Back up the centerfielder. Let him know which base to throw to and what the runners are doing.']}},
+ {type:'tag',ball:'RF',run:[1,3],outs:true,to:'H',src:'PH',d:{
+  P:['backup_home','Move into a position to back up home plate.'], C:['protect_home','Protect home plate.'], '1B':['cutoff','Move into a cut-off/relay position to home plate.'],
+  '2B':['cover1B','Cover first base.'], SS:['cover2B','Cover second base.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_3B','Move into a possible backup position toward third base.'], CF:['backup_RF','Back up the right fielder. Let him know which base to throw to and what the runners are doing.'],
+  RF:['catch_throw_home','Get behind the ball and give the catcher a good one-hop throw. No short hops.']}},
+
+ /* ---- korte pop-ups, loper op 1 (Baseball Dudes) ---- */
+ {type:'pop',ball:'LF',run:[1],to:null,src:'BD',d:{
+  P:['cover3B','Move towards 3B to cover. Be ready for possible play on runner trying to advance.'], C:['protect_home','Protect home plate.'], '1B':['cover1B','Watch runner on first and communicate his actions.'],
+  '2B':['cover2B','Cover 2B and be ready for throw.'], SS:['popup_yield','Go after the ball and try to catch it.'], '3B':['popup_yield','Go after the ball and try to catch it.'],
+  LF:['popup_priority','Go after the ball and try to catch it. LF has priority.'], CF:['rf_toward_infield','Move towards infield for possible back up.'], RF:['rf_toward_infield','Move towards infield for possible back up.']}},
+ {type:'pop',ball:'CF',run:[1],to:null,src:'BD',d:{
+  P:['cover2B','Move towards 2B to cover. Be ready for possible play on runner trying to advance.'], C:['protect_home','Protect home plate.'], '1B':['cover1B','Watch runner on first and communicate his actions.'],
+  '2B':['popup_yield','Go after the ball and try to catch it.'], SS:['popup_yield','Go after the ball and try to catch it.'], '3B':['cover3B','Cover bag, be ready for possible play.'],
+  LF:['rf_toward_infield','Move towards the infield in-case help is needed.'], CF:['popup_priority','Go after the ball and try to catch it. CF has priority.'], RF:['rf_toward_infield','Move towards the infield in-case help is needed.']}},
+ {type:'pop',ball:'RF',run:[1],to:null,src:'BD',d:{
+  P:['cover1B','Move towards 1B to cover. Watch runner on first and communicate his actions.'], C:['protect_home','Protect home plate.'], '1B':['popup_yield','Go after the ball and try to catch it.'],
+  '2B':['popup_yield','Go after the ball and try to catch it.'], SS:['cover2B','Cover 2B. Be ready for possible play.'], '3B':['cover3B','Cover 3B. Be ready for possible play.'],
+  LF:['backup_3B','Move towards SS position for possible back up. Be heads up to back up possible throw to 3B.'], CF:['rf_toward_infield','Move towards infield in case help is needed.'],
+  RF:['popup_priority','Go after the ball and try to catch it. RF has priority.']}},
+
+ /* ---- stootslagen (Perry Hill / cut-off) ---- */
+ {type:'bunt',ball:null,run:[1],to:'1B',src:'PH',d:{
+  P:['bunt_pitcher','Delivers a strike then breaks toward home plate.'], C:['bunt_catcher','Calls play (loud and clear, “1, 1, 1” or “2, 2, 2!”). Fields all bunts close to home plate.'],
+  '1B':['bunt_charge_1B','Holds runner on and then charges when pitcher delivers ball. Covers area from foul line to the mound.'],
+  '2B':['cover1B','Starts at DP depth, creeps in, reads bunt, then covers first base.'], SS:['cover2B','Starts at DP depth, covers second base.'],
+  '3B':['bunt_charge_3B','Charges toward home plate when pitcher delivers ball and/or third baseman reads bunt. Hustles back to cover third base if he does not field bunt.'],
+  LF:['rf_toward_infield','Come toward the infield in order to back up poor throws.','CO'], CF:['backup_2B','Back up any throw to second base.','CO'], RF:['backup_1B','Back up any throw to first base.','CO']}},
+ {type:'bunt',ball:null,run:[1,2],to:'1B',src:'CO',d:{
+  P:['bunt_p_3Bline','Cover the third base line. If you field the ball, listen to the catcher\'s instructions, and then throw to the appropriate base.'],
+  C:['bunt_catcher','Tell the infielders where the throw is going.'],
+  '1B':['bunt_charge_1B','Cover the right side of the infield. If you field the ball, listen for catcher\'s instructions, and then throw to the appropriate base.'],
+  '2B':['cover1B','Cover first base.'], SS:['cover2B','Cover second base.'],
+  '3B':['bunt_charge_3B','Charge toward home plate and cover the left side of the infield. If you field the ball, listen for the catcher\'s instructions, and then throw to the appropriate base.'],
+  LF:['backup_2B','Back up any throw to second base.'], CF:['backup_2B','Back up any throw to second base.'], RF:['backup_1B','Back up any throw to first base.']}},
+ {type:'bunt',ball:null,run:[3],to:'H',src:'PH',d:{
+  P:['bunt_pitcher','Breaks straight to home plate.'], C:['protect_home','Protects home plate.'], '1B':['bunt_charge_1B','As the hitter squares to bunt, breaks to home plate or cover first base.'],
+  '2B':['cover1B','Cover first base/Read first baseman or cover second base.'], SS:['cover3B','Cover third base.'],
+  '3B':['bunt_charge_3B','As the runner at third breaks for home plate, third baseman breaks with him.'],
+  LF:['rf_toward_infield','Move toward infield to back up bases.'], CF:['rf_toward_infield','Move toward infield to back up bases.'], RF:['rf_toward_infield','Move toward infield to back up bases.']}},
 ];
-SIT.forEach((S,i)=>S.id=i);
+SIT.forEach((S,i)=>{S.id=i;S.src=S.src||'TRC';});
 
 /* ---------- het idee achter een situatie ---------- */
 function idea(S){
@@ -478,7 +613,26 @@ function idea(S){
                          'No runners: only the batter is running. The ball has to get to second base as fast as possible, so the batter stops at first.');
     if(k==='1') return L('De loper op het eerste honk probeert bij een slag naar het outfield door te lopen naar het derde honk. Daarom gaat de worp naar het derde honk.',
                          'On a hit to the outfield, the runner on first tries to go all the way to third. That is why the throw goes to third base.');
-    return L('De loper op het tweede honk probeert te scoren. Daarom gaat de worp naar de thuisplaat.','The runner on second tries to score. That is why the throw goes home.');
+    return L('De loper op het tweede honk probeert te scoren, dus de worp gaat naar de thuisplaat. Bij een worp naar huis is de cut-off de derde honkman (bal in het linksveld) of de eerste honkman (bal in het midden- of rechtsveld).',
+             'The runner on second tries to score, so the throw goes home. On a throw home the cut-off is the third baseman (ball in left field) or the first baseman (ball in center or right field).');
+  }
+  if(S.type==='xbh'){
+    if(k==='0') return L('Een tweehonkslag, misschien driehonkslag. Is het eerste honk leeg, dan lijn je op naar het derde honk. De worp is te lang voor één keer gooien, dus er komt een dubbele cut-off: een relay-man en daarachter een trailer die roept waar de bal heen moet.',
+                         'A double, maybe a triple. With first base empty you line up to third base. The throw is too long for one throw, so there is a double cut: a relay man and a trailer behind him who calls where the ball should go.');
+    return L('Een tweehonkslag met een loper op het eerste honk: die loper probeert te scoren. Is het eerste honk bezet, dan lijn je op naar de thuisplaat, met een relay-man, een trailer en een tweede cut-off.',
+             'A double with a runner on first: that runner will try to score. With first base occupied you line up to home plate, with a relay man, a trailer and a second cut-off.');
+  }
+  if(S.type==='tag') return L('Vangbal met minder dan twee uit en lopers op 1 en 3: de loper op het derde honk tagt op (wacht tot de vangst) en probeert te scoren. De worp gaat laag naar huis via de cut-off. Laat ook de loper op het eerste honk niet zomaar doorlopen naar het tweede.',
+                              'Fly out with less than two outs and runners on 1st and 3rd: the runner on third tags up (waits for the catch) and tries to score. The throw goes low to home through the cut-off. Don\'t let the runner on first walk into second either.');
+  if(S.type==='pop') return L('Een korte pop-up tussen infield en outfield: meerdere spelers kunnen erbij, dus roepen is alles. Volgorde van voorrang: midvelder, dan links- en rechtsvelder, dan korte stop, tweede, derde en eerste honkman, catcher en als laatste de werper. Wie de bal heeft roept luid "I got it!".',
+                              'A shallow pop fly between infield and outfield: several players can get there, so calling is everything. Priority order: center fielder, then left and right fielders, then shortstop, second, third and first basemen, catcher and last the pitcher. Whoever takes it yells "I got it!".');
+  if(S.type==='bunt'){
+    if(S.to==='H') return L('Squeeze: de loper op het derde honk sprint bij de worp naar huis en de slagman bunt. Iedereen die dichtbij staat stormt naar binnen: probeer de loper bij de thuisplaat uit te maken, anders de zekere uit op het eerste honk.',
+                            'Squeeze: the runner on third breaks for home on the pitch and the batter bunts. Everyone close charges in: try to get the runner at home, otherwise take the sure out at first.');
+    if(k==='1') return L('Opofferingsstootslag met een loper op het eerste honk. Eerste doel is een zekere uit (meestal op het eerste honk); alleen bij een slechte bunt pak je de voorste loper op het tweede honk. De catcher ziet alles en roept waar de bal heen moet.',
+                         'Sacrifice bunt with a runner on first. The first goal is a sure out (usually at first base); only on a bad bunt do you go for the lead runner at second. The catcher sees everything and calls where the ball goes.');
+    return L('Stootslag met lopers op 1 en 2: het team gaat voor de zekere uit op het eerste honk. De binnenvelders stormen naar de bal, de tweede honkman dekt het eerste honk en de catcher roept waar de bal heen moet.',
+             'Bunt with runners on 1st and 2nd: the team goes for the sure out at first. The corner infielders and pitcher charge, the second baseman covers first and the catcher calls where the ball goes.');
   }
   if(k==='0') return L('Geen lopers: de enige uit die je kunt maken is de slagman op het eerste honk.','No runners: the only out you can get is the batter at first base.');
   if(k==='1') return L('De loper op het eerste honk moet doorlopen (gedwongen). Je pakt de voorste loper: force out op het tweede honk, en misschien lukt nog een dubbelspel.',
@@ -491,7 +645,7 @@ function idea(S){
                              'Both runners are forced. Get the lead runner: the third baseman is closest, so he tags the runner or steps on the bag.');
   return L('Beide lopers zijn gedwongen. Pak de voorste loper: force out op het derde honk.','Both runners are forced. Get the lead runner: force out at third base.');
 }
-const cutPos = S => POS.find(p=>['cutoff','cover2B_or_cut'].includes(S.d[p][0]));
+const cutPos = S => POS.find(p=>['cutoff','cover2B_or_cut','relay_lead'].includes(S.d[p][0]));
 
 /* ---------- acties: label, groep (opties uit dezelfde groep lijken te veel op elkaar), uitleg ---------- */
 const backupBaseWhy = base => (S)=>L(
@@ -505,6 +659,53 @@ const throwOut = base => ({l:()=>L(`Hard naar ${BN(base)} gooien, of naar de cut
            `You get the ball. ${idea(S)} Throw hard and low to ${BN(base)}. If it's too far, hit the cut-off (${de(cutPos(S))}) who lines up between you and the base.`)});
 
 const A = {
+  backup_home:{l:()=>L('Diep achter de thuisplaat gaan staan als back-up','Back up home plate, deep behind the catcher'),g:['bH'],
+    why:S=>L('De worp gaat naar de thuisplaat. Jij gaat zo diep mogelijk achter de catcher staan, in lijn met de worp. Gaat de bal langs hem, dan stop jij hem en kunnen de andere lopers niet doorlopen.',
+             'The throw goes home. Get as deep as possible behind the catcher, in line with the throw. If the ball gets past him, you stop it and the other runners can\'t advance.')},
+  relay_lead:{l:()=>L('Als relay-man naar buiten sprinten, in lijn tussen de bal en het honk','Sprint out as the relay man, in line between the ball and the base'),g:['cut'],
+    why:S=>L(`De bal ligt diep in het veld: te ver voor één worp. Jij sprint naar buiten en gaat in één lijn staan tussen de bal en ${BN(S.to)}, met je handen omhoog als doel. Vang de bal aan je handschoenkant, draai en gooi door. De trailer achter je roept waar de bal heen moet.`,
+             `The ball is deep in the outfield: too far for one throw. You sprint out and line up between the ball and ${BN(S.to)}, hands up as a target. Catch it on your glove side, turn and relay it. The trailer behind you calls where the ball should go.`)},
+  trailer:{l:()=>L('Als trailer zo\'n 10 meter achter de relay-man gaan staan en roepen waar de bal heen moet','Trail about 30 feet behind the relay man and call where the ball goes'),g:['trail'],
+    why:S=>L(`Jij bent de tweede cut-off (trailer). Je staat zo'n 10 meter (30 ft) achter de relay-man, in lijn met ${BN(S.to)}. Vliegt de worp over hem heen of stuitert hij voor zijn voeten, dan pak jij hem. Omdat je het hele spel voor je ziet, roep jij waar de relay heen moet gooien.`,
+             `You are the second cut-off (trailer). You stand about 30 feet behind the relay man, in line with ${BN(S.to)}. If the throw sails over him or bounces at his feet, you take it. Because you see the whole play in front of you, you call where the relay should throw.`)},
+  trail_runner_2B:{l:()=>L('Kijken of de slagman het eerste honk aanraakt en hem dan volgen naar het tweede honk','Check the batter touches first, then trail him to second base'),g:['c2','trl2'],
+    why:S=>L('De korte stop en de tweede honkman zijn allebei bezig met de relay, dus het tweede honk is leeg. Kijk eerst of de slagman het eerste honk aanraakt en loop dan achter hem aan naar het tweede honk: zo is daar toch iemand als hij te ver uitloopt.',
+             'The shortstop and second baseman are both busy with the relay, so second base is empty. First check that the batter touches first, then trail him to second: that way someone is there if he rounds the bag too far.')},
+  second_cut_home:{l:()=>L('De tweede cut-off op de lijn naar de thuisplaat worden','Become the second cut-off on the line to home plate'),g:['cut2'],
+    why:S=>L('Met een loper op het eerste honk gaat die loper bij een tweehonkslag voor de thuisplaat. De relay gooit naar huis, en jij staat als tweede cut-off op die lijn, zodat de catcher kan roepen dat je de bal moet afsnijden.',
+             'With a runner on first, that runner will try to score on a double. The relay throws home, and you stand as the second cut-off on that line, so the catcher can tell you to cut the ball.')},
+  throw_relay:{l:()=>L('De bal ophalen en hard en zuiver naar de relay-man gooien','Field the ball and throw hard and accurately to the relay man'),g:['oR','o2B','o3B','oH'],field:'R',
+    why:S=>L(`Jij haalt de bal op. ${idea(S)} Gooi hard en zuiver naar de relay-man (${de(cutPos(S))}), op borst- tot hoofdhoogte. Gooi niet zelf naar het honk: dat is te ver.`,
+             `You get the ball. ${idea(S)} Throw hard and accurately to the relay man (${de(cutPos(S))}), chest to head high. Don't throw to the base yourself: it's too far.`)},
+  catch_throw_home:{l:()=>L('Achter de bal gaan staan, vangen terwijl je naar voren komt en laag naar huis gooien','Get behind the ball, catch it moving forward and throw low toward home'),g:['oH'],field:'H',
+    why:S=>L(`De loper op het derde honk tagt op en gaat voor de thuisplaat. Ga een paar stappen achter de plek waar de bal valt staan, zodat je vangt terwijl je naar voren komt. Dan gooi je hard en laag naar huis, door de cut-off (${de(cutPos(S))}) heen. Laat de loper van het eerste honk niet zomaar naar het tweede honk lopen.`,
+             `The runner on third tags up and goes for home. Set up a few steps behind where the ball will come down, so you catch it moving forward. Then throw hard and low toward home, through the cut-off (${de(cutPos(S))}). Don't let the runner from first walk into second.`)},
+  popup_priority:{l:()=>L('Op de bal afgaan en luid "I got it!" roepen: jij hebt voorrang','Go for the ball and yell "I got it!": you have priority'),g:['pop1'],
+    why:(S,pos)=>L(`${pos==='CF'?'De midvelder heeft voorrang op iedereen.':'Een buitenvelder heeft voorrang op alle binnenvelders.'} Jij komt naar de bal toe en ziet hem beter dan een binnenvelder die achteruit moet lopen. Roep luid en vaak "I got it!": iedereen geeft je dan de ruimte.`,
+             `${pos==='CF'?'The center fielder has priority over everyone.':'An outfielder has priority over all infielders.'} You are coming in on the ball and see it better than an infielder running back. Yell "I got it!" loud and often: everyone then gives way.`)},
+  popup_yield:{l:()=>L('Op de bal afgaan, maar wegblijven zodra iemand met voorrang hem roept','Go for the ball, but give way when someone with priority calls it'),g:['pop2'],
+    why:(S,pos)=>{const ord=['CF','LF','RF','SS','2B','3B','1B','C','P'];const over=POS.filter(p=>p!==pos&&['popup_priority','popup_yield'].includes(S.d[p][0])&&ord.indexOf(p)<ord.indexOf(pos));
+      return L(`Ga hard op de bal af, want misschien ben jij er als eerste. Maar ${listPos(over)} ${over.length>1?'hebben':'heeft'} voorrang op jou: roept die "I got it!", dan ga je opzij. Zeg zelf niets tot je echt onder de bal staat.`,
+               `Go hard after the ball, because you might get there first. But ${listPos(over)} ${over.length>1?'have':'has'} priority over you: when they call "I got it!", you give way. Say nothing until you are really under the ball.`);}},
+  bunt_pitcher:{l:()=>L('Een strike gooien en dan naar de thuisplaat sprinten om de bunt te pakken','Throw a strike, then break toward home to field the bunt'),g:['buntP'],
+    why:S=>S.to==='H'?L('Bij de squeeze moet het snel: gooi je pitch en sprint recht naar de thuisplaat. Pak je de bal, dan kun je de loper misschien bij huis uitmaken of anders de slagman op het eerste honk.',
+                         'On the squeeze it has to be fast: deliver the pitch and break straight to home plate. If you get the ball, you may get the runner at home or else the batter at first.')
+      :L('Gooi eerst een goede strike, dan sprint je van de heuvel naar de thuisplaat. Jij pakt de bunts in het midden. Luister naar de catcher: die roept naar welk honk je moet gooien.',
+         'First throw a good strike, then break off the mound toward home. You take the bunts in the middle. Listen to the catcher: he calls which base to throw to.')},
+  bunt_p_3Bline:{l:()=>L('Na de pitch naar de derde-honklijn sprinten om bunts aan die kant te pakken','After the pitch, break to the third-base line to field bunts on that side'),g:['buntP'],
+    why:S=>L('Met lopers op 1 en 2 wil de aanval de loper naar het derde honk krijgen, dus de bunt komt vaak aan de derde-honkkant. Jij neemt die lijn, zodat de bal snel wordt opgepakt. Luister naar de catcher waar de worp heen moet.',
+             'With runners on 1st and 2nd the offense wants to move the runner to third, so the bunt often goes to the third-base side. You take that line so the ball is picked up quickly. Listen to the catcher for where the throw goes.')},
+  bunt_catcher:{l:()=>L('Bunts vlak voor de plaat pakken en luid roepen naar welk honk de bal moet','Field bunts close to the plate and loudly call which base to throw to'),g:['buntC'],
+    why:S=>L('Jij ziet het hele spel voor je. Je pakt zelf de bunts vlak voor de thuisplaat en roept luid en duidelijk naar welk honk de bal moet ("1-1-1!" of "2-2-2!"). Alleen bij een slechte bunt gaat de bal naar de voorste loper; anders altijd de zekere uit.',
+             'You see the whole play in front of you. You field the bunts right in front of the plate yourself and call loud and clear which base to throw to ("1-1-1!" or "2-2-2!"). Only on a bad bunt does the ball go to the lead runner; otherwise always take the sure out.')},
+  bunt_charge_1B:{l:()=>L('Naar binnen stormen en het gebied tussen de eerste-honklijn en de heuvel nemen','Charge in and cover the area between the first-base line and the mound'),g:['bunt1'],
+    why:S=>L(`${S.run.includes(1)&&!S.run.includes(2)?'Eerst houd je de loper op het eerste honk vast, en zodra de werper gooit storm':'Zodra de slagman gaat bunten, storm'} je naar binnen. Jij neemt de bunts tussen de eerste-honklijn en de heuvel. De tweede honkman dekt intussen het eerste honk.`,
+             `${S.run.includes(1)&&!S.run.includes(2)?'First you hold the runner on first, and as soon as the pitcher delivers you':'As soon as the batter squares to bunt you'} charge in. You take the bunts between the first-base line and the mound. Meanwhile the second baseman covers first.`)},
+  bunt_charge_3B:{l:()=>L('Naar de thuisplaat stormen voor de bunt, en terug naar je honk als een ander hem pakt','Charge toward home for the bunt, and get back to your base if someone else fields it'),g:['bunt3'],
+    why:S=>S.to==='H'?L('Bij de squeeze sprint de loper van het derde honk naar huis. Jij stormt met hem mee naar binnen: pak je de bunt snel, dan kun je hem nog bij de thuisplaat uitmaken. De korte stop dekt jouw honk.',
+                         'On the squeeze the runner from third breaks for home. You charge in with him: if you get the bunt quickly, you can still get him at the plate. The shortstop covers your base.')
+      :L('Jij neemt de bunts aan de derde-honkkant: storm naar binnen zodra je ziet dat er gebunt wordt. Pakt een ander de bal, ga dan snel terug naar het derde honk, zodat de loper daar niet zomaar heen kan.',
+         'You take the bunts on the third-base side: charge as soon as you see the bunt. If someone else fields it, hurry back to third base, so the runner can\'t just take it.')},
   field_1B:{l:()=>L('De bal fielden en naar het eerste honk gooien','Field the ball and throw to first base'),g:['f1'],field:'1B',
     why:S=>L(`De bal komt naar jou. ${idea(S)} Dus: bal netjes fielden en een goede worp naar het eerste honk.`,
              `The ball comes to you. ${idea(S)} So: field it cleanly and make a good throw to first.`)},
@@ -529,13 +730,23 @@ const A = {
   throw_2B_or_cut:throwOut('2B'), throw_3B_or_cut:throwOut('3B'), throw_home_or_cut:throwOut('H'),
   cutoff:{l:()=>L('In lijn gaan staan als cut-off tussen de bal en het honk','Line up as the cut-off between the ball and the base'),g:['cut'],
     why:S=>L(`De worp van ${de(S.ball)} naar ${BN(S.to)} is lang. Jij gaat in één lijn staan tussen de bal en ${BN(S.to)}. Komt de worp niet goed aan, dan vang jij hem op en gooi je hem door (relay).`,
-             `The throw from ${de(S.ball)} to ${BN(S.to)} is a long one. You line up between the ball and ${BN(S.to)}. If the throw is off, you catch it and relay it on.`),
+             `The throw from ${de(S.ball)} to ${BN(S.to)} is a long one. You line up between the ball and ${BN(S.to)}. If the throw is off, you catch it and relay it on.`)
+      +(S.to==='H'?L(` Bij een worp naar huis is de cut-off ${S.ball==='LF'?'de derde honkman, want die staat het dichtst bij de lijn van links naar huis':'de eerste honkman: de korte stop en de tweede honkman zijn nodig op de honken'}. De catcher roept of je moet afsnijden.`,
+                     ` On a throw home the cut-off is ${S.ball==='LF'?'the third baseman, who is closest to the line from left field to home':'the first baseman: the shortstop and second baseman are needed at the bases'}. The catcher tells you whether to cut it.`):''),
     no:S=>cutPos(S)?L(`De cut-off staat in lijn tussen de bal en ${BN(S.to)}. Dat doet ${de(cutPos(S))}.`,`The cut-off lines up between the ball and ${BN(S.to)}. That is ${de(cutPos(S))}'s job.`)
       :L('Bij een grondbal in het infield is geen cut-off nodig: de worp is kort genoeg om direct te gooien.','On a ground ball in the infield no cut-off is needed: the throw is short enough to go straight to the base.')},
   cover2B_or_cut:{l:()=>L('Het tweede honk dekken als de bal aan de kant van je partner komt, anders cut-off zijn','Cover second base if the ball is on your partner\'s side, otherwise be the cut-off'),g:['c2','cut'],
     why:S=>L('Bij een fly ball naar het midveld bewegen de tweede honkman en de korte stop allebei richting de bal. Komt de bal aan de kant van je partner, dan dek jij het tweede honk. Komt hij aan jouw kant, dan ben jij de cut-off. Zo staat er altijd één op het honk en één in de lijn van de worp.',
              'On a fly ball to center, the second baseman and shortstop both move toward the ball. If it\'s on your partner\'s side, you cover second. If it\'s on your side, you are the cut-off. That way one is always on the bag and one is in line with the throw.')},
   cover1B:{l:()=>L('Het eerste honk dekken','Cover first base'),g:['c1'],why:(S,pos)=>{
+    if(S.type==='bunt' && pos==='2B') return L('Bij een stootslag stormen de eerste honkman en de werper naar binnen, dus het eerste honk is leeg. Jij als tweede honkman dekt het: daar gaat de worp voor de zekere uit meestal heen.',
+      'On a bunt the first baseman and pitcher charge in, so first base is empty. As second baseman you cover it: that is where the throw for the sure out usually goes.');
+    if(pos==='2B') return L('De eerste honkman is de cut-off naar de thuisplaat, dus het eerste honk is leeg. Jij dekt het, zodat de cut-off de slagman of loper daar nog kan uitmaken.',
+      'The first baseman is the cut-off to home plate, so first base is empty. You cover it, so the cut-off can still throw out the batter or runner there.');
+    if(pos==='P' && S.type==='pop') return L('De eerste honkman gaat achter de pop-up aan, dus het eerste honk is leeg. Jij als werper dekt het en houdt de loper op het eerste honk in de gaten.',
+      'The first baseman goes after the pop-up, so first base is empty. As the pitcher you cover it and keep an eye on the runner on first.');
+    if(S.type==='pop' || S.type==='tag') return L('Blijf bij je honk en houd de loper op het eerste honk in de gaten. Roep naar je teamgenoten wat hij doet: loopt hij te ver uit, dan kan de bal naar jou.',
+      'Stay at your base and watch the runner on first. Tell your teammates what he is doing: if he strays too far, the ball can come to you.');
     if(pos==='P') return L(`${cap(de(S.ball))} gaat naar de bal, dus het eerste honk is leeg. Als werper sprint je meteen naar het eerste honk (eerst richting de lijn, dan langs de lijn) om de worp te ontvangen.`,
                            `${cap(de(S.ball))} goes for the ball, so first base is empty. As the pitcher you sprint to first right away (first toward the line, then along it) to take the throw.`);
     if(S.to==='1B') return L('De worp gaat naar het eerste honk om de slagman uit te maken. Jij staat met je voet op het honk en strekt je richting de worp.',
@@ -549,6 +760,12 @@ const A = {
     why:S=>L('De eerste honkman fieldt de bal. Jij gaat naar het eerste honk: dekken als hij naar jou gooit, of erachter als back-up als hij zelf naar het honk loopt.',
              'The first baseman fields the ball. You go to first: cover it if he throws to you, or back him up if he takes the bag himself.')},
   cover2B:{l:()=>L('Het tweede honk dekken','Cover second base'),g:['c2'],why:(S,pos)=>{
+    if(pos==='P') return L('De korte stop en de tweede honkman gaan allebei achter de pop-up aan, dus het tweede honk is leeg. Jij als werper dekt het, voor als de loper van het eerste honk doorloopt.',
+      'The shortstop and second baseman both go after the pop-up, so second base is empty. As the pitcher you cover it, in case the runner from first keeps going.');
+    if(S.type==='bunt') return L('Bij een stootslag stormen de binnenvelders naar de bal en dekt de tweede honkman het eerste honk. Jij dekt het tweede honk: bij een slechte bunt kan de worp naar jou voor de voorste loper.',
+      'On a bunt the infielders charge and the second baseman covers first. You cover second: on a bad bunt the throw can come to you for the lead runner.');
+    if(S.type==='tag' || (S.type==='fly' && S.to==='H')) return L('De eerste honkman is de cut-off en de tweede honkman dekt het eerste honk. Jij dekt het tweede honk, zodat de loper daar niet zomaar heen kan en de cut-off een honk heeft om naar te gooien.',
+      'The first baseman is the cut-off and the second baseman covers first. You cover second, so no runner gets there for free and the cut-off has a base to throw to.');
     if(S.to==='2B') return S.type==='ground'
       ? L(`De worp gaat naar het tweede honk voor de force out op de loper van het eerste honk. ${cap(de(S.ball))} is met de bal bezig, dus jij neemt het honk. Jij staat op het honk om die worp te ontvangen.`,
           `The throw goes to second for the force out on the runner from first. ${cap(de(S.ball))} is busy with the ball, so you take the bag and receive that throw.`)
@@ -560,6 +777,14 @@ const A = {
           'Second base can\'t be left empty. That way there is a base to throw to if a runner goes too far, and no runner gets a free extra base.');},
     no:S=>L('Het tweede honk wordt in deze situatie al gedekt door een ander.','Someone else already covers second base in this situation.')},
   cover3B:{l:()=>L('Het derde honk dekken','Cover third base'),g:['c3'],why:(S,pos)=>{
+    if(pos==='SS' && S.type==='bunt') return L('Bij de squeeze stormt de derde honkman met de loper mee naar huis. Het derde honk is dus leeg: jij dekt het.',
+      'On the squeeze the third baseman charges home with the runner. So third base is empty: you cover it.');
+    if(pos==='SS') return L('De derde honkman is de cut-off voor de worp naar huis, dus het derde honk is leeg. Jij dekt het, zodat een loper die te ver doorloopt daar alsnog uitgemaakt kan worden.',
+      'The third baseman is the cut-off for the throw home, so third base is empty. You cover it, so a runner who goes too far can still be thrown out there.');
+    if(pos==='P' && S.type==='pop') return L('De derde honkman gaat achter de pop-up aan, dus het derde honk is leeg. Jij als werper dekt het, voor als een loper probeert door te lopen.',
+      'The third baseman goes after the pop-up, so third base is empty. As the pitcher you cover it, in case a runner tries to advance.');
+    if(S.type==='xbh' && S.to==='3B') return L('De slagman probeert er een driehonkslag van te maken. De worp komt via de relay naar het derde honk: jij staat op het honk, klaar om te taggen.',
+      'The batter tries to stretch it into a triple. The throw comes to third through the relay: you are on the bag, ready to tag.');
     if(pos==='P') return L(`Het derde honk raakt leeg omdat ${S.ball==='3B'?'de derde honkman de bal fieldt':'de derde honkman de korte stop backupt'}. Jij als werper neemt dat honk over, zodat een loper niet zomaar naar het derde honk kan.`,
                            `Third base is left empty because ${S.ball==='3B'?'the third baseman is fielding the ball':'the third baseman is backing up the shortstop'}. As the pitcher you take over that base, so a runner can't just walk into third.`);
     if(S.to==='3B') return L('De worp gaat naar het derde honk. Jij staat op het honk om de worp te vangen en de loper uit te maken.','The throw goes to third base. You are on the bag to catch it and get the runner out.');
@@ -576,8 +801,10 @@ const A = {
              'With no runners the catcher runs to first as back-up. That leaves home plate empty, so you cover it as the pitcher.'),
     no:S=>S.run.length?L('De catcher blijft al bij de thuisplaat.','The catcher already stays at home plate.'):L('Er staan geen lopers die kunnen scoren.','There are no runners who can score.')},
   protect_home:{l:()=>L('Bij de thuisplaat blijven en die beschermen','Stay at home plate and protect it'),g:['home'],
-    why:S=>S.to==='H'?L('De loper op het tweede honk probeert te scoren. Jij blijft bij de thuisplaat, maakt je klaar voor de worp uit het veld en tikt de loper uit.',
-                        'The runner on second tries to score. You stay at home plate, get ready for the throw from the outfield and tag the runner.')
+    why:S=>S.type==='bunt'?L('Squeeze: de loper komt van het derde honk recht op je af. Jij blijft bij de thuisplaat; fieldt een teamgenoot de bunt snel, dan gooit hij naar jou voor de tag.',
+                             'Squeeze: the runner from third is coming straight at you. You stay at home plate; if a teammate fields the bunt quickly, he throws to you for the tag.')
+      :S.to==='H'?L('Een loper probeert te scoren. Jij blijft bij de thuisplaat, geeft de loper een looplijn en maakt je klaar voor de worp. Jij ziet alles voor je: roep naar de cut-off of hij de bal moet afsnijden ("Cut!") of laten doorgaan.',
+                        'A runner is trying to score. You stay at home plate, give the runner a lane and get ready for the throw. You see everything in front of you: tell the cut-off whether to cut the ball ("Cut!") or let it through.')
       :L('Er staan lopers op de honken die kunnen scoren. Als catcher blijf je daarom bij de thuisplaat, zodat niemand ongehinderd thuis kan komen.',
          'There are runners on base who can score. As the catcher you stay at home plate, so nobody can score unchallenged.'),
     no:S=>L('Er staan geen lopers die kunnen scoren, dus de thuisplaat hoeft niet bewaakt te worden.','There are no runners who can score, so home plate doesn\'t need guarding.')},
@@ -623,25 +850,26 @@ const lbl = a => A[a].l();
 
 /* welke foute opties passen bij een positie */
 const POOL = {
-  P:['cover1B','cover3B','cover_home','cover2B','backup_1B','backup_3B','backup_2B','p_backup_mound_2B','p_backup_mound_SS','p_backup_3B_home','p_backup_1B_home','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover_backup_1B','cover_backup_3B'],
-  C:['protect_home','follow_runner_1B','backup_1B','cover3B','backup_3B','cover1B','backup_P','cover_home'],
-  '1B':['cover1B','cover1B_after_touch','field_run1B','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover2B','backup_P','backup_2B'],
-  '2B':['cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_1B','backup_P','cover1B','backup_SS'],
-  SS:['cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_3B','cover3B','backup_2B','backup_P'],
-  '3B':['cover3B','stay_near3B','backup_SS','field_1B','field_2B','field_3B','field_tag3','hold_throw1B','cutoff','cover_home','cover2B'],
-  LF:['backup_3B','backup_SS','backup_CF','backup_2B','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','cutoff','rf_toward_infield','cover3B'],
-  CF:['backup_2B','backup_LF','backup_RF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','cutoff','cover2B','rf_toward_infield'],
-  RF:['backup_1B','backup_2B','backup_CF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','cutoff','rf_toward_infield','cover1B'],
+  P:['cover1B','cover3B','cover_home','cover2B','backup_1B','backup_3B','backup_2B','backup_home','p_backup_mound_2B','p_backup_mound_SS','p_backup_3B_home','p_backup_1B_home','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover_backup_1B','cover_backup_3B','bunt_pitcher','bunt_p_3Bline'],
+  C:['protect_home','follow_runner_1B','backup_1B','cover3B','backup_3B','cover1B','backup_P','cover_home','bunt_catcher'],
+  '1B':['cover1B','cover1B_after_touch','field_run1B','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover2B','backup_P','backup_2B','trail_runner_2B','trailer','second_cut_home','bunt_charge_1B','popup_priority','popup_yield'],
+  '2B':['cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_1B','backup_P','cover1B','backup_SS','relay_lead','trailer','popup_priority','popup_yield'],
+  SS:['cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_3B','cover3B','backup_2B','backup_P','relay_lead','trailer','popup_priority','popup_yield'],
+  '3B':['cover3B','stay_near3B','backup_SS','field_1B','field_2B','field_3B','field_tag3','hold_throw1B','cutoff','cover_home','cover2B','bunt_charge_3B','relay_lead','popup_priority','popup_yield'],
+  LF:['backup_3B','backup_SS','backup_CF','backup_2B','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','rf_toward_infield','cover3B','popup_priority','popup_yield'],
+  CF:['backup_2B','backup_LF','backup_RF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','cover2B','rf_toward_infield','popup_priority','popup_yield'],
+  RF:['backup_1B','backup_2B','backup_CF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','rf_toward_infield','cover1B','cover2B','popup_priority','popup_yield'],
 };
 const SELF = {P:'backup_P','1B':'backup_1B','2B':'backup_2B',SS:'backup_SS','3B':'backup_3B',LF:'backup_LF',CF:'backup_CF',RF:'backup_RF'};
-const OUT_ONLY = ['throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','rf_toward_infield'];
+const OUT_ONLY = ['throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','rf_toward_infield'];
+const P_ONLY = ['backup_home','bunt_pitcher','bunt_p_3Bline','p_backup_mound_2B','p_backup_mound_SS','p_backup_3B_home','p_backup_1B_home'];
 const conflicts = (a,b) => a===b || A[a].g.some(x=>A[b].g.includes(x));
 const shuffle = a => {a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
 
 function makeOptions(S,pos){
   const correct = S.d[pos][0];
   const isOF = ['LF','CF','RF'].includes(pos);
-  const ok = a => a!==SELF[pos] && (isOF || !OUT_ONLY.includes(a)) && !(pos==='C' && A[a].field) && !chosen.some(c=>conflicts(a,c));
+  const ok = a => a!==SELF[pos] && (isOF || !OUT_ONLY.includes(a)) && (pos==='P' || !P_ONLY.includes(a)) && !(pos==='C' && A[a].field) && !(!S.ball && A[a].field) && !chosen.some(c=>conflicts(a,c));
   const chosen = [correct];
   const add = (list,cap=4) => {let n=0;for(const a of shuffle(list)){if(chosen.length>=4||n>=cap)break;if(ok(a)){chosen.push(a);n++;}}};
   const same = [...new Set(POS.filter(p=>p!==pos).map(p=>S.d[p][0]))];
@@ -658,6 +886,7 @@ function wrongWhy(S,pos,act){
   const who = POS.filter(p=>p!==pos && conflicts(S.d[p][0],act));
   const a = A[act];
   if(a.field && S.ball!==pos) parts.push(L(`De bal gaat niet naar jou, maar naar ${de(S.ball)}.`,`The ball isn't coming to you, it goes to ${de(S.ball)}.`));
+  else if(a.field && S.ball===pos && (a.field==='R' || S.d[pos][0]==='throw_relay')) parts.push(L(`De bal is wel voor jou, maar zo moet hij niet naar binnen. ${idea(S)}`,`The ball is yours, but that's not how it should come in. ${idea(S)}`));
   else if(a.field && S.ball===pos) parts.push(a.field===S.to
     ? L(`De bal is wel voor jou, maar je moet het anders aanpakken. ${idea(S)}`,`The ball is yours, but you should handle it differently. ${idea(S)}`)
     : L(`De bal is wel voor jou, maar de worp hoort niet naar ${BN(a.field)} te gaan. ${idea(S)}`,`The ball is yours, but the throw shouldn't go to ${BN(a.field)}. ${idea(S)}`));
@@ -674,7 +903,11 @@ const H=[200,385], B={'1B':[266,319],'2B':[200,253],'3B':[134,319],H:[200,385]};
 const START={P:[200,326],C:[200,402],'1B':[279,293],'2B':[240,247],SS:[160,247],'3B':[121,293],LF:[92,196],CF:[200,158],RF:[308,196]};
 const SPOT_FLY={LF:[84,176],CF:[200,138],RF:[316,176]};
 const SPOT_GR={'3B':[127,301],SS:[166,262],'2B':[234,262],'1B':[273,303],P:[207,349]};
-const spot = S => S.type==='fly'?SPOT_FLY[S.ball]:SPOT_GR[S.ball];
+const SPOT_XBH={LFline:[38,214],LCgap:[108,150],RCgap:[292,150],RFline:[362,214]};
+const SPOT_POP={LF:[118,250],CF:[200,212],RF:[282,250]};
+const AIR=['fly','xbh','tag','pop'];
+const spot = S => S.type==='xbh'?SPOT_XBH[S.where]:S.type==='pop'?SPOT_POP[S.ball]:S.type==='bunt'?[200,356]
+  :(S.type==='fly'||S.type==='tag')?SPOT_FLY[S.ball]:SPOT_GR[S.ball];
 const add2=(a,b,k=1)=>[a[0]+b[0]*k,a[1]+b[1]*k];
 const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
 const len=v=>Math.hypot(v[0],v[1]);
@@ -703,12 +936,24 @@ function target(pos,S){
     case 'backup_SS': return S.ball==='SS'?behind(sp):behind(START.SS);
     case 'backup_P': return add2(sp,[8,-28]);
     case 'backup_LF': case 'backup_CF': case 'backup_RF': {
-      const o=SPOT_FLY[act.slice(-2)]; return add2(add2(o,unit(sub(o,H)),22),unit(sub(st,o)),24);}
+      const X=act.slice(-2), o=S.ball===X?sp:START[X]; return add2(add2(o,unit(sub(o,H)),22),unit(sub(st,o)),24);}
     case 'p_backup_mound_2B': return [200,287];
     case 'p_backup_mound_SS': return [181,289];
     case 'p_backup_3B_home': return [152,360];
     case 'p_backup_1B_home': return [248,360];
     case 'rf_toward_infield': return add2(st,unit(sub(B['2B'],st)),45);
+    case 'backup_home': return [214,409];
+    case 'relay_lead': return lerp(B[S.to],sp,.55);
+    case 'trailer': return lerp(B[S.to],sp,.36);
+    case 'trail_runner_2B': return add2(B['2B'],[12,6]);
+    case 'second_cut_home': return lerp(H,sp,.2);
+    case 'popup_priority': return sp;
+    case 'popup_yield': return lerp(st,sp,.72);
+    case 'bunt_pitcher': return S.to==='H'?[200,362]:[204,348];
+    case 'bunt_p_3Bline': return [172,350];
+    case 'bunt_catcher': return [200,374];
+    case 'bunt_charge_1B': return [240,342];
+    case 'bunt_charge_3B': return [158,340];
   }
   return st;
 }
@@ -772,14 +1017,14 @@ function drawField(svg,{S,me,mode,onPick,animate=true}){
   svg.classList.toggle('show',false);
   const lay={mv:el('g',{},svg),hit:el('g',{},svg),thr:el('g',{},svg),run:el('g',{},svg),pl:el('g',{},svg)};
   if(S){
-    for(const r of S.run.map(r=>r===1?'1B':'2B')){const p=add2(B[r],r==='1B'?[-9,-11]:[-12,6]);el('circle',{cx:p[0],cy:p[1],r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);}
+    for(const r of S.run.map(r=>['','1B','2B','3B'][r])){const p=add2(B[r],{'1B':[-9,-11],'2B':[-12,6],'3B':[10,-10]}[r]);el('circle',{cx:p[0],cy:p[1],r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);}
     el('circle',{cx:212,cy:378,r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);
     const sp=spot(S);
     let d;
-    if(S.type==='fly'){const m=lerp(H,sp,.5);d=`M200,380 Q${m[0]},${m[1]-70} ${sp[0]},${sp[1]}`;}
+    if(AIR.includes(S.type)){const m=lerp(H,sp,.5);d=`M200,380 Q${m[0]},${m[1]-(S.type==='pop'?90:70)} ${sp[0]},${sp[1]}`;}
     else d=`M200,380 L${sp[0]},${sp[1]}`;
-    const hp=el('path',{d,class:'hit'+(S.type==='fly'?' fly':'')},lay.hit);
-    if(S.type==='fly') el('circle',{cx:sp[0],cy:sp[1],r:7,fill:'none',stroke:'#fff','stroke-width':1,'stroke-dasharray':'2 2',opacity:.8},lay.hit);
+    const hp=el('path',{d,class:'hit'+(AIR.includes(S.type)?' fly':'')},lay.hit);
+    if(AIR.includes(S.type)) el('circle',{cx:sp[0],cy:sp[1],r:7,fill:'none',stroke:'#fff','stroke-width':1,'stroke-dasharray':'2 2',opacity:.8},lay.hit);
     const ball=el('circle',{cx:sp[0],cy:sp[1],r:3.4,fill:'#fff',stroke:'#555','stroke-width':.8},lay.hit);
     if(animate&&mode==='pre'){
       const Ln=hp.getTotalLength();hp.style.strokeDasharray=`${Ln}`;hp.style.strokeDashoffset=`${Ln}`;ball.style.opacity=0;
@@ -816,11 +1061,11 @@ function drawField(svg,{S,me,mode,onPick,animate=true}){
     if(animate){svg.getBoundingClientRect();setTimeout(go,30);}else{for(const n of Object.values(nodes))n.style.transition='none';svg.querySelectorAll('.mv').forEach(m=>m.style.transition='none');go();}
     const dest=S.to==='H'?add2(B.H,[0,-4]):B[S.to];
     const cp=cutPos(S);
-    const fieldAct=S.d[S.ball][0];
+    const fieldAct=S.ball?S.d[S.ball][0]:'';
     let pts=[sp];
-    if(S.type==='fly' && cp) pts.push(T[cp]);
-    pts.push(fieldAct==='field_tag3'?B['3B']:dest);
-    if(len(sub(pts[pts.length-1],sp))>8){
+    if(['fly','xbh','tag'].includes(S.type) && cp) pts.push(T[cp]);
+    if(S.to) pts.push(fieldAct==='field_tag3'?B['3B']:dest);
+    if(S.to && len(sub(pts[pts.length-1],sp))>8){
       const tp=el('path',{d:'M'+pts.map(q=>q.join(',')).join(' L'),class:'throw','marker-end':`url(#${id}r)`},lay.thr);
       if(animate){tp.style.opacity=0;tp.style.transition='opacity .4s';setTimeout(()=>tp.style.opacity=1,1000);}
     }
@@ -835,10 +1080,112 @@ const store={
 };
 let stats=store.get();
 
+/* ---------- theorievragen (eerste optie is het goede antwoord; wordt gehusseld) ---------- */
+const TH = [
+ {src:'PH',q:['De catcher roept "4-4-4!" naar de cut-off. Wat moet de cut-off doen?','The catcher yells "4-4-4!" to the cut-off. What should the cut-off do?'],
+  o:[['De bal afsnijden en naar de thuisplaat gooien','Cut the ball and throw it home'],['De bal laten doorgaan naar de thuisplaat','Let the ball go through to home'],
+     ['De bal afsnijden en vasthouden','Cut the ball and hold it'],['De bal afsnijden en naar het tweede honk gooien','Cut the ball and throw to second']],
+  why:['Een honknummer roepen betekent: afsnijden en naar dat honk gooien. De thuisplaat is "4".','Calling a base number means: cut it and throw to that base. Home plate is "4".']},
+ {src:'PH',q:['De cut-off hoort alleen "Cut!" (zonder nummer). Wat doet hij?','The cut-off only hears "Cut!" (no number). What does he do?'],
+  o:[['Afsnijden en kijken of er ergens anders een spel te maken is','Cut it and look for another possible play'],['Doorgooien naar het honk waar de worp heen ging','Relay it to the base the throw was going to'],
+     ['De bal laten doorgaan','Let the ball go through'],['De bal terug naar de buitenvelder gooien','Throw it back to the outfielder']],
+  why:['"Cut" zonder nummer: snij de bal af en check of er nog een loper uit te maken is. Is er geen spel, breng de bal dan naar het infield.','"Cut" without a number: cut the ball and check whether another runner can be played on. If there is no play, bring the ball into the infield.']},
+ {src:'PH',q:['De cut-off hoort níets van de catcher terwijl de worp aankomt. Wat betekent dat?','The cut-off hears nothing from the catcher as the throw comes in. What does that mean?'],
+  o:[['De worp laten doorgaan naar het honk','Let the throw go through to the base'],['Altijd afsnijden','Always cut it'],['Afsnijden en naar het tweede honk gooien','Cut it and throw to second'],['Zelf een keuze maken en naar het dichtstbijzijnde honk gooien','Decide yourself and throw to the nearest base']],
+  why:['Geen geluid betekent: laat de worp doorgaan. Een goede worp hoef je niet aan te raken; je kunt wel doen alsof je hem afsnijdt om andere lopers af te remmen.','No sound means: let the throw go through. A good throw doesn\'t need touching; you can fake cutting it to slow down other runners.']},
+ {src:'WR',q:['Welke speler is de "eerste roeper" bij een bal in het outfield?','Who is the "first call man" on a ball to the outfield?'],
+  o:[['De buitenvelder die het dichtst bij de spelende buitenvelder staat','The outfielder closest to the one making the play'],['De catcher','The catcher'],['De cut-off man','The cut-off man'],['De werper','The pitcher']],
+  why:['De buitenvelder ernaast roept naar welk honk de bal moet ("Two!", "Four!"). Hij roept geen "Cut": dat beslist de binnenvelder die het honk dekt.','The neighbouring outfielder calls the base to throw to ("Two!", "Four!"). He doesn\'t call "Cut": that is decided by the infielder covering the base.']},
+ {src:'WR',q:['Op welke hoogte gooit een buitenvelder naar de cut-off man?','At what height does an outfielder throw to the cut-off man?'],
+  o:[['Borst- tot hoofdhoogte','Chest to head high'],['Kniehoogte, dan is hij makkelijk te vangen','Knee high, that is easy to catch'],['Zo hoog mogelijk, dan komt hij verder','As high as possible, so it carries further'],['Met een stuit vlak voor zijn voeten','On a bounce right in front of his feet']],
+  why:['Borst- tot hoofdhoogte kan de cut-off snel vangen en doorgooien. Een hoge boog is traag en een korte stuit is lastig te vangen.','Chest to head high lets the cut-off catch and relay quickly. A high arc is slow and a short hop is hard to catch.']},
+ {src:'BD',q:['Hoe gooi je als buitenvelder naar je cut-off man?','How do you throw to your cut-off man as an outfielder?'],
+  o:[['Dóór hem heen, alsof je door zijn hoofd gooit','Through him, as if throwing through his head'],['Zacht, zodat hij hem makkelijk vangt','Softly, so he catches it easily'],['Met een boog over hem heen','In an arc over his head'],['Rollend over de grond','Rolling along the ground']],
+  why:['Gooi niet zomaar naar hem, maar door hem heen: hard en laag. Dan kan de bal desnoods ook zonder cut-off het honk halen.','Don\'t just throw to him but through him: hard and low. That way the ball can reach the base even without the cut-off.']},
+ {src:'WR',q:['Hoe staat een goede relay-man klaar voor de worp?','How does a good relay man get ready for the throw?'],
+  o:[['Handen omhoog als doel, de bal aan zijn handschoenkant opvangen en al naar het doel draaien','Hands up as a target, catch the ball on his glove side and already turn toward the target'],
+     ['Met zijn rug naar de bal, zodat hij snel kan gooien','With his back to the ball so he can throw quickly'],['Gehurkt, met de handschoen op de grond','Crouched, with the glove on the ground'],['Stilstaand op het honk','Standing still on the base']],
+  why:['Handen omhoog geeft de buitenvelder een doel. Door de bal aan je handschoenkant te vangen en je onderlichaam al naar het doel te draaien, kun je meteen doorgooien.','Hands up gives the outfielder a target. By catching the ball on your glove side with your lower body already turned toward the target, you can relay right away.']},
+ {src:'PH',q:['Een te hoge worp of een lastige korte stuit komt bij de relay-man. Wat doet hij?','A throw comes in too high or on a tricky short hop to the relay man. What does he do?'],
+  o:[['Niet springen of duiken: de trailer achter hem pakt die bal','Don\'t jump or dive: the trailer behind him takes that ball'],['Altijd springen om hem te vangen','Always jump to catch it'],['Hem over laten gaan en naar het honk rennen','Let it go and run to the base'],['Hem met zijn blote hand proberen te pakken','Try to grab it bare-handed']],
+  why:['De relay-man verlaat nooit zijn voeten en probeert geen korte stuit te plukken. Daarvoor staat de trailer zo\'n 10 meter achter hem.','The relay man never leaves his feet and doesn\'t try to pick a short hop. That\'s why the trailer stands about 30 feet behind him.']},
+ {src:'PH',q:['Tweehonkslag in het gat, het eerste honk is léég. Naar welk honk lijnt de relay zich op?','Double into the gap, first base is EMPTY. Which base does the relay line up to?'],
+  o:[['Het derde honk','Third base'],['Het tweede honk','Second base'],['De thuisplaat','Home plate'],['Het eerste honk','First base']],
+  why:['De vuistregel: eerste honk leeg, opstellen naar het derde honk. De slagman probeert er een driehonkslag van te maken.','The rule of thumb: first base empty, line up to third. The batter is trying to stretch it into a triple.']},
+ {src:'PH',q:['Tweehonkslag in het gat, er staat een loper op het eerste honk. Naar welk honk lijnt de relay zich op?','Double into the gap with a runner on first. Which base does the relay line up to?'],
+  o:[['De thuisplaat','Home plate'],['Het derde honk','Third base'],['Het tweede honk','Second base'],['Het eerste honk','First base']],
+  why:['Eerste honk bezet: opstellen naar de thuisplaat, want die loper gaat proberen te scoren.','First base occupied: line up to home plate, because that runner will try to score.']},
+ {src:'PH',q:['Hoe ver staat de trailer (tweede cut-off) achter de relay-man?','How far does the trailer (second cut-off) stand behind the relay man?'],
+  o:[['Zo\'n 10 meter (30 feet)','About 30 feet (10 meters)'],['Direct achter hem, tegen hem aan','Right behind him, touching'],['Op het honk','On the base'],['Halverwege het outfield','Halfway into the outfield']],
+  why:['Ongeveer 10 meter achter de relay-man, in dezelfde lijn. Zo pakt hij worpen die over de relay heen gaan, en ziet hij het spel om te roepen.','About 30 feet behind the relay man, in the same line. That way he catches throws over the relay and sees the play so he can call it.']},
+ {src:'WR',q:['Een algemene regel: waar gooien veldspelers de bal meestal naartoe?','A general rule: where do fielders usually throw the ball?'],
+  o:[['Eén honk vóór de voorste loper','One base ahead of the lead runner'],['Altijd naar het eerste honk','Always to first base'],['Naar het honk waar de loper vandaan kwam','To the base the runner came from'],['Altijd naar de werper','Always to the pitcher']],
+  why:['Gooi één honk vóór de voorste loper. Zo voorkom je dat hij een extra honk pakt.','Throw one base ahead of the lead runner. That way he can\'t take an extra base.']},
+ {src:'PH',q:['Pop-up achter het tweede honk: de midvelder en de korte stop roepen allebei. Wie vangt?','Pop-up behind second base: the center fielder and shortstop both call it. Who catches it?'],
+  o:[['De midvelder','The center fielder'],['De korte stop','The shortstop'],['Wie het eerst riep','Whoever called first'],['De tweede honkman','The second baseman']],
+  why:['De midvelder heeft voorrang op iedereen. Een buitenvelder die naar de bal toe komt ziet hem beter dan een binnenvelder die achteruit loopt.','The center fielder has priority over everyone. An outfielder coming in sees the ball better than an infielder running back.']},
+ {src:'PH',q:['Korte pop-up langs de linkerlijn: de linksvelder en de derde honkman roepen allebei. Wie vangt?','Shallow pop-up down the left-field line: the left fielder and third baseman both call it. Who catches it?'],
+  o:[['De linksvelder','The left fielder'],['De derde honkman','The third baseman'],['De korte stop','The shortstop'],['De catcher','The catcher']],
+  why:['Links- en rechtsvelder hebben voorrang op alle binnenvelders (alleen de midvelder gaat boven hen).','The left and right fielders have priority over all infielders (only the center fielder ranks above them).']},
+ {src:'PH',q:['Welke binnenvelder heeft de hoogste voorrang bij een pop-up?','Which infielder has the highest priority on a pop-up?'],
+  o:[['De korte stop','The shortstop'],['De eerste honkman','The first baseman'],['De werper','The pitcher'],['De catcher','The catcher']],
+  why:['Volgorde in het infield: korte stop, tweede honkman, derde honkman, eerste honkman, catcher en als laatste de werper.','Infield order: shortstop, second baseman, third baseman, first baseman, catcher and last the pitcher.']},
+ {src:'PH',q:['Wat doet de werper bij een pop-up in het infield?','What does the pitcher do on an infield pop-up?'],
+  o:[['Hij wijst de bal aan en regelt het verkeer; alleen in noodgevallen vangt hij zelf','He points at the ball and directs traffic; he only catches it in an emergency'],['Hij vangt altijd zelf, want hij staat in het midden','He always catches it, because he is in the middle'],['Hij dekt de thuisplaat','He covers home plate'],['Hij doet niets en wacht af','He does nothing and waits']],
+  why:['De werper staat onderaan de voorrangslijst. Hij wijst de bal aan en roept zo nodig de naam van de speler met de beste hoek.','The pitcher is at the bottom of the priority list. He points at the ball and, if needed, calls the name of the player with the best angle.']},
+ {src:'PH',q:['Een binnenvelder rent achteruit op een bal over zijn hoofd. Wanneer roept hij "I got it!"?','An infielder runs back on a ball over his head. When does he call "I got it!"?'],
+  o:[['Pas als hij echt onder de bal staat; roept een buitenvelder, dan geeft hij die voorrang','Only once he is really under the ball; if an outfielder calls, he gives way'],['Meteen als de bal geslagen wordt','Right when the ball is hit'],['Nooit, binnenvelders roepen niet','Never, infielders don\'t call'],['Alleen als de catcher het zegt','Only if the catcher tells him to']],
+  why:['Ga hard op de bal af maar zeg niets tot je er echt onder staat. Een binnenvelder geeft altijd voorrang aan een buitenvelder die roept.','Go hard after the ball but say nothing until you are camped under it. An infielder always gives way to an outfielder who calls it.']},
+ {src:'PH',q:['Stootslag met een loper op 1 (geen speciale play). Wat is het eerste doel?','Bunt with a runner on first (no set play). What is the first goal?'],
+  o:[['Een zekere uit maken','Get a sure out'],['Altijd de loper op het tweede honk uitmaken','Always get the runner at second'],['Een dubbelspel proberen','Try for a double play'],['De bal vasthouden','Hold the ball']],
+  why:['Eerst een zekere uit. Alleen bij een slechte bunt ga je voor de voorste loper.','First a sure out. Only on a bad bunt do you go for the lead runner.']},
+ {src:'PH',q:['Wie roept bij een stootslag naar welk honk de bal moet?','Who calls which base to throw to on a bunt?'],
+  o:[['De catcher','The catcher'],['De werper','The pitcher'],['De eerste honkman','The first baseman'],['De speler die de bal pakt beslist zelf','The player fielding it decides himself']],
+  why:['De catcher ziet het hele spel voor zich en roept luid "1-1-1!" of "2-2-2!".','The catcher sees the whole play in front of him and yells "1-1-1!" or "2-2-2!".']},
+ {src:'PH',q:['Een loper zit klem tussen twee honken (rundown). Hoeveel worpen wil je idealiter?','A runner is caught between two bases (rundown). How many throws do you ideally want?'],
+  o:[['Eén','One'],['Zo veel mogelijk, om hem moe te maken','As many as possible, to tire him out'],['Drie','Three'],['Geen: altijd zelf achter hem aan rennen','None: always chase him yourself']],
+  why:['Hoe minder worpen, hoe minder kans op een fout en hoe minder tijd voor andere lopers. Charge de loper, de tagger roept "Nu!", één worp, tag.','The fewer throws, the less chance of an error and the less time for other runners. Charge the runner, the tagger calls "Now!", one throw, tag.']},
+ {src:'PH',q:['Jij begint de rundown met de bal. Wat doe je eerst?','You start the rundown with the ball. What do you do first?'],
+  o:[['Bal in je blote hand en hard op de loper af, zodat hij vol moet gaan lopen','Ball in your bare hand and charge the runner hard, so he has to commit'],['Meteen naar de andere kant gooien','Throw to the other side right away'],['Blijven staan en schijnbewegingen maken','Stand still and fake throws'],['De bal aan de werper geven','Hand the ball to the pitcher']],
+  why:['Haal de bal uit je handschoen en ren hard op de loper af. Een loper die op volle snelheid één kant op gaat is makkelijk uit te maken. Geen schijnworpen.','Get the ball out of your glove and charge the runner hard. A runner going full speed one way is easy to get. No fake throws.']},
+ {src:'PH',q:['Hoe maak je een tag op het honk?','How do you make a tag at the base?'],
+  o:[['Over het honk staan, de bal naar je toe laten komen en hard recht naar beneden taggen','Straddle the base, let the ball come to you and tag hard straight down'],['Naar de loper toe rennen en hem op zijn borst tikken','Run at the runner and tag him on the chest'],['Voor het honk gaan liggen','Lie down in front of the base'],['Achter het honk staan en wachten','Stand behind the base and wait']],
+  why:['Sta over het honk en laat de bal komen. Tag hard, recht naar beneden, met de handschoen voor het honk waar de loper moet aantikken.','Straddle the base and let the ball come. Tag hard, straight down, with the glove in front of the base where the runner has to touch it.']},
+ {src:'PH',q:['Wat is de volgorde van de "Six Fs" van Perry Hill?','What is the order of Perry Hill\'s "Six Fs"?'],
+  o:[['Feet – Field – Funnel – Footwork – Fire – Follow','Feet – Field – Funnel – Footwork – Fire – Follow'],['Field – Feet – Fire – Funnel – Follow – Footwork','Field – Feet – Fire – Funnel – Follow – Footwork'],
+     ['Footwork – Feet – Field – Follow – Funnel – Fire','Footwork – Feet – Field – Follow – Funnel – Fire'],['Fire – Field – Feet – Funnel – Footwork – Follow','Fire – Field – Feet – Funnel – Footwork – Follow']],
+  why:['Feet (klaarstaan), Field (bal pakken), Funnel (naar je lichaam brengen), Footwork (voeten naar het doel), Fire (gooien), Follow (doorlopen achter je worp).','Feet (ready position), Field (catch it), Funnel (bring it to your body), Footwork (feet to the target), Fire (throw), Follow (follow your throw).']},
+ {src:'PH',q:['Hoe sta je als je een grondbal fieldt?','How do you set up to field a ground ball?'],
+  o:[['Brede basis, billen omlaag, handen vóór je lichaam: bal en handschoen in één beeld','Wide base, butt down, hands out front: ball and glove in one view'],['Smalle stand, rechte benen, handschoen tussen je voeten','Narrow stance, straight legs, glove between your feet'],['Op één knie','On one knee'],['Zijwaarts, met de handschoen naast je','Sideways, glove beside you']],
+  why:['Een brede basis geeft balans en laat je laag zitten. Vang de bal vóór je lichaam, zodat je bal en handschoen tegelijk ziet.','A wide base gives balance and lets you get low. Catch the ball out front so you see ball and glove at the same time.']},
+ {src:'PH',q:['"Funnel": hoe haal je na het vangen je handen uit elkaar?','"Funnel": how do you separate your hands after the catch?'],
+  o:[['Bal naar het midden van je borst en dan uit elkaar met je duimen naar beneden','Bring the ball to the middle of your chest, then separate with thumbs down'],['Duimen omhoog, bal bij je heup','Thumbs up, ball at your hip'],['De bal direct vanuit de handschoen gooien','Throw straight out of the glove'],['De handschoen achter je rug','Glove behind your back']],
+  why:['Duimen naar beneden zet je in een krachtige houding: je voorste schouder wijst naar het doel en je hand komt vanzelf achter de bal.','Thumbs down puts you in a position of power: your front shoulder points at the target and your hand ends up behind the ball.']},
+ {src:'PH',q:['"Footwork" voor een rechtshandige gooier: welke voetbeweging?','"Footwork" for a right-handed thrower: which footwork?'],
+  o:[['Rechtervoet naar de linker, linkervoet naar het doel, zonder te kruisen','Right foot to left, left foot to the target, without crossing over'],['Linkervoet achter de rechter kruisen','Cross the left foot behind the right'],['Stilstaan en alleen met je arm gooien','Stand still and throw with just your arm'],['Een sprongetje en dan gooien','A little hop, then throw']],
+  why:['Rechts naar links, links naar het doel. Kruis je je voeten, dan komt je hand onder de bal: dat is slecht voor je elleboog en de bal gaat zwabberen.','Right to left, left to target. If you cross your feet your hand gets under the ball: bad for your elbow and the ball will tail.']},
+ {src:'PH',q:['Wanneer strekt de eerste honkman zich uit naar een worp?','When does the first baseman stretch toward a throw?'],
+  o:[['Pas als hij ziet waar de worp heen gaat','Only once he sees where the throw is going'],['Zodra de binnenvelder de bal vangt','As soon as the infielder fields the ball'],['Al voordat de bal geslagen wordt','Before the ball is even hit'],['Nooit, hij blijft rechtop staan','Never, he stays upright']],
+  why:['Strek je te vroeg, dan kun je een slechte worp niet meer halen. Zie de worp, plaats je voet en strek dan pas naar de bal.','Stretch too early and you can\'t adjust to a bad throw. See the throw, set your foot, then stretch toward the ball.']},
+ {src:'BD',q:['"Als je de bal niet fieldt, ..." Hoe gaat die regel verder?','"If you are not fielding the ball, ..." How does that rule continue?'],
+  o:[['... dek je een honk, ben je cut-off of ga je backuppen: je hebt altijd een taak','... you cover a base, are the cut-off or back up: you always have a job'],['... blijf je staan waar je stond','... you stay where you were'],['... ren je naar de bal om te helpen','... you run to the ball to help'],['... let je op de slagman','... you watch the batter']],
+  why:['"If you are not fielding the ball, you are covering a base. If you are not covering a base, you are a cut-off man. If you are not a cut-off man, you should be moving somewhere to back up."','"If you are not fielding the ball, you are covering a base. If you are not covering a base, you are a cut-off man. If you are not a cut-off man, you should be moving somewhere to back up."']},
+ {src:'BD',q:['Waar gaat de werper staan als hij een honk backupt?','Where does the pitcher stand when he backs up a base?'],
+  o:[['Zo diep mogelijk achter het honk, in lijn met de worp','As deep as possible behind the base, in line with the throw'],['Vlak achter de honkman','Right behind the baseman'],['Op de heuvel','On the mound'],['Naast het honk, in de looplijn','Next to the base, in the runner\'s path']],
+  why:['Diep staan geeft je tijd om op een afgeketste bal te reageren. Blijf ook uit de looplijn van de loper.','Standing deep gives you time to react to a deflected ball. Also stay out of the runner\'s path.']},
+ {src:'BD',q:['Je loopt naar een honk om te dekken en de loper komt eraan. Waar let je op?','You run to cover a base and the runner is coming. What do you watch out for?'],
+  o:[['Blijf uit de looplijn van de loper, anders krijgt hij het honk toegewezen','Stay out of the runner\'s path, or he will be awarded the base'],['Ga midden op de looplijn staan om hem te blokkeren','Stand in the base path to block him'],['Duw hem weg','Push him away'],['Niets, de loper moet om jou heen','Nothing, the runner has to go around you']],
+  why:['Loopt de loper tegen je aan terwijl je de bal niet hebt, dan is het obstructie en krijgt hij het volgende honk, wat er ook gebeurt.','If the runner runs into you while you don\'t have the ball, it is obstruction and he gets the next base no matter what.']},
+ {src:'PH',q:['Je bent binnenvelder en doet niet mee aan de relay. Waar ga je staan?','You are an infielder not involved in the relay. Where do you go?'],
+  o:[['Net binnen je honk, en kijken of de lopers het honk aantikken','Just inside your base, watching the runners touch it'],['Midden op het honk, zodat de loper er niet op kan','Right on the base, so the runner can\'t touch it'],['Naar de dug-out','To the dugout'],['Achter de relay-man aan','Following the relay man']],
+  why:['Net binnen het honk staan dwingt de loper vaak een wijdere bocht te maken. Let op dat je hem niet hindert.','Standing just inside the base often makes the runner take a wider turn. Be careful not to interfere with him.']},
+];
+
 /* ---------- start-scherm ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const state={pos:null,types:new Set(['fly','ground']),runs:new Set(['0','1','2','12']),len:10};
+const state={mode:'sit',pos:null,types:new Set(['fly','ground','xbh','tag','pop','bunt']),runs:new Set(['0','1','2','12','3']),len:10};
+const runMatch = S => { const k=runKey(S); return k.includes('3')?state.runs.has('3'):state.runs.has(k); };
 function renderPosGrid(){
   const g=$('#posGrid');g.innerHTML='';
   for(const p of [...POS,'ALL']){
@@ -852,19 +1199,27 @@ function renderPosGrid(){
   }
 }
 function pool(){
-  const sits=SIT.filter(S=>state.types.has(S.type)&&state.runs.has(runKey(S)));
+  if(state.mode==='theory') return TH.map(T=>({T}));
+  const sits=SIT.filter(S=>state.types.has(S.type)&&runMatch(S));
   if(!state.pos) return [];
   if(state.pos==='ALL') return sits.flatMap(S=>POS.map(p=>({S,pos:p})));
   return sits.map(S=>({S,pos:state.pos}));
 }
 function renderSetup(){
+  const th=state.mode==='theory';
+  document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.m===state.mode));
+  $('#sitOpts').style.display=th?'none':'';
+  $('#thNote').style.display=th?'':'none';
   renderPosGrid();
-  drawField($('#pickField'),{mode:'pick',me:state.pos==='ALL'?null:state.pos,onPick:p=>{state.pos=p;renderSetup();}});
+  drawField($('#pickField'),{mode:'pick',me:state.pos==='ALL'?null:state.pos,onPick:p=>{state.mode='sit';state.pos=p;renderSetup();}});
   const n=pool().length;
   $('#startBtn').disabled=!n;
-  $('#startBtn').textContent=state.pos?(state.pos==='ALL'?L('Start: alle posities','Start: all positions'):L(`Start als ${nm(state.pos).toLowerCase()}`,`Start as ${nm(state.pos).toLowerCase()}`)):L('Kies eerst een positie','Pick a position first');
-  $('#poolNote').textContent=state.pos?(n?L(`${n} situatie${n===1?'':'s'} beschikbaar met deze filters.`,`${n} situation${n===1?'':'s'} available with these filters.`):L('Geen situaties met deze filters.','No situations with these filters.')):'';
+  const s=stats.THEORY;
+  $('#startBtn').textContent=th?L('Start de theorie-quiz','Start the theory quiz'):state.pos?(state.pos==='ALL'?L('Start: alle posities','Start: all positions'):L(`Start als ${nm(state.pos).toLowerCase()}`,`Start as ${nm(state.pos).toLowerCase()}`)):L('Kies eerst een positie','Pick a position first');
+  $('#poolNote').textContent=th?L(`${n} vragen.`,`${n} questions.`)+(s&&s.t?' '+L(`Tot nu toe ${Math.round(100*s.c/s.t)}% goed.`,`So far ${Math.round(100*s.c/s.t)}% correct.`):'')
+    :state.pos?(n?L(`${n} situatie${n===1?'':'s'} beschikbaar met deze filters.`,`${n} situation${n===1?'':'s'} available with these filters.`):L('Geen situaties met deze filters.','No situations with these filters.')):'';
 }
+document.querySelectorAll('#modeSw button').forEach(b=>b.onclick=()=>{state.mode=b.dataset.m;renderSetup();});
 function chipGroup(sel,set){
   document.querySelectorAll(sel+' .chip').forEach(c=>c.onclick=()=>{
     const v=c.dataset.v;
@@ -877,38 +1232,53 @@ document.querySelectorAll('#fLen .chip').forEach(c=>c.onclick=()=>{state.len=+c.
 
 /* ---------- spel ---------- */
 let round=null;
+const whyFor = (S,p) => S.w&&S.w[p] ? L(S.w[p][0],S.w[p][1]) : A[S.d[p][0]].why(S,p);
+const srcOf = (S,p) => SRC[S.d[p][2]||S.src];
+const tx = a => a[LANG==='en'?1:0];
 function startRound(items){
-  round={items,i:0,score:0,miss:[],pick:null};
+  round={items,i:0,score:0,miss:[],pick:null,kind:items[0]&&items[0].T?'theory':'sit'};
   show('play');nextQ();
 }
 $('#startBtn').onclick=()=>{
   const p=shuffle(pool());
   // bij "alle posities": niet twee keer achter elkaar dezelfde situatie
-  if(state.pos==='ALL'){for(let i=1;i<p.length;i++)if(p[i].S===p[i-1].S){const j=p.findIndex((x,k)=>k>i&&x.S!==p[i-1].S);if(j>0)[p[i],p[j]]=[p[j],p[i]];}}
+  if(state.mode==='sit'&&state.pos==='ALL'){for(let i=1;i<p.length;i++)if(p[i].S===p[i-1].S){const j=p.findIndex((x,k)=>k>i&&x.S!==p[i-1].S);if(j>0)[p[i],p[j]]=[p[j],p[i]];}}
   startRound(p.slice(0,state.len));
 };
 function nextQ(){
   if(round.i>=round.items.length) return showResult();
-  const {S,pos}=round.items[round.i];
-  round.pick=null;round.opts=makeOptions(S,pos);
+  const it=round.items[round.i];
+  round.pick=null;
+  $('#play .grid2').classList.toggle('solo',!!it.T);
+  if(it.T){ round.opts=shuffle([0,1,2,3]); }
+  else { round.opts=makeOptions(it.S,it.pos); }
   renderQuestion();
-  drawField($('#playField'),{S,me:pos,mode:'pre'});
+  if(!it.T) drawField($('#playField'),{S:it.S,me:it.pos,mode:'pre'});
   if(window.innerWidth<820) window.scrollTo({top:0,behavior:'smooth'});
 }
 function renderQuestion(){
-  const {S,pos}=round.items[round.i];
-  $('#pPos').textContent=`${L('Jij','You')}: ${pos} · ${nm(pos)}`;
+  const it=round.items[round.i];
   $('#pCount').textContent=`${round.i+1}/${round.items.length}`;
   $('#pProg').style.width=`${100*(round.i+(round.pick!==null?1:0))/round.items.length}%`;
   $('#pScore').textContent=`✓ ${round.score}`;
-  $('#sKind').textContent=kindTxt(S);
-  $('#sTitle').textContent=sitTitle(S);
-  $('#sRun').textContent=runTxt(S);
-  $('#sQ').textContent=L(`Jij bent ${de(pos)} (${pos}). Wat doe jij?`,`You are ${de(pos)} (${pos}). What do you do?`);
+  if(it.T){
+    $('#pPos').textContent=L('Theorie','Theory');
+    $('#sKind').textContent=L('Theorie','Theory');
+    $('#sTitle').textContent=tx(it.T.q);
+    $('#sRun').textContent='';
+    $('#sQ').textContent='';
+  } else {
+    const {S,pos}=it;
+    $('#pPos').textContent=`${L('Jij','You')}: ${pos} · ${nm(pos)}`;
+    $('#sKind').textContent=kindTxt(S);
+    $('#sTitle').textContent=sitTitle(S);
+    $('#sRun').textContent=runTxt(S);
+    $('#sQ').textContent=L(`Jij bent ${de(pos)} (${pos}). Wat doe jij?`,`You are ${de(pos)} (${pos}). What do you do?`);
+  }
   const o=$('#opts');o.innerHTML='';
   round.opts.forEach((a,i)=>{
     const b=document.createElement('button');b.className='opt';
-    b.innerHTML=`<span class="k">${i+1}</span><span>${esc(lbl(a))}</span>`;
+    b.innerHTML=`<span class="k">${i+1}</span><span>${esc(it.T?tx(it.T.o[a]):lbl(a))}</span>`;
     b.onclick=()=>answer(i);o.appendChild(b);
   });
   $('#fb').innerHTML='';
@@ -917,33 +1287,43 @@ function renderQuestion(){
 function answer(i){
   if(round.pick!==null) return;
   round.pick=i;
-  const {S,pos}=round.items[round.i];
-  const good=round.opts[i]===S.d[pos][0];
-  if(good) round.score++; else round.miss.push(round.items[round.i]);
-  const st=stats[pos]||(stats[pos]={c:0,t:0});st.t++;if(good)st.c++;store.save(stats);
+  const it=round.items[round.i];
+  const good=it.T?round.opts[i]===0:round.opts[i]===it.S.d[it.pos][0];
+  if(good) round.score++; else round.miss.push(it);
+  const key=it.T?'THEORY':it.pos;
+  const st=stats[key]||(stats[key]={c:0,t:0});st.t++;if(good)st.c++;store.save(stats);
   $('#pScore').textContent=`✓ ${round.score}`;
   $('#pProg').style.width=`${100*(round.i+1)/round.items.length}%`;
   renderFeedback();
-  drawField($('#playField'),{S,me:pos,mode:'post'});
+  if(!it.T) drawField($('#playField'),{S:it.S,me:it.pos,mode:'post'});
   if(window.innerWidth<820) setTimeout(()=>$('#fb').scrollIntoView({behavior:'smooth',block:'nearest'}),50);
 }
 function renderFeedback(){
-  const {S,pos}=round.items[round.i];
-  const i=round.pick, pick=round.opts[i], correct=S.d[pos][0], good=pick===correct;
+  const it=round.items[round.i];
+  const i=round.pick, pick=round.opts[i];
+  const correct=it.T?0:it.S.d[it.pos][0], good=pick===correct;
   [...$('#opts').children].forEach((b,k)=>{b.disabled=true;const a=round.opts[k];
     if(a===correct)b.classList.add('ok');else if(k===i)b.classList.add('no');else b.classList.add('fade');});
   const last=round.i+1>=round.items.length;
-  $('#fb').innerHTML=`
-    <div class="fb ${good?'ok':'no'}">
-      <h3>${good?L('Goed!','Correct!'):L('Niet helemaal','Not quite')}</h3>
+  const head=`<h3>${good?L('Goed!','Correct!'):L('Niet helemaal','Not quite')}</h3>`;
+  const next=`<div class="next"><button class="btn pri" id="nextBtn">${last?L('Bekijk resultaat','See result'):L(it.T?'Volgende vraag':'Volgende situatie',it.T?'Next question':'Next situation')} →</button></div>`;
+  if(it.T){
+    $('#fb').innerHTML=`<div class="fb ${good?'ok':'no'}">${head}
+      <p><b>${L('Antwoord:','Answer:')}</b> ${esc(tx(it.T.o[0]))}.</p>
+      <p>${esc(tx(it.T.why))}</p>
+      <p class="srcl">${L('Bron','Source')}: ${esc(SRC[it.T.src])}</p></div>${next}`;
+  } else {
+    const {S,pos}=it;
+    $('#fb').innerHTML=`
+    <div class="fb ${good?'ok':'no'}">${head}
       ${good?'':`<p><b>${L('Jij koos:','You chose:')}</b> ${esc(lbl(pick).toLowerCase())}. ${esc(wrongWhy(S,pos,pick))}</p>`}
       <p><b>${L(`Jouw taak als ${nm(pos).toLowerCase()}:`,`Your job as ${nm(pos).toLowerCase()}:`)}</b> ${esc(lbl(correct).toLowerCase())}.</p>
-      <p>${esc(A[correct].why(S,pos))}</p>
-      <p class="quote">${L('Uit het boekje','From the booklet')}: “${esc(S.d[pos][1])}”</p>
+      <p>${esc(whyFor(S,pos))}</p>
+      <p class="quote">${L('Bron','Source')} (${esc(srcOf(S,pos))}): “${esc(S.d[pos][1])}”</p>
       <div class="idea"><b>${L('Het idee van deze situatie:','The idea of this situation:')}</b> ${esc(idea(S))}</div>
       <details><summary>${L('Wie doet wat?','Who does what?')}</summary>${whoList(S,pos)}</details>
-    </div>
-    <div class="next"><button class="btn pri" id="nextBtn">${last?L('Bekijk resultaat','See result'):L('Volgende situatie','Next situation')} →</button></div>`;
+    </div>${next}`;
+  }
   $('#nextBtn').onclick=()=>{round.i++;nextQ();};
 }
 function whoList(S,me){
@@ -959,13 +1339,15 @@ $('#stopBtn').onclick=()=>{ if(round.i>0||round.pick!==null){round.items=round.i
 function showResult(){ show('result'); renderResult(); }
 function renderResult(){
   const n=round.items.length,s=round.score,pct=n?s/n:0;
-  $('#rPos').textContent=state.pos==='ALL'?L('Alle posities','All positions'):`${state.pos} · ${PN[state.pos]?nm(state.pos):''}`;
+  $('#rPos').textContent=round.kind==='theory'?L('Theorie','Theory'):state.pos==='ALL'?L('Alle posities','All positions'):`${state.pos} · ${PN[state.pos]?nm(state.pos):''}`;
   $('#rScore').textContent=`${s}/${n}`;
   $('#rMsg').textContent=pct===1?L('Foutloos! Jij weet precies waar je moet staan. ⚾','Perfect! You know exactly where to be. ⚾')
     :pct>=.8?L('Sterk gedaan! Nog een paar details en je hebt het helemaal.','Great job! A few details and you\'ve got it all.')
     :pct>=.5?L('Op de goede weg. Kijk de fouten nog eens rustig na.','On the right track. Take another look at your mistakes.')
     :L('Lastig hè? Bekijk de uitleg hieronder en probeer de fouten opnieuw.','Tricky, right? Check the explanations below and retry your mistakes.');
-  $('#rMiss').innerHTML=round.miss.length?`<div class="lbl">${L('Nog even oefenen','Keep practising')}</div><ul class="miss">${round.miss.map(({S,pos})=>`<li><div class="t">${pos} · ${esc(sitTitle(S))}, ${esc(runTxt(S).toLowerCase())}</div>${esc(lbl(S.d[pos][0]))}</li>`).join('')}</ul>`:'';
+  $('#rMiss').innerHTML=round.miss.length?`<div class="lbl">${L('Nog even oefenen','Keep practising')}</div><ul class="miss">${round.miss.map(it=>it.T
+    ?`<li><div class="t">${esc(tx(it.T.q))}</div>${esc(tx(it.T.o[0]))}</li>`
+    :`<li><div class="t">${it.pos} · ${esc(sitTitle(it.S))}, ${esc(runTxt(it.S).toLowerCase())}</div>${esc(lbl(it.S.d[it.pos][0]))}</li>`).join('')}</ul>`:'';
   $('#retryMiss').style.display=round.miss.length?'':'none';
 }
 $('#retryMiss').onclick=()=>startRound(shuffle(round.miss));
@@ -974,10 +1356,12 @@ $('#toSetup').onclick=()=>show('setup');
 
 /* ---------- studeren ---------- */
 const study={S:SIT[0],pos:null};
+const RUNSHORT={'0':['leeg','empty'],'1':['1','1'],'2':['2','2'],'12':['1+2','1+2'],'3':['3','3'],'13':['1+3','1+3']};
+const shortName = S => S.type==='xbh'?{LFline:'LF-lijn',LCgap:'LC',RCgap:'RC',RFline:'RF-lijn'}[S.where].replace('lijn',L('lijn','line'))
+  : S.type==='bunt'?(S.to==='H'?'squeeze':'bunt'):S.ball;
 function renderStudyList(){
-  const groups=[['0',L('Geen lopers','No runners')],['1',L('Loper op 1','Runner on 1st')],['2',L('Loper op 2','Runner on 2nd')],['12',L('Lopers op 1 en 2','Runners on 1st & 2nd')]];
-  $('#slist').innerHTML=groups.map(([k,t])=>`<div class="sgroup"><h3>${t}</h3><div class="sitems">${
-    SIT.filter(S=>runKey(S)===k).map(S=>`<button class="sitem${S===study.S?' on':''}" data-id="${S.id}">${S.type==='fly'?'Fly':L('Grond','Ground')} → ${S.ball}</button>`).join('')}</div></div>`).join('');
+  $('#slist').innerHTML=Object.keys(KIND).map(t=>`<div class="sgroup"><h3>${tx(KIND[t])}</h3><div class="sitems">${
+    SIT.filter(S=>S.type===t).map(S=>`<button class="sitem${S===study.S?' on':''}" data-id="${S.id}">${shortName(S)} · ${tx(RUNSHORT[runKey(S)])}</button>`).join('')}</div></div>`).join('');
   $('#slist').querySelectorAll('.sitem').forEach(b=>b.onclick=()=>{study.S=SIT[+b.dataset.id];renderStudy();
     if(window.innerWidth<820)$('#studyField').scrollIntoView({behavior:'smooth',block:'start'});});
 }
@@ -987,8 +1371,8 @@ function renderStudy(animate=true){
   $('#tKind').textContent=kindTxt(S);
   $('#tTitle').textContent=sitTitle(S);
   $('#tRun').textContent=runTxt(S);
-  $('#tIdea').innerHTML=`<b>${L('Het idee:','The idea:')}</b> ${esc(idea(S))}`;
-  $('#tWho').innerHTML=POS.map(p=>`<li data-pos="${p}" class="${p===study.pos?'me':''}"><div class="h"><b>${p}</b><span>${esc(lbl(S.d[p][0]))}</span></div><div class="why">${esc(A[S.d[p][0]].why(S,p))}<br><span class="quote">“${esc(S.d[p][1])}”</span></div></li>`).join('');
+  $('#tIdea').innerHTML=`<b>${L('Het idee:','The idea:')}</b> ${esc(idea(S))}<div class="srcl">${L('Bron','Source')}: ${esc(SRC[S.src])}</div>`;
+  $('#tWho').innerHTML=POS.map(p=>`<li data-pos="${p}" class="${p===study.pos?'me':''}"><div class="h"><b>${p}</b><span>${esc(lbl(S.d[p][0]))}</span></div><div class="why">${esc(whyFor(S,p))}<br><span class="quote">“${esc(S.d[p][1])}”</span></div></li>`).join('');
   $('#tWho').querySelectorAll('li').forEach(li=>li.onclick=()=>{study.pos=study.pos===li.dataset.pos?null:li.dataset.pos;renderStudy(false);});
   drawField($('#studyField'),{S,me:study.pos,mode:'post',animate});
 }
@@ -1012,9 +1396,9 @@ function setLang(l){
   else if(current==='study') renderStudy(false);
   else if(current==='result') renderResult();
   else if(current==='play'){
-    const {S,pos}=round.items[round.i];
+    const it=round.items[round.i];
     renderQuestion();
-    drawField($('#playField'),{S,me:pos,mode:round.pick!==null?'post':'pre',animate:false});
+    if(!it.T) drawField($('#playField'),{S:it.S,me:it.pos,mode:round.pick!==null?'post':'pre',animate:false});
   }
 }
 document.querySelectorAll('.langtg button').forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
