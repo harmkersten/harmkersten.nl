@@ -776,9 +776,19 @@ function ideaBase(S){
 const cutPos = S => POS.find(p=>['cutoff','cover2B_or_cut','relay_lead'].includes(S.d[p][0]));
 
 /* ---------- acties: label, groep (opties uit dezelfde groep lijken te veel op elkaar), uitleg ---------- */
+/* waarom er een worp naar een honk kan komen waar de eerste worp niet heen gaat */
+function laterThrow(base,S){
+  if(S.type==='ground' && base==='3B' && S.to==='1B' && S.run.includes(2))
+    return L('Na de uit op het eerste honk kan de loper van het tweede honk nog doorlopen naar het derde; dan gooit de eerste honkman naar het derde honk.',
+             'After the out at first, the runner from second may still break for third; then the first baseman throws to third.');
+  if(S.type==='ground' && base==='2B' && S.to!=='2B')
+    return L('De eerste worp gaat niet naar het tweede honk, maar de bal kan nog door het infield glippen, of er komt alsnog een worp naar het tweede honk als een loper te ver van zijn honk staat.',
+             'The first throw doesn\'t go to second, but the ball can still get through the infield, or a throw may still come to second if a runner strays too far off his base.');
+  return L(`Er kan ook een worp naar ${BN(base)} komen.`,`A throw could also go to ${BN(base)}.`);
+}
 const backupBaseWhy = base => (S)=>L(
-  `${S.to===base?`De worp gaat naar ${BN(base)}.`:`Er kan ook een worp naar ${BN(base)} komen.`} Jij gaat erachter staan, in lijn met de worp. Gaat de bal mis (overthrow), dan stop jij hem en krijgen de lopers geen extra honk.`,
-  `${S.to===base?`The throw goes to ${BN(base)}.`:`A throw could also go to ${BN(base)}.`} You get behind it, in line with the throw. If the ball gets away (overthrow), you stop it and the runners don't get an extra base.`);
+  `${S.to===base?`De worp gaat naar ${BN(base)}.`:laterThrow(base,S)} Jij gaat erachter staan, in lijn met de worp. Gaat de bal mis (overthrow), dan stop jij hem en krijgen de lopers geen extra honk.`,
+  `${S.to===base?`The throw goes to ${BN(base)}.`:laterThrow(base,S)} You get behind it, in line with the throw. If the ball gets away (overthrow), you stop it and the runners don't get an extra base.`);
 const backupOF = X => ({l:()=>L(`${cap(de(X))} backuppen`,`Back up ${de(X)}`),g:['b'+X],
   why:S=>L(`De bal gaat naar ${de(X)}. Jij rent mee als back-up: mist hij de bal of springt die weg, dan pak jij hem op voordat de lopers extra honken krijgen.`,
            `The ball goes to ${de(X)}. You run over as back-up: if he misses it or it bounces away, you pick it up before the runners take extra bases.`)});
@@ -1051,6 +1061,7 @@ function throwFrom(base,S){
   const sp=spot(S), cp=cutPos(S);
   if(S.to===base) return (['fly','xbh','tag'].includes(S.type)&&cp)?target(cp,S):sp;
   if(S.type==='ground' && S.to==='2B' && base==='1B') return B['2B'];   // tweede worp van het dubbelspel
+  if(S.type==='ground' && S.to==='1B' && base==='3B' && S.run.includes(2)) return B['1B'];   // na de uit op 1B: worp naar 3B als de loper doorloopt
   return H;   // geen worp verwacht: dan achter het honk aan de buitenveldkant
 }
 /* buitenvelders backuppen dieper dan binnenvelders, zodat ze niet op elkaar staan */
