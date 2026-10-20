@@ -784,6 +784,15 @@ function laterThrow(base,S){
   if(S.type==='ground' && base==='2B' && S.to!=='2B')
     return L('De eerste worp gaat niet naar het tweede honk, maar de bal kan nog door het infield glippen, of er komt alsnog een worp naar het tweede honk als een loper te ver van zijn honk staat.',
              'The first throw doesn\'t go to second, but the ball can still get through the infield, or a throw may still come to second if a runner strays too far off his base.');
+  if(S.type==='bunt')
+    return L(`Bij een slechte bunt kan de catcher roepen dat de bal naar ${BN(base)} moet, voor de voorste loper.`,
+             `On a poor bunt the catcher may call for the ball to go to ${BN(base)}, for the lead runner.`);
+  if(S.type==='ground')
+    return L(`De veldspeler kan, afhankelijk van het aantal uit, ook naar ${BN(base)} gooien.`,
+             `Depending on the number of outs, the fielder may also throw to ${BN(base)}.`);
+  if(AIR.includes(S.type) && S.to && cutPos(S))
+    return L(`${cap(de(cutPos(S)))} kan de worp afsnijden en naar ${BN(base)} gooien als een loper daar te ver doorloopt ("Cut ${base==='2B'?2:3}!").`,
+             `${cap(de(cutPos(S)))} may cut the throw and fire to ${BN(base)} if a runner goes too far ("Cut ${base==='2B'?2:3}!").`);
   return L(`Er kan ook een worp naar ${BN(base)} komen.`,`A throw could also go to ${BN(base)}.`);
 }
 const backupBaseWhy = base => (S)=>L(
@@ -1061,7 +1070,14 @@ function throwFrom(base,S){
   const sp=spot(S), cp=cutPos(S);
   if(S.to===base) return (['fly','xbh','tag'].includes(S.type)&&cp)?target(cp,S):sp;
   if(S.type==='ground' && S.to==='2B' && base==='1B') return B['2B'];   // tweede worp van het dubbelspel
+  if(S.type==='ground' && S.to==='3B' && base==='1B') return B['3B'];   // dubbelspel via het derde honk
   if(S.type==='ground' && S.to==='1B' && base==='3B' && S.run.includes(2)) return B['1B'];   // na de uit op 1B: worp naar 3B als de loper doorloopt
+  if(S.type==='bunt') return sp;   // bij een bunt komt elke worp uit het gebied voor de plaat
+  if(S.type==='ground'){            // een ander goed antwoord van de veldspeler gooit naar dit honk
+    const oks=S.ok||(S.ov?[0,1,2].flatMap(n=>S.ov[n].ok):[]);
+    if(oks.some(a=>A[a].field===base||(a==='field_tag3'&&base==='3B'))) return sp;
+  }
+  if(AIR.includes(S.type)) return (cp&&S.to)?target(cp,S):sp;   // de cut-off kan afsnijden en hierheen gooien ("Cut 2!", "Cut 3!")
   return H;   // geen worp verwacht: dan achter het honk aan de buitenveldkant
 }
 /* buitenvelders backuppen dieper dan binnenvelders, zodat ze niet op elkaar staan */
@@ -1081,7 +1097,7 @@ function target(pos,S){
     case 'cover_home': return [190,377];
     case 'protect_home': return [198,381];
     case 'follow_runner_1B': return [257,343];
-    case 'cutoff': return lerp(B[S.to],sp,S.to==='H'?.4:.45);
+    case 'cutoff': return lerp(B[S.to],sp,S.to==='H'?.4:(S.to==='3B'&&S.ball==='RF')?.6:.45);
     case 'cover2B_or_cut': return add2(lerp(B['2B'],sp,.22),[pos==='2B'?12:-12,0]);
     case 'backup_1B': return behindBase('1B',S,pos);
     case 'backup_2B': return (S.type==='ground'&&S.ball==='2B')?behind(pos==='CF'?B['2B']:sp,55):behindBase('2B',S,pos);
@@ -1116,7 +1132,7 @@ function target(pos,S){
    de rest wordt uit elkaar geduwd tot ze minstens GAP van iedereen af staan */
 const GAP=30;
 const anchored = a => !!A[a].field || (a.startsWith('cover') && a!=='cover_backup_1B' && a!=='cover_backup_3B' && a!=='cover2B_or_cut')
-  || ['protect_home','popup_priority','stay_near3B','trail_runner_2B','bunt_catcher'].includes(a);
+  || ['protect_home','popup_priority','stay_near3B','trail_runner_2B','bunt_catcher','cutoff','relay_lead','trailer','second_cut_home'].includes(a);
 function targets(S){
   const t={}; for(const p of POS) t[p]=target(p,S);
   const fixed=p=>anchored(S.d[p][0]);
