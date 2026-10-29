@@ -341,15 +341,6 @@ const NOS = {
   tekst: "#1a1a1a",
 };
 
-/* ---- Kiesbare achtergrondkleuren voor de opstelling-maker ------------------ */
-/* Aangeleverde kleurenkaart: 13 kleuren op een rij, plus een losstaande        */
-/* dertiende/veertiende (donkerblauw), die als standaard blijft dienen omdat    */
-/* hij het dichtst bij het oorspronkelijke veldblauw (#284bbe) ligt.            */
-const ACHTERGROND_KLEUREN = [
-  "#a1150e", "#ac470f", "#b37813", "#b39421", "#98943f", "#648a45", "#7a9871",
-  "#4c8493", "#2a70b3", "#553d82", "#6f2f51", "#881f30", "#5f5f5f", "#1c357f",
-];
-
 /* ---- Teamkleuren (2026): kleurvlak achter de coureur op het podium --------- */
 const TEAM_KLEUR = {
   MCL: "#F07C31", // McLaren
@@ -436,6 +427,21 @@ const THEMES = {
       [0, "#B9779B"], [50, "#DAB9CA"], [100, "#9B3A6F"],
     ] },
   },
+  // Champions League: donkernavy balken (#101E4C) op een blauw-navy verloop met
+  // de sterrenbal van de competitie, afgemeten op "champions league design.svg".
+  // Het verloop is als vaste afbeelding aangeleverd; de sterren staan als vector
+  // erboven (witte overlay, links sterk en naar rechts uitdovend — gelijk aan
+  // de screen-blend met wit->zwart verloop in het ontwerp).
+  championsleague: {
+    titel: "#101E4C",
+    tekst: "#1B2A6B",
+    zebra: "#E9EDF9",
+    achtergrondFoto: "data:image/jpeg;base64,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AEWAAolWolBKIAAAAlBKqVBAAEqoAAgAIoAigAAAAmoC6agAAmgAgAAAAAAAloLaIA6MB6BxAAAC4oAgAAIoCYjQYMi4iAAAABUKAAAAMgALGaLUFKy0gIAgAIACCBQABlRLxSisgAAICXqpegAJQSqlQQAABlURagACAl6pQZvEaZSgAgAAIqXqNACUEqpUEAFEqssgAAAlC8RagJUWoAAyAA0AAl6CIFQAAEABAZWoAABUL0QAEWACVQAAQ0DUAAAABAAQAAAAANALU0AAAAB0eGKPQ44kwxQwQWxBQANAENAA0AAABLEaSxMEAAsRQEFxAAEABFglVBUAKGJijIyNJgILiJQqLUAASrABBkL0AARRKqAAJQSqlQQAABlUqNXjIACAUARKqVKIAgAAJeql6jQAlBKrN6hAAqpUWoygAKAIJehQGb0AABlRNANNAKglVlFgAKAJQAqCXqAABUogCLAAUBKgaagAAAAmgAgAAAaAJoC6mgAAAAAAaACaOkAejcQAKAAlgpYmGIAiAAAAAAaACjLSUEAQAAMRQVBcRAAKrN6LUQAEABAZWogIqXoACVYAIVL1FqAAJVKhQABASqlQQAABFSotRAAKACCXqVUqCAIAACXqpeo0AJQZvWkqEQEpVQBlAAUAvEES8VKCAJQARYlFQKAJUSoUGgAABkEpUAAQEvVS9QABoAQSoAAAACACagomgLqaAAAAAABoAJoAAAAAA6QB6NxgAAAAAGIoggWCIAAAAAAACpUaSpRAAABRL1UvUUAAZaSoIAlABBKgAFBBBbESgACVFvERYACpegAAIDK3iIACAUSoqAIABQKFQRKqVKIAgAAJeqiNACUEqpUESqlKtQBlAAUSrUQEqs3oACUAEWCXqlFQBGWaANACUASoIAAAgIt4iLABFAAZFqAAIBeBUEAAAAAAANABAAAE00FE00MUTTRVEAdNhij0bh1kaBdZFwwNQXFDURpLETULABBUsAAQAAAAABWRaiAAAl6qXotAEIJVEVkL0ASql6ggCAAlAoAgAFZarLKwAFShQABBKi1EABAS9VkABFAEoJVRAASjItRAAAqLURoAZoJeKlBEvVS9SiAIAJUAAWDK3iAAJQARqCVUvSgCIiACgCUSot6iAAAAyFQolWAAoAlEqLagACAlVKAAAAAAgAlBUQDF1AFAAAAAAAAd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",
+    achtergrondSterren: "M779.02,346.74c-1.21.61-3.03-.61-3.03-1.82-3.03-59.31-8.47-116.81-11.5-137.99,0-51.44-8.47-104.09-16.94-143.43-.61-1.21,1.21-2.42,2.42-2.42,48.42,9.68,64.15,27.84,64.15,27.84-25.42-57.49-62.33-101.07-102.28-133.75-34.5-72.02-73.83-105.31-73.83-105.31,3.02,15.74,1.21,33.89-4.84,52.65-.61,1.21-1.82,1.82-3.03,1.21-65.97-32.08-133.75-46.6-159.78-50.84-39.34-19.37-82.31-31.47-116.81-41.15-1.21,0-1.21-1.21-.61-1.82,46-38.13,88.97-48.42,88.97-48.42-75.04-3.03-139.8,10.89-194.27,31.47-81.1-6.66-132.54,7.87-132.54,7.87,0,0,22.39,26.63,30.86,41.76,1.21,1.82.61,4.24-1.21,5.45C93.92-116.85,57.61-77.51,43.09-61.78c-16.34,2.42-43.57,6.05-67.78,12.1-1.21,0-1.82-.61-1.21-1.82C-1.7-109.59,24.93-141.66,24.93-141.66c0,0-156.14,110.75-185.8,310.47,0,0,12.71-35.1,56.28-88.97.61-.61,1.82-.61,1.82,0,12.1,27.24,26.63,51.45,33.29,62.94-24.21,38.73-40.55,80.5-50.84,114.99-.61,1.21-1.21,2.42-2.42,2.42-36.31,13.92-45.39,26.63-45.39,26.63,5.45,19.37,16.95,38.13,30.87,55.68,1.21,1.82,1.82,3.63,1.82,5.45-3.63,85.33,23.6,141.01,23.6,141.01,6.05-29.66,18.16-58.71,33.89-85.94.61-1.21,1.82-1.21,3.03-.61,35.71,28.44,72.63,53.26,87.15,61.73,7.87,19.37,29.05,69.6,58.1,121.04.61,1.21,0,2.42-1.21,3.03-34.5,12.71-70.2,18.15-102.89,10.29,0,0,39.34,49.02,160.38,70.2,33.89,39.95,74.44,72.63,122.25,84.12,0,0-13.92-15.73-17.55-73.23,0-1.21.61-2.42,1.81-2.42,29.66.61,70.81,1.21,107.73-1.82,13.31,10.29,41.76,33.29,70.2,47.81,1.21.61,1.21,2.42,0,3.63-49.02,29.66-82.31,32.68-82.31,32.68,223.33,4.84,357.68-141.01,357.68-141.01-36.92,24.21-79.28,39.34-121.65,48.42-1.21,0-2.42-1.21-2.42-2.42,7.87-38.13,5.45-75.04,4.84-87.76,53.26-13.31,99.26-36.92,133.75-61.13.61-.61,1.82-.61,2.42,0,14.53,9.68,26.63,21.19,38.73,39.34,0,0,23-32.68,30.87-108.94,57.49-75.05,65.97-151.91,65.97-151.91-12.71,24.81-34.5,41.16-59.92,52.65ZM297.88-127.14c1.82-3.03,4.84-4.84,8.47-5.45,72.02-9.68,137.99-10.89,163.41-10.29,46,30.87,91.39,71.41,127.1,109.54,2.42,2.42,3.03,6.66,1.21,9.68-25.42,39.94-62.94,78.68-79.28,95.62-60.52,14.52-125.28,35.1-177.33,52.65-4.84,1.82-10.9,0-13.92-4.84C287.59,62.29,262.77,12.67,252.49-6.1c10.89-47.81,25.42-90.78,45.39-121.04ZM-54.96,239.01c-6.05-37.52-9.68-77.47-10.29-95.62-1.21-41.76,5.45-79.28,13.31-113.78,1.21-5.45,4.24-10.89,8.47-14.53C-21.07-5.49,19.48-41.8,45.51-58.14c24.21-15.74,91.39-37.52,119.23-45.39,5.45-1.82,10.89.61,13.92,5.45,3.03,6.05,6.66,11.5,10.29,17.55,21.79,33.89,45.99,63.55,55.68,75.65-13.31,53.26-19.37,113.17-21.79,163.41,0,4.84-3.03,9.08-7.87,10.89-70.2,27.23-122.86,49.02-141.01,56.89-47.81,1.82-93.81,10.29-124.67,15.74-1.82.61-4.24-1.21-4.24-3.03ZM141.74,553.72c-4.24,2.42-9.08,2.42-13.32-.61-35.71-25.42-77.47-57.49-113.17-90.18-20.58-35.7-36.92-81.1-47.81-119.83-.61-2.42,0-5.44,1.21-7.26,39.34-48.42,87.15-87.15,106.52-101.68,44.78,19.37,96.23,36.31,141.01,51.44,4.84,1.82,7.87,5.45,8.47,10.29,6.05,79.89,21.18,144.65,24.81,169.46-16.34,18.16-60.52,59.31-107.73,88.36ZM634.38,474.44c-33.89,56.89-59.92,91.39-68.39,101.67-11.5,15.74-39.95,57.49-84.12,99.26-3.03,2.42-6.66,4.24-10.29,4.24-55.68,2.42-107.73-1.82-127.7-6.05-16.95-7.26-56.89-24.81-104.1-50.84-4.24-2.42-6.65-6.66-6.05-11.5,2.42-36.31,13.92-88.36,24.21-143.43,25.42-44.78,51.44-95.02,78.68-136.78,3.03-4.24,8.47-6.66,13.31-4.84,81.1,22.39,151.91,39.34,180.96,45.39,39.34,45.39,77.47,77.47,102.89,97.44,1.21,1.82,1.21,3.63.61,5.45ZM693.08,366.11c-1.21,2.42-3.63,4.23-6.05,4.23-61.73,7.26-127.1-1.21-152.51-5.44-42.36-42.37-87.76-88.97-121.65-130.12-3.63-4.24-3.63-10.29-.61-14.52,47.81-67.18,91.99-120.44,110.76-141.62,53.26-11.5,105.91-21.79,141.62-23.61,2.42,0,5.44,1.21,6.65,3.63,46,64.15,79.29,125.88,89.57,148.28-21.18,56.89-46.6,114.38-67.78,159.17Z",
+    gradient: { x1: 0, y1: 0, x2: 1, y2: 1, stops: [
+      [0, "#1C347C"], [50, "#294CC0"], [100, "#1C347C"],
+    ] },
+  },
   // Standaard blauw verloop voor een nog in te vullen ("eigen") competitie
   // — geen vaste clubkleur/illustratie zoals bij Eredivisie/Premier League,
   // dus een neutrale eigen blauwtint i.p.v. het echte clublogo-blauw.
@@ -500,15 +506,16 @@ const THEMES = {
     ] },
   },
   // Neutraal thema voor de blanco etappekoers/eendagskoers-templates: geen
-  // wedstrijd-eigen merkkleur (dat verzint de redacteur zelf), dus een
-  // grijstint i.p.v. geel/roze/rood/groen. Truien-kleuren blijven het
-  // gangbare geel/groen/bol/wit, herkenbaar voor vrijwel elke rittenkoers.
+  // wedstrijd-eigen merkkleur (dat verzint de redacteur zelf), dus het NOS
+  // sport-blauw uit het palet (basis #284BBE, achtergrond 30l/60l) i.p.v.
+  // geel/roze/rood/groen. Truien-kleuren blijven het gangbare
+  // geel/groen/bol/wit, herkenbaar voor vrijwel elke rittenkoers.
   blanco: {
-    titel: "#1F1F1F",
+    titel: "#284BBE",
     tekst: NOS.tekst,
     zebra: "#E9EDF9",
     gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
-      [0, "#9CA3AF"], [50, "#4B5563"], [100, "#9CA3AF"],
+      [0, "#A7B4E5"], [50, "#6A80D2"], [100, "#A7B4E5"],
     ] },
     truien: [
       { label: "Geel · algemeen", kleur: "#FFC828" },
@@ -517,24 +524,32 @@ const THEMES = {
       { label: "Wit · jongeren", kleur: "#ffffff" },
     ],
   },
-  // Voor Algemeen (bv. medaillespiegel): eigen donkerblauw-groen i.p.v. een
-  // sport-eigen kleur, afgemeten op het referentie-ontwerp (#2c4c54). Blijft
-  // ook de balkkleur in foto-modus (i.t.t. wielrennen's FOTO_ACCENT-blauw) —
-  // #2c4c54 leest zelf al goed over vrijwel elke foto.
+  // Voor Algemeen (bv. medaillespiegel): NOS Sport-blauw met hetzelfde
+  // lichtblauwe verloop als de andere blauwe graphics (blanco/livestream).
   algemeen: {
-    titel: "#2c4c54",
-    tekst: NOS.tekst,
+    titel: "#284BBE",
+    tekst: "#1B2A6B",
     zebra: "#E9EDF9",
     gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
-      [0, "#5A7B84"], [50, "#2c4c54"], [100, "#5A7B84"],
+      [0, "#A7B4E5"], [50, "#6A80D2"], [100, "#A7B4E5"],
+    ] },
+  },
+  // Programma Livestream: zelfde sport-blauw en achtergrond als blanco, maar
+  // met het donkerblauw (#1B2A6B) als tekstkleur, zoals in het ontwerp.
+  livestream: {
+    titel: "#284BBE",
+    tekst: "#1B2A6B",
+    zebra: "#E9EDF9",
+    gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
+      [0, "#A7B4E5"], [50, "#6A80D2"], [100, "#A7B4E5"],
     ] },
   },
   schaatsen: {
-    titel: "#1C357F",
-    tekst: "#101E4C",
-    zebra: "#EAEDF9",
+    titel: "#284BBE",
+    tekst: "#1B2A6B",
+    zebra: "#E9EDF9",
     gradient: { x1: 1, y1: 0, x2: 0, y2: 1, stops: [
-      [0, "#6A80D2"], [50, "#1C357F"], [100, "#6A80D2"],
+      [0, "#A7B4E5"], [50, "#6A80D2"], [100, "#A7B4E5"],
     ] },
   },
 };
@@ -595,6 +610,13 @@ const CONFIG = {
       },
       premierleague: {
         label: "Premier League",
+        types: {
+          programma: { label: "programma" },
+          stand: { label: "stand" },
+        },
+      },
+      championsleague: {
+        label: "Champions League",
         types: {
           programma: { label: "programma" },
           stand: { label: "stand" },
@@ -670,6 +692,12 @@ const CONFIG = {
         label: "toernooien",
         types: {
           medaillespiegel: { label: "medaillespiegel" },
+        },
+      },
+      livestream: {
+        label: "Programma Livestream",
+        types: {
+          programma: { label: "programma" },
         },
       },
     },
@@ -920,6 +948,17 @@ const VOETBAL_STAND = {
     ["team x", 27, 8, 14, 15, 19], ["team x", 27, 8, 12, 15, 19],
     ["team x", 27, 8, 14, 15, 19], ["team x", 27, 8, 12, 15, 19],
   ],
+  championsleague: [
+    ["team x", 4, 4, 0, 0, 12], ["team x", 4, 3, 1, 0, 10],
+    ["team x", 4, 3, 0, 1, 9], ["team x", 4, 3, 0, 1, 9],
+    ["team x", 4, 2, 2, 0, 8], ["team x", 4, 2, 2, 0, 8],
+    ["team x", 4, 2, 1, 1, 7], ["team x", 4, 2, 1, 1, 7],
+    ["team x", 4, 2, 1, 1, 7], ["team x", 4, 2, 0, 2, 6],
+    ["team x", 4, 2, 0, 2, 6], ["team x", 4, 1, 3, 0, 6],
+    ["team x", 4, 1, 2, 1, 5], ["team x", 4, 1, 2, 1, 5],
+    ["team x", 4, 1, 1, 2, 4], ["team x", 4, 1, 1, 2, 4],
+    ["team x", 4, 1, 0, 3, 3], ["team x", 4, 0, 2, 2, 2],
+  ],
   // Nog in te vullen competitie: bewust leeg, geen fictieve clubs — de
   // redacteur plakt of vult zelf de echte stand in.
   eigen: [],
@@ -953,15 +992,28 @@ const VOETBAL_PROGRAMMA = {
       ] },
     ],
   },
+  championsleague: {
+    dagen: [
+      { dag: "dinsdag 6 oktober", duels: [["team x", "team x", "18:45"]] },
+      { dag: "woensdag 7 oktober", duels: [
+        ["team x", "team x", "18:45"], ["team x", "team x", "21:00"],
+        ["team x", "team x", "21:00"], ["team x", "team x", "21:00"],
+      ] },
+      { dag: "donderdag 8 oktober", duels: [
+        ["team x", "team x", "18:45"], ["team x", "team x", "21:00"],
+        ["team x", "team x", "21:00"], ["team x", "team x", "21:00"],
+      ] },
+    ],
+  },
   // Nog in te vullen competitie: bewust leeg, zelfde opzet als
   // VOETBAL_STAND.eigen hierboven.
   eigen: { dagen: [] },
 };
 
-// Alleen Eredivisie/Premier League hebben een vaste competitienaam voor in
+// Alleen Eredivisie/Premier League/Champions League hebben een vaste competitienaam voor in
 // de titel — "eigen" (nog in te vullen) heeft die niet, vandaar de fallback
 // naar "" i.p.v. een hardcoded derde naam.
-const VOETBAL_COMPETITIE_LABEL = { eredivisie: "Eredivisie", premierleague: "Premier League" };
+const VOETBAL_COMPETITIE_LABEL = { eredivisie: "Eredivisie", premierleague: "Premier League", championsleague: "Champions League" };
 
 function getMockVoetbal(competitie, type) {
   const label = VOETBAL_COMPETITIE_LABEL[competitie] || "";
@@ -972,7 +1024,7 @@ function getMockVoetbal(competitie, type) {
     }));
     // "Competitie X" i.p.v. een lege titel als er geen bekende competitie-
     // naam is ("eigen") — zelfde "nog in te vullen"-signaal als "team x".
-    return { sport: "Voetbal", titel: label || "Competitie X", ondertitel: "stand na speelronde x", type: "stand", theme, rijen };
+    return { sport: "Voetbal", titel: label || "Competitie X", ondertitel: competitie === "championsleague" ? "stand leaguefase" : "stand na speelronde x", type: "stand", theme, rijen };
   }
   if (type === "programma") {
     const data = VOETBAL_PROGRAMMA[competitie];
@@ -984,7 +1036,7 @@ function getMockVoetbal(competitie, type) {
     }));
     // "x" i.p.v. het echte rondenummer: duidelijk startpunt dat nog
     // ingevuld moet worden, net als de lege ondertitel bij "stand" hierboven.
-    return { sport: "Voetbal", titel: label || "Competitie X", ondertitel: "speelronde x", type: "programma", theme, competitie, dagen };
+    return { sport: "Voetbal", titel: label || "Competitie X", ondertitel: competitie === "championsleague" ? "leaguefase" : "speelronde x", type: "programma", theme, competitie, dagen };
   }
   return null;
 }
@@ -1183,7 +1235,94 @@ const MEDAILLESPIEGEL_MOCK = {
   ],
 };
 
+/* Programma Livestream: dagen -> programmaonderdelen (blauwe kopbalk) -> regels
+   (tijd + omschrijving). Placeholders i.p.v. een echt programma, zodat er geen
+   verouderd schema per ongeluk gepubliceerd wordt. Standaard in 9:16. */
+const lsNieuweRegel = () => ({ tijd: "00.00", tekst: "omschrijving x" });
+const lsNieuwEvenement = (n = 1) => ({ titel: "evenement x", items: Array.from({ length: n }, lsNieuweRegel) });
+const lsNieuweDag = () => ({ dag: "dag x", groepen: [lsNieuwEvenement()] });
+/* Programma Livestream: plakdata van de livestream-lijst op nos.nl. Per
+   uitzending staan er een dag-regel ("vandaag", "donderdag"), een tijd-regel
+   ("vandaag, 20:45") en een titel. Werkt met zowel de opgemaakte tekst als de
+   markdown-variant (met [tekst](link) en opsommingstekens). "Sport: titel" wordt
+   evenement "Sport" met omschrijving "titel"; een titel zonder dubbele punt
+   wordt het evenement zelf. Direct opeenvolgende uitzendingen met dezelfde
+   evenement-titel op dezelfde dag worden onder één kopbalk gezet. */
+function parseLivestreamPlak(tekst) {
+  // Op nos.nl staat de dag voluit ("woensdag 21 oktober") bij de dagkop en
+  // afgekort ("wo 21 oktober, 19:30") bij de tijd.
+  const VOLUIT = { ma: "maandag", di: "dinsdag", wo: "woensdag", do: "donderdag", vr: "vrijdag", za: "zaterdag", zo: "zondag" };
+  const DAG = "(?:vandaag|overmorgen|morgen|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|ma|di|wo|do|vr|za|zo)";
+  const DATUM = "(?:\\s+\\d{1,2}\\s+[a-z]+)?";
+  const dagRe = new RegExp(`^(${DAG})(${DATUM})$`, "i");
+  const tijdRe = new RegExp(`^(${DAG})(${DATUM}),?\\s+(\\d{1,2})[:.](\\d{2})$`, "i");
+  const losTijdRe = /^(\d{1,2})[:.](\d{2})$/;
+  const regels = String(tekst || "").split(/\r?\n/)
+    .map((r) => r
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")      // [tekst](url) -> tekst
+      .replace(/^[\s*\-•·]+/, "").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  const dagen = [];
+  let dag = null, tijd = null;
+  // "wo 21 oktober" en "woensdag 21 oktober" zijn dezelfde dag.
+  const sleutel = (naam, datum) => `${naam.toLowerCase().slice(0, 2)}${datum.trim().toLowerCase()}`;
+  const dagVoor = (naam, datum) => {
+    const n = naam.toLowerCase();
+    const label = `${VOLUIT[n] || n}${datum.toLowerCase()}`;
+    const k = sleutel(n, datum);
+    if (!dag || dag.sleutel !== k) { dag = { dag: label, groepen: [], sleutel: k }; dagen.push(dag); }
+    return dag;
+  };
+  const tijdTekst = (u, m) => `${u.padStart(2, "0")}.${m}`;
+  for (const r of regels) {
+    let m;
+    if ((m = r.match(tijdRe))) { dagVoor(m[1], m[2]); tijd = tijdTekst(m[3], m[4]); continue; }
+    if ((m = r.match(dagRe))) { dagVoor(m[1], m[2]); tijd = null; continue; }
+    if ((m = r.match(losTijdRe))) { tijd = tijdTekst(m[1], m[2]); continue; }
+    if (tijd === null || !dag) continue;   // titel zonder tijd: geen uitzending
+    const i = r.indexOf(": ");
+    const titel = i > 0 ? r.slice(0, i).trim() : r;
+    const omschrijving = i > 0 ? r.slice(i + 2).trim() : "";
+    const laatste = dag.groepen[dag.groepen.length - 1];
+    const regel = { tijd, tekst: omschrijving };
+    if (laatste && laatste.titel === titel) laatste.items.push(regel);
+    else dag.groepen.push({ titel, items: [regel] });
+    tijd = null;
+  }
+  return dagen.filter((dg) => dg.groepen.length).map(({ dag, groepen }) => ({ dag, groepen }));
+}
+
+function getMockLivestream() {
+  const groep = lsNieuwEvenement;
+  return {
+    sport: "Algemeen", titel: "Live bij NOS Sport", ondertitel: "streams", type: "programma",
+    theme: THEMES.livestream, formaat: "1080x1920",
+    dagen: [
+      { dag: "dag x", groepen: [groep(1), groep(2), groep(1)] },
+      { dag: "dag x", groepen: [groep(1)] },
+      { dag: "dag x", groepen: [groep(1)] },
+    ],
+    achtergrond: "verloop", foto: null,
+  };
+}
+
+// Schaatsen-programma: dezelfde opzet als Programma Livestream (dagen >
+// evenementen > regels), in de schaatsvormgeving en standaard in 4:5. Het
+// programma is nog niet bekend, dus de redacteur vult alles zelf in.
+function getMockSchaatsenProgramma() {
+  const eersteDag = { dag: "19 oktober", groepen: [{ titel: "wereldbeker", items: [
+    { tijd: "00.00", tekst: "5.000 meter vrouwen" }, lsNieuweRegel(), lsNieuweRegel(),
+  ] }] };
+  return {
+    sport: "Schaatsen", titel: "Schaatsen", ondertitel: "programma", type: "programma",
+    theme: THEMES.schaatsen, formaat: "1080x1350", ring: false,
+    dagen: [eersteDag, lsNieuweDag(), lsNieuweDag()],
+    achtergrond: "verloop", foto: null,
+  };
+}
+
 function getMockAlgemeen(competitie, type) {
+  if (competitie === "livestream" && type === "programma") return getMockLivestream();
   if (competitie !== "toernooien" || type !== "medaillespiegel") return null;
   const d = MEDAILLESPIEGEL_MOCK;
   return {
@@ -1231,14 +1370,6 @@ const SCHAATSEN_WERELDBEKERSTAND_MOCK = {
   ],
   extra: ["nl", "schaatser x", 140],
 };
-const SCHAATSEN_PROGRAMMA_MOCK = {
-  rijen: [
-    ["500m vrouwen", "14:00"], ["500m mannen", "14:45"],
-    ["1000m vrouwen", "16:00"], ["1000m mannen", "16:45"],
-    ["Massastart vrouwen", "18:00"], ["Massastart mannen", "18:30"],
-  ],
-};
-
 function getMockSchaatsen(competitie, type) {
   if (competitie !== "wereldbeker") return null;
   const theme = THEMES.schaatsen;
@@ -1263,15 +1394,7 @@ function getMockSchaatsen(competitie, type) {
       achtergrond: "verloop", foto: null,
     };
   }
-  if (type === "programma") {
-    const d = SCHAATSEN_PROGRAMMA_MOCK;
-    return {
-      sport: "Schaatsen", titel: "Wereldbeker", ondertitel: "programma", type: "programma",
-      theme,
-      rijen: d.rijen.map(([omschrijving, tijd], i) => ({ nr: i + 1, omschrijving, tijd })),
-      achtergrond: "verloop", foto: null,
-    };
-  }
+  if (type === "programma") return getMockSchaatsenProgramma();
   return null;
 }
 
@@ -2855,12 +2978,18 @@ function Vlag({ code, x, y, h = 32 }) {
 const W = 1080;
 const H = 1350; // default/fallback; elke graphic bepaalt zijn eigen hoogte via hoogteVoor()
 
-// Canvas-hoogte per graphic: 1080x1350 (4:5, standaard) of 1080x1440 (3:4) —
+// Canvas-hoogte per graphic: 1080x1350 (4:5, standaard), 1080x1440 (3:4) of 1080x1920 (9:16) —
 // zelf te kiezen via de FormaatKiezer, opgeslagen als data.formaat. Alles
 // (Achtergrond, Kop, iedere Template) leest zijn eigen H hiermee uit i.p.v.
-// de vaste module-constante, zodat de extra ruimte bij 1440 gewoon als
+// de vaste module-constante, zodat de extra ruimte bij 1440/1920 gewoon als
 // achtergrond onder de bestaande, ongewijzigde opmaak bij komt.
-const hoogteVoor = (data) => (data && data.formaat === "1080x1440" ? 1440 : 1350);
+const HOOGTE_PER_FORMAAT = { "1080x1350": 1350, "1080x1440": 1440, "1080x1920": 1920, "1800x1350": 1350 };
+const hoogteVoor = (data) => (data && HOOGTE_PER_FORMAAT[data.formaat]) || 1350;
+// Breedte per formaat: alleen 4:3 (liggend) is breder dan de standaard 1080. De
+// graphic zelf blijft 1080 breed en komt horizontaal gecentreerd te staan
+// (offX), de extra ruimte links en rechts is achtergrond.
+const BREEDTE_PER_FORMAAT = { "1800x1350": 1800 };
+const breedteVoor = (data) => (data && BREEDTE_PER_FORMAAT[data.formaat]) || 1080;
 
 /* ---- Type-scale (spec): titel 60, ondertitel + alle tekst 36, grid-team 24 - */
 const TS = {
@@ -2916,7 +3045,14 @@ const vlagRandFilter = (
   </filter>
 );
 
-function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1350 }) {
+function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoHelder, fotoSleep, H = 1350, B = W }) {
+  // Helderheid van de foto: een zwarte (donkerder) of witte (lichter) laag erover
+  // i.p.v. een CSS-filter, zodat het ook in de SVG-export (Illustrator) klopt.
+  const helder = Number(fotoHelder) || 0;
+  const helderLaag = helder !== 0
+    ? <rect id="foto-helderheid" width={B} height={H} fill={helder < 0 ? "#000" : "#fff"}
+        opacity={Math.abs(helder) / 100} pointerEvents="none" />
+    : null;
   if (foto) {
     // Foto-variant: geen kleurverloop, de eigen (geüploade) foto vult het hele
     // canvas. Zonder bekende beeldmaten (bv. oudere data) blijft het simpele
@@ -2927,31 +3063,33 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
       return (
         <>
           <defs><style>{fontFaceCss()}</style>{vlagRandFilter}</defs>
-          <rect width={W} height={H} fill="#1e1e1e" />
-          <image href={foto} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" />
+          <rect width={B} height={H} fill="#1e1e1e" />
+          <image href={foto} x="0" y="0" width={B} height={H} preserveAspectRatio="xMidYMid slice" />
+          {helderLaag}
         </>
       );
     }
     const pos = fotoPos || { x: 0, y: 0 };
-    const dekkend = Math.max(W / fotoDim.w, H / fotoDim.h);
+    const dekkend = Math.max(B / fotoDim.w, H / fotoDim.h);
     const schaal = dekkend * Math.max(1, fotoZoom || 1);
     const w = fotoDim.w * schaal;
     const h = fotoDim.h * schaal;
-    const x = (W - w) / 2 + pos.x;
+    const x = (B - w) / 2 + pos.x;
     const y = (H - h) / 2 + pos.y;
     return (
       <>
         <defs>
           <style>{fontFaceCss()}</style>
-          <clipPath id="fotoClip"><rect width={W} height={H} /></clipPath>
+          <clipPath id="fotoClip"><rect width={B} height={H} /></clipPath>
           {vlagRandFilter}
         </defs>
-        <rect width={W} height={H} fill="#1e1e1e" />
+        <rect width={B} height={H} fill="#1e1e1e" />
         <g clipPath="url(#fotoClip)">
           <image href={foto} x={x} y={y} width={w} height={h}
             style={fotoSleep ? { cursor: "grab" } : undefined}
             onPointerDown={fotoSleep ? (e) => fotoSleep.start(e, pos) : undefined} />
         </g>
+        {helderLaag}
       </>
     );
   }
@@ -2963,7 +3101,18 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
     return (
       <>
         <defs><style>{fontFaceCss()}</style>{vlagRandFilter}</defs>
-        <image href={th.achtergrondFoto} x="0" y="0" width={W} height={H} preserveAspectRatio="xMidYMid slice" />
+        <image href={th.achtergrondFoto} x="0" y="0" width={B} height={H} preserveAspectRatio="xMidYMid slice" />
+        {th.achtergrondSterren && (
+          <g id="sterren" transform={`translate(${(B - W) / 2}, 0)`} opacity="0.5">
+            <defs>
+              <linearGradient id="sterrenVerloop" gradientUnits="userSpaceOnUse" x1="-168.13" y1="0" x2="838.94" y2="0">
+                <stop offset="0" stopColor="#fff" />
+                <stop offset="1" stopColor="#fff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d={th.achtergrondSterren} fill="url(#sterrenVerloop)" />
+          </g>
+        )}
       </>
     );
   }
@@ -2975,8 +3124,8 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
   // (puur middenKleur, geen contaminatie) en bereikt geen enkel hoekverloop
   // een ándere hoek (die liggen verder weg dan de halve diagonaal) — zo
   // blijft elke hoek zijn eigen zuivere kleur houden, ongeacht tekenvolgorde.
-  const straal = Math.hypot(W, H) / 2;
-  const hoekPunten = [["tl", 0, 0], ["tr", W, 0], ["bl", 0, H], ["br", W, H]];
+  const straal = Math.hypot(B, H) / 2;
+  const hoekPunten = [["tl", 0, 0], ["tr", B, 0], ["bl", 0, H], ["br", B, H]];
   return (
     <>
       <defs>
@@ -2994,13 +3143,20 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
         ))}
         {vlagRandFilter}
       </defs>
-      <rect width={W} height={H} fill={middenKleur} />
+      <rect width={B} height={H} fill={middenKleur} />
       {hoekPunten.map(([id]) => (
-        <rect key={id} width={W} height={H} fill={`url(#bg-${id})`} />
+        <rect key={id} width={B} height={H} fill={`url(#bg-${id})`} />
       ))}
     </>
   );
 }
+
+// Eredivisie/Premier League/Champions League: standaard met de eigen
+// achtergrondillustratie; data.illustratie === false geeft het gewone
+// kleurverloop van het thema, zonder illustratie of sterren.
+const achtergrondTheme = (data) => (data.illustratie === false && data.theme && data.theme.achtergrondFoto
+  ? { ...data.theme, achtergrondFoto: null, achtergrondSterren: null }
+  : data.theme);
 
 // Vaste blauwe balkstijl voor de "foto"-achtergrondvariant (wielrennen): een
 // eigen foto botst met het fel wedstrijdthema (geel/roze/rood/groen), en
@@ -3008,7 +3164,14 @@ function Achtergrond({ theme, foto, fotoDim, fotoZoom, fotoPos, fotoSleep, H = 1
 // balk-/tekstkleuren van het thema, niet bv. de leiderstruitjes — die
 // blijven race-eigen.
 const FOTO_ACCENT = { titel: "#284bbe", tekst: "#101e4c", zebra: "#E9EDF9" };
-const metFotoStijl = (theme, actief) => (actief ? { ...theme, ...FOTO_ACCENT } : theme);
+// Tekst op de titelbalken: standaard wit; "donker" (NOS-donker #1e1e1e) is een
+// handmatige keuze, bv. bij een lichte titelkleur (data.titelDonker).
+const NOS_DONKER = "#1e1e1e";
+const titelTekst = (theme) => (theme && theme.titelTekst) || NOS.wit;
+
+const metFotoStijl = (theme, actief) => (actief
+  ? { ...theme, ...FOTO_ACCENT, ...(theme.titelVast ? { titel: theme.titel } : {}) }
+  : theme);
 
 // barY schuift per graphic mee met de hoeveelheid inhoud (bv. de voetbalstand:
 // hoe meer rijen, hoe hoger de balk komt te staan) — barH/titelOffset zijn
@@ -3017,7 +3180,7 @@ const metFotoStijl = (theme, actief) => (actief ? { ...theme, ...FOTO_ACCENT } :
 // ondertitel-balk (36pt) is voor alle sporten gelijk: hij sluit direct aan
 // op de sport-balk (barY+barH), hoogte 50px, tekst-offset 35.5 vanaf de
 // bovenkant.
-function Kop({ sport, titel, theme, barY = 100, barH = 90, titelOffset = 65 }) {
+function Kop({ sport, titel, theme, H = 1350, B = W, barY = 100, barH = 90, titelOffset = 63, logo = H < 1920 }) {
   const th = theme || THEMES.formule1;
   // Logo op ware verhouding (nieuw 2026-logo, viewBox 664.3x236.6 -> ~2.81:1).
   const logoH = 39;
@@ -3070,13 +3233,15 @@ function Kop({ sport, titel, theme, barY = 100, barH = 90, titelOffset = 65 }) {
   const balkMidX = W / 2;
   return (
     <>
-      {/* NOS logo */}
-      <image href={NOS_LOGO} x="52" y="44" width={logoW} height={logoH}
-        preserveAspectRatio="xMidYMid meet" />
+      {/* NOS logo — vast t.o.v. de linkerrand van het canvas (bij 4:3 compenseren we de zijmarge); standaard niet in 1080x1920 (daar komt het logo van het platform zelf), tenzij `logo` het overschrijft */}
+      {logo && (
+        <image href={NOS_LOGO} x={52 - (B - W) / 2} y="44" width={logoW} height={logoH}
+          preserveAspectRatio="xMidYMid meet" />
+      )}
       {/* Sport-balk (titel 60pt) */}
       <rect x={balkX} y={barY} width={balkW} height={barH} fill={th.titel} />
       <text ref={sportRef} x={balkMidX} y={barY + titelOffset} textAnchor="middle" fontFamily={FONT}
-        fontWeight="700" fontSize={TS.titel} fill={NOS.wit}>{sport}</text>
+        fontWeight="700" fontSize={TS.titel} fill={titelTekst(th)}>{sport}</text>
       {/* Titel-balk (ondertitel 36pt), direct aansluitend op de sport-balk */}
       <rect x={balkX} y={barY + barH} width={balkW} height="50" fill={NOS.wit} />
       <text ref={titelRef} x={balkMidX} y={barY + barH + 35.5} textAnchor="middle" fontFamily={FONT}
@@ -3177,9 +3342,13 @@ function PodiumBlok({ p, x, y, w, h, waarde }) {
   );
 }
 
-function UitslagTemplate({ data }) {
+function UitslagTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
   const podium = [...data.podium].sort((a, b) => a.pos - b.pos);
   const p1 = podium.find((p) => p.pos === 1);
   const p2 = podium.find((p) => p.pos === 2);
@@ -3221,13 +3390,17 @@ function UitslagTemplate({ data }) {
   const waarde = (r) => (isKwalificatie ? r.tijd : `${r.punten} pt`);
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} H={H} />
-      <g transform={`translate(0, ${offY})`}>
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
+      <g transform={`translate(${offX}, ${offY})`}>
       {/* Titel/ondertitel omgedraaid t.o.v. de meeste sporten: hier is
           "Uitslag" de grote 58pt-titel en de Grand Prix de 36pt-ondertitel
           (referentie-svg) — allebei aan te passen in de editor. */}
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={data.theme} />
 
       <PodiumBlok p={p2} x={70} y={p2y} w={colW} h={p2h} waarde={waarde(p2)} />
       <PodiumBlok p={p1} x={393} y={p1y} w={colW} h={p1h} waarde={waarde(p1)} />
@@ -3267,32 +3440,43 @@ function UitslagTemplate({ data }) {
   );
 }
 
-function GridTemplate({ data }) {
+function GridTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
-  // Eén startvak (positie + naam + team). Maten afgemeten op het referentie-ontwerp.
-  const posW = 72;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
+  // Eén startvak (positie + naam + team), volledig op het 8px-raster:
+  // positiebadge 70x50, naambalk 294x50 (36pt), teambalk 294x34 (24pt),
+  // 8px goot tussen badge en naambalk én tussen twee vakken onder elkaar
+  // (50 + 34 + 8 = 92 = rowGap). Tekst staat verticaal gecentreerd: een
+  // cijfer in 36pt is 22,7px hoog, dus baseline = midden + 11.
+  const posW = 70;
+  const goot = 8;
   const naamW = 294;
-  const naamH = 51;   // naambalk hoogte (36pt)
-  const teamH = 41;   // teambalk hoogte (24pt)
+  const naamH = 50;   // naambalk hoogte (36pt)
+  const teamH = 34;   // teambalk hoogte (24pt)
+  const inzet = 18;   // marge tekst/vlag tot de rand van de balk
   const vlagW = 32 * 4 / 3;
   const vak = (r, x, y) => {
-    const naamTekstX = x + posW + 26 + vlagW + 18;
-    const naamMaxW = x + posW + 8 + naamW - naamTekstX - 16;
+    const balkX = x + posW + goot;
+    const naamTekstX = balkX + inzet + vlagW + 16;
+    const naamMaxW = balkX + naamW - naamTekstX - 16;
     return (
       <g key={r.pos}>
         {/* positie (bold 36) */}
         <rect x={x} y={y} width={posW} height={naamH} fill={NOS.wit} />
-        <text x={x + posW / 2} y={y + naamH / 2 + 13} textAnchor="middle" fontFamily={FONT}
+        <text x={x + posW / 2} y={y + naamH / 2 + 11} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize={TS.tekst} fill={NOS.tekst}>{r.pos}</text>
         {/* naambalk (vlag + naam, bold 36), naam begrensd tot balkbreedte */}
-        <rect x={x + posW + 8} y={y} width={naamW} height={naamH} fill={NOS.wit} />
-        <Vlag code={r.land} x={x + posW + 26} y={y + naamH / 2 - 16} h={32} />
-        <FitText x={naamTekstX} y={y + naamH / 2 + 13} maxW={naamMaxW}
+        <rect x={balkX} y={y} width={naamW} height={naamH} fill={NOS.wit} />
+        <Vlag code={r.land} x={balkX + inzet} y={y + naamH / 2 - 16} h={32} />
+        <FitText x={naamTekstX} y={y + naamH / 2 + 11} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
         {/* teambalk (regular 24) */}
-        <rect x={x + posW + 8} y={y + naamH} width={naamW} height={teamH} fill={NOS.zwart} />
-        <text x={x + posW + 26} y={y + naamH + teamH / 2 + 8} fontFamily={FONT} fontWeight="400"
+        <rect x={balkX} y={y + naamH} width={naamW} height={teamH} fill={NOS.zwart} />
+        <text x={balkX + inzet} y={y + naamH + teamH / 2 + 8} fontFamily={FONT} fontWeight="400"
           fontSize={TS.gridTeam} fill={NOS.wit}>{r.team}</text>
       </g>
     );
@@ -3300,24 +3484,29 @@ function GridTemplate({ data }) {
 
   // Grid-stagger: oneven posities (P1,3,5..) links, even (P2,4,6..) rechts.
   // Rechterkolom zakt iets omlaag, zoals op een echte startopstelling waar de
-  // nr. 2 net achter de nr. 1 staat (afgemeten op het referentie-ontwerp).
+  // nr. 2 net achter de nr. 1 staat. Twee kolommen van 372px (70+8+294) met
+  // 80px ertussen, gecentreerd op het canvas (128px marge links en rechts).
   const rowGap = 92;       // verticale afstand tussen vak-toppen in dezelfde kolom
   const stagger = 24;
-  const y0 = 258;
-  const xLinks = 127;
-  const xRechts = 570;
+  const y0 = 256;
+  const xLinks = 128;
+  const xRechts = 580;
 
   const oneven = data.rijen.filter((r) => r.pos % 2 === 1); // links
   const even = data.rijen.filter((r) => r.pos % 2 === 0);   // rechts
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} H={H} />
-      <g transform={`translate(0, ${offY})`}>
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
+      <g transform={`translate(${offX}, ${offY})`}>
       {/* Hogere titelvariant (barY=60 i.p.v. 100, zelfde als bij de PL-stand/
           -programma): geeft meer lucht tussen de kop-balk en de eerste
           startrij (y0=258 blijft gelijk, dus de marge groeit mee). */}
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={60} />
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={60} />
       {oneven.map((r, i) => vak(r, xLinks, y0 + i * rowGap))}
       {even.map((r, i) => vak(r, xRechts, y0 + stagger + i * rowGap))}
       </g>
@@ -3330,9 +3519,13 @@ function GridTemplate({ data }) {
 /* 2026, resp. 23 coureurs / 11 constructeurs). Geen teamkleur-accentbalkje  */
 /* meer (referentie toont alleen platte teamcode-tekst).                    */
 
-function WKStandCoureursTemplate({ data }) {
+function WKStandCoureursTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
   // pos(70) | naam(460, incl. vlag) | team(80) | punten(80), steeds 8px gap,
   // x=188 t/m 892 — gecentreerd op het canvas (540 = 1080/2).
   const xL = 188, xR = 892;
@@ -3355,13 +3548,17 @@ function WKStandCoureursTemplate({ data }) {
   const y0 = subBarY + subBarH + 8;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} />
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={data.theme} />
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 16} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
-        fontWeight="700" fontSize="36" fill={NOS.wit}>coureurs</text>
+        fontWeight="700" fontSize="36" fill={titelTekst(data.theme)}>coureurs</text>
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 10;
@@ -3389,9 +3586,13 @@ function WKStandCoureursTemplate({ data }) {
   );
 }
 
-function WKStandTeamsTemplate({ data }) {
+function WKStandTeamsTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
   // pos(70) | team(600, incl. vlag) | punten(100), steeds 8px gap, x=142
   // t/m 928 (referentie is hier ~5px uit het midden, zo overgenomen).
   const xL = 142, xR = 928;
@@ -3411,13 +3612,17 @@ function WKStandTeamsTemplate({ data }) {
   const y0 = subBarY + subBarH + 8;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
-      <Achtergrond theme={data.theme} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={160} />
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={160} />
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 24} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
-        fontWeight="700" fontSize="36" fill={NOS.wit}>constructeurs</text>
+        fontWeight="700" fontSize="36" fill={titelTekst(data.theme)}>constructeurs</text>
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 13;
@@ -3447,6 +3652,8 @@ function WKStandTeamsTemplate({ data }) {
 function StandTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
@@ -3479,14 +3686,14 @@ function StandTemplate({ data, setData }) {
   const headerY = y0 - 15;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={achtergrondTheme(data)} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={barY} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={barY} />
       {kolommen.map((k, i) => (
         <text key={k} x={colX(i) + numW / 2} y={headerY} textAnchor="middle" fontFamily={FONT}
           fontWeight="700" fontSize="36" fill={NOS.wit}>{k}</text>
@@ -3531,6 +3738,8 @@ function StandTemplate({ data, setData }) {
 function ProgrammaTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
@@ -3569,21 +3778,21 @@ function ProgrammaTemplate({ data, setData }) {
   const uitLogoX = midX + 70;
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={achtergrondTheme(data)} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={barY} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={barY} />
       {blokken.map((b, i) => {
         if (b.soort === "dag") {
           return (
             <g key={i}>
               <rect x={xL} y={b.y} width={xR - xL} height={dayBarH} fill={themeEff.titel} />
               <text x={midX} y={b.y + dayBarH / 2 + 11} textAnchor="middle" fontFamily={FONT}
-                fontWeight="700" fontSize="32" fill={NOS.wit}>{b.label}</text>
+                fontWeight="700" fontSize="32" fill={titelTekst(themeEff)}>{b.label}</text>
             </g>
           );
         }
@@ -3997,6 +4206,17 @@ function Veld() {
     const yb = onder ? V.y1 - d : V.y0 + d;
     return `${x0},${y} ${x0},${yb} ${x1},${yb} ${x1},${y}`;
   };
+  // Strafschopstip op 2/3 van de strafschopgebied-diepte en de cirkelboog
+  // erbuiten (de "D"), in dezelfde verhouding als op een echt veld (11 m en
+  // 9,15 m t.o.v. 16,5 m): r = 9,15/5,5 * (d/3).
+  const stipD = (V.strafD * 2) / 3;
+  const rD = (9.15 / 5.5) * (V.strafD / 3);
+  const halfD = Math.sqrt(rD * rD - (V.strafD / 3) ** 2);
+  const boog = (onder) => {
+    const yb = onder ? V.y1 - V.strafD : V.y0 + V.strafD;
+    return `M ${V.cx - halfD} ${yb} A ${rD} ${rD} 0 0 ${onder ? 1 : 0} ${V.cx + halfD} ${yb}`;
+  };
+  const hoek = 16;
   return (
     <g id="veldlijnen" opacity="0.5" fill="none" stroke="#fff" strokeMiterlimit="10" strokeWidth="2">
       <rect x={V.x0} y={V.y0} width={V.x1 - V.x0} height={V.y1 - V.y0} />
@@ -4006,8 +4226,38 @@ function Veld() {
       <polyline points={box(V.strafX0, V.strafX1, V.strafD, false)} />
       <polyline points={box(V.doelX0, V.doelX1, V.doelD, true)} />
       <polyline points={box(V.strafX0, V.strafX1, V.strafD, true)} />
+      <path d={boog(false)} />
+      <path d={boog(true)} />
+      <path d={`M ${V.x0 + hoek} ${V.y0} A ${hoek} ${hoek} 0 0 1 ${V.x0} ${V.y0 + hoek}`} />
+      <path d={`M ${V.x1 - hoek} ${V.y0} A ${hoek} ${hoek} 0 0 0 ${V.x1} ${V.y0 + hoek}`} />
+      <path d={`M ${V.x0 + hoek} ${V.y1} A ${hoek} ${hoek} 0 0 0 ${V.x0} ${V.y1 - hoek}`} />
+      <path d={`M ${V.x1 - hoek} ${V.y1} A ${hoek} ${hoek} 0 0 1 ${V.x1} ${V.y1 - hoek}`} />
+      <g fill="#fff" stroke="none">
+        <circle cx={V.cx} cy={V.midY} r="4" />
+        <circle cx={V.cx} cy={V.y0 + stipD} r="4" />
+        <circle cx={V.cx} cy={V.y1 - stipD} r="4" />
+      </g>
     </g>
   );
+}
+
+/* Met titel: de Kop (balk + ondertitelbalk, barY=60 zoals de PL-stand) staat boven het veld en het veld   */
+/* met de spelers schaalt gelijkmatig mee (geen vervorming) zodat het precies   */
+/* tussen titel en onderrand past. Verhouding afgeleid van de veldmaten.        */
+const OPST_VELD_TOP = 272, OPST_VELD_BODEM = 1278;
+const OPST_TITEL_SCHAAL = (OPST_VELD_BODEM - OPST_VELD_TOP) / (VELD.y1 - VELD.y0);
+const OPST_TITEL_TY = OPST_VELD_TOP - VELD.y0 * OPST_TITEL_SCHAAL;
+/* Schaal + verschuiving als svg-attributen: useSleep rekent er de muispositie  */
+/* mee terug naar veldcoördinaten.                                             */
+const opstVeldTransform = (toonTitel) => toonTitel
+  ? { schaal: OPST_TITEL_SCHAAL, ty: OPST_TITEL_TY }
+  : { schaal: 1, ty: 0 };
+const OPST_TITEL_THEMA = { titel: "#1B2A6B", tekst: "#1B2A6B" };
+
+function OpstellingKop({ opst, H, B }) {
+  if (!opst.toonTitel) return null;
+  return <Kop H={H} B={B} sport={opst.titel} titel={opst.ondertitel}
+    theme={{ ...OPST_TITEL_THEMA, ...(opst.titelKleur ? { titel: opst.titelKleur } : {}), ...(opst.titelDonker ? { titelTekst: NOS_DONKER } : {}) }} barY={60} />;
 }
 
 /* ---- Layout-engine --------------------------------------------------------- */
@@ -4140,7 +4390,12 @@ function opstellingLayout(formatie, anker, basis) {
 /* ongeveer 30px rond de middenlijn vrij.                                       */
 const ANKER_DUEL_BOVEN = { yGK: 203.6, yEerste: 331.6, yLaatste: 594.4, pitch: 200.4, yGrens: 668.5 };
 const ANKER_DUEL_ONDER = { yGK: 1129.8, yEerste: 1018.4, yLaatste: 742.8, pitch: 200.4, yGrens: 698.0 };
-const ANKER_ENKEL = { yGK: 1084.8, yEerste: 920, yLaatste: 380.2, pitch: 265.9, yGrens: VELD.y0 + 8 };
+/* Enkele opstelling: afgemeten op het voorbeeld van de redactie. De linies      */
+/* verdelen zich gelijk tussen yEerste en yLaatste (bij een 4-3-3 staat het      */
+/* middenveld dus op ~562, de namen net boven de middenlijn op 675,7); de        */
+/* namen van de aanvallers staan net boven de 16-meterlijn van de tegenstander   */
+/* (371,7) en die van de verdedigers net boven de eigen 16-meterlijn (979,7).    */
+const ANKER_ENKEL = { yGK: 1084.8, yEerste: 854, yLaatste: 271, pitch: 265.9, yGrens: VELD.y0 + 8 };
 
 /* Ontwerpmaten: gap zo gekozen dat naamDy exact op de afgemeten waarde uitkomt */
 /* (duel 68, enkel 91), zodat de referentieontwerpen 1-op-1 gereproduceerd      */
@@ -4202,8 +4457,8 @@ function useSleep(zetPositie) {
   // scrollen tijdens het slepen het shirt niet laat verspringen. Is het kader
   // (nog) niet meetbaar, dan geven we null terug: anders levert de deling
   // Infinity op en belandt er NaN in de opgeslagen positie.
-  // De werkelijke svg-hoogte (1350 of 1440) lezen we uit de svg zelf i.p.v.
-  // de vaste H-constante — bij 1440 staat de inhoud bovendien 45px lager
+  // De werkelijke svg-hoogte (1350, 1440 of 1920) lezen we uit de svg zelf i.p.v.
+  // de vaste H-constante — bij 1440 staat de inhoud bovendien 45px lager (bij 1920 285px)
   // (translate(0, offY), zie de Template) dus die offset trekken we er weer
   // af zodat posities/VELD, die in de oorspronkelijke 1350-ruimte rekenen,
   // blijven kloppen.
@@ -4211,11 +4466,16 @@ function useSleep(zetPositie) {
     const kader = svg.getBoundingClientRect();
     if (!kader.width || !kader.height) return null;
     const svgH = svg.viewBox.baseVal.height || H;
+    const svgB = svg.viewBox.baseVal.width || W;
     const offY = (svgH - 1350) / 2;
-    return {
-      x: ((clientX - kader.left) / kader.width) * W,
-      y: ((clientY - kader.top) / kader.height) * svgH - offY,
-    };
+    const offX = (svgB - W) / 2;
+    // Met titel staat het veld geschaald en verschoven (zie opstVeldTransform);
+    // die transformatie draaien we hier terug.
+    const vs = Number(svg.getAttribute("data-veld-schaal")) || 1;
+    const vty = Number(svg.getAttribute("data-veld-ty")) || 0;
+    const x = ((clientX - kader.left) / kader.width) * svgB - offX;
+    const y = ((clientY - kader.top) / kader.height) * svgH - offY;
+    return { x: VELD.cx + (x - VELD.cx) / vs, y: (y - vty) / vs };
   };
 
   const start = useCallback((e, zijde, index, x, y) => {
@@ -4263,8 +4523,9 @@ function useFotoSleep(zetPositie) {
     const kader = svg.getBoundingClientRect();
     if (!kader.width || !kader.height) return null;
     const svgH = svg.viewBox.baseVal.height || H;
+    const svgB = svg.viewBox.baseVal.width || W;
     return {
-      x: ((clientX - kader.left) / kader.width) * W,
+      x: ((clientX - kader.left) / kader.width) * svgB,
       y: ((clientY - kader.top) / kader.height) * svgH,
     };
   };
@@ -4295,39 +4556,65 @@ function useFotoSleep(zetPositie) {
   return { start, beweeg, stop };
 }
 
-function OpstellingDuelTemplate({ opst, sleep }) {
+function OpstellingDuelTemplate({ opst, sleep, setOpst }) {
   const H = hoogteVoor(opst);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(opst);
+  const offX = (B - W) / 2;
+  const vt = opstVeldTransform(opst.toonTitel);
+  const isFoto = opst.achtergrond === "foto" && !!opst.foto;
+  const fotoSleep = useFotoSleep((pos) => setOpst && setOpst((o) => ({ ...o, fotoPos: pos })));
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
-      onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
-      onPointerCancel={sleep && sleep.stop}>
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      data-veld-schaal={vt.schaal} data-veld-ty={vt.ty}
+      onPointerMove={(e) => { sleep && sleep.beweeg(e); isFoto && fotoSleep.beweeg(e); }}
+      onPointerUp={() => { sleep && sleep.stop(); isFoto && fotoSleep.stop(); }}
+      onPointerCancel={() => { sleep && sleep.stop(); isFoto && fotoSleep.stop(); }}>
       <defs><style>{fontFaceCss()}</style></defs>
-      <rect id="achtergrond" width={W} height={H} fill={opst.achtergrond || VELD.kleur} />
-      <g transform={`translate(0, ${offY})`}>
+      {isFoto
+        ? <Achtergrond B={B} theme={THEMES.eigen} foto={opst.foto} fotoDim={opst.fotoDim} fotoZoom={opst.fotoZoom}
+            fotoPos={opst.fotoPos} fotoHelder={opst.fotoHelder} fotoSleep={setOpst ? fotoSleep : null} H={H} />
+        : <rect id="achtergrond" width={B} height={H} fill={VELD.kleur} />}
+      <g transform={`translate(${offX}, ${offY})`}>
+      <OpstellingKop opst={opst} H={H} B={B} />
+      <g id="veld" transform={`translate(${VELD.cx}, ${vt.ty}) scale(${vt.schaal}) translate(${-VELD.cx}, 0)`}>
       <Veld />
       <Opstelling ploeg={opst.a} anker={ANKER_DUEL_BOVEN} basisMaat={MAAT_DUEL} zijde="a"
         opSleep={sleep && sleep.start} />
       <Opstelling ploeg={opst.b} anker={ANKER_DUEL_ONDER} basisMaat={MAAT_DUEL} zijde="b"
         opSleep={sleep && sleep.start} />
       </g>
+      </g>
     </svg>
   );
 }
 
-function OpstellingEnkelTemplate({ ploeg, sleep, kleur, formaat }) {
-  const H = hoogteVoor({ formaat });
+function OpstellingEnkelTemplate({ opst, sleep, setOpst }) {
+  const H = hoogteVoor(opst);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(opst);
+  const offX = (B - W) / 2;
+  const vt = opstVeldTransform(opst.toonTitel);
+  const isFoto = opst.achtergrond === "foto" && !!opst.foto;
+  const fotoSleep = useFotoSleep((pos) => setOpst && setOpst((o) => ({ ...o, fotoPos: pos })));
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
-      onPointerMove={sleep && sleep.beweeg} onPointerUp={sleep && sleep.stop}
-      onPointerCancel={sleep && sleep.stop}>
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      data-veld-schaal={vt.schaal} data-veld-ty={vt.ty}
+      onPointerMove={(e) => { sleep && sleep.beweeg(e); isFoto && fotoSleep.beweeg(e); }}
+      onPointerUp={() => { sleep && sleep.stop(); isFoto && fotoSleep.stop(); }}
+      onPointerCancel={() => { sleep && sleep.stop(); isFoto && fotoSleep.stop(); }}>
       <defs><style>{fontFaceCss()}</style></defs>
-      <rect id="achtergrond" width={W} height={H} fill={kleur || VELD.kleur} />
-      <g transform={`translate(0, ${offY})`}>
+      {isFoto
+        ? <Achtergrond B={B} theme={THEMES.eigen} foto={opst.foto} fotoDim={opst.fotoDim} fotoZoom={opst.fotoZoom}
+            fotoPos={opst.fotoPos} fotoHelder={opst.fotoHelder} fotoSleep={setOpst ? fotoSleep : null} H={H} />
+        : <rect id="achtergrond" width={B} height={H} fill={VELD.kleur} />}
+      <g transform={`translate(${offX}, ${offY})`}>
+      <OpstellingKop opst={opst} H={H} B={B} />
+      <g id="veld" transform={`translate(${VELD.cx}, ${vt.ty}) scale(${vt.schaal}) translate(${-VELD.cx}, 0)`}>
       <Veld />
-      <Opstelling ploeg={ploeg} anker={ANKER_ENKEL} basisMaat={MAAT_ENKEL} zijde="a" laag="e"
+      <Opstelling ploeg={opst.a} anker={ANKER_ENKEL} basisMaat={MAAT_ENKEL} zijde="a" laag="e"
         opSleep={sleep && sleep.start} />
+      </g>
       </g>
     </svg>
   );
@@ -4438,7 +4725,7 @@ function Shirt({ x, y, size, kleur, stip, stipKleur = "#D32E22" }) {
   return (
     <g transform={`translate(${x},${y}) scale(${s})`}>
       <path d="M9 1 L1 9 L7 15 L9 13 L9 33 L27 33 L27 13 L29 15 L35 9 L27 1 L22 1 Q18 6 14 1 Z"
-        fill={kleur} stroke="#00000030" strokeWidth="1" />
+        fill={kleur} stroke="#000" strokeWidth="1" />
       {stip && (
         <>
           <circle cx="13" cy="11" r="2.2" fill={stipKleur} />
@@ -4453,46 +4740,35 @@ function Shirt({ x, y, size, kleur, stip, stipKleur = "#D32E22" }) {
   );
 }
 
-function BergIcon({ x, y, size, kleur = "#fff" }) {
-  const s = size / 32;
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`}>
-      <path d="M1 27 L12 8 L17 15 L22 5 L31 27 Z" fill={kleur} />
-      <path d="M22 5 L26 12 L18.5 12 Z" fill="#1a1a1a" opacity="0.25" />
-    </g>
-  );
-}
-
-/* Etappetype-icoontjes voor het programma-overzicht — nog niet definitief
-   (afgesproken met de redactie), dus bewust eenvoudig gehouden. */
-function VlakIcon({ x, y, size, kleur = "#1e1e1e" }) {
-  const s = size / 32;
-  return <rect x={x - 12.5 * s} y={y - 1.5 * s} width={25 * s} height={3 * s} rx={1.5 * s} fill={kleur} />;
-}
-function TijdritIcon({ x, y, size, kleur = "#1e1e1e" }) {
-  const s = size / 32;
-  const r = 10 * s;
-  return (
-    <g transform={`translate(${x},${y})`} stroke={kleur} strokeWidth={2.6 * s} strokeLinecap="round" fill="none">
-      <circle cx="0" cy="0" r={r} />
-      <line x1="0" y1="0" x2="0" y2={-r + 3 * s} />
-      <line x1="0" y1="0" x2={r - 4 * s} y2="0" />
-    </g>
-  );
-}
-function HeuvelIcon({ x, y, size, kleur = "#1e1e1e" }) {
-  const s = size / 32;
-  return (
-    <g transform={`translate(${x},${y}) scale(${s})`}>
-      <path d="M-14 8 Q-14 -9 0 -9 Q14 -9 14 8 Z" fill={kleur} />
-    </g>
-  );
-}
+/* Etappetype-iconen (berg, heuvel, vlak, tijdrit), geleverd als losse SVG's
+   op een 64x64-vlak (Wielrennen/Type_etappe_*.svg) en hier ongewijzigd
+   overgenomen: `size` is de zijde van dat vlak, het icoon zelf vult ~70%. */
 function EtappeIcon({ soort, x, y, size, kleur }) {
-  if (soort === "tijdrit") return <TijdritIcon x={x} y={y} size={size} kleur={kleur} />;
-  if (soort === "heuvel") return <HeuvelIcon x={x} y={y} size={size} kleur={kleur} />;
-  if (soort === "berg") return <BergIcon x={x - size / 2} y={y - size / 2} size={size} kleur={kleur} />;
-  return <VlakIcon x={x} y={y} size={size} kleur={kleur} />;
+  return (
+    <g transform={`translate(${x - size / 2},${y - size / 2}) scale(${size / 64})`} fill={kleur}>
+      {soort === "berg" && (
+        <>
+          <path d="M9.52,48.49l16.49-28.48,7.49,10.49,7.49-14.99,13.49,32.97H9.52Z" />
+          <path d="M9.52,48.49c12.17-23.27,19.35-3.91,23.57-10.86,6.77-11.15,14.38-7.15,21.4,10.86H9.52Z" />
+        </>
+      )}
+      {soort === "heuvel" && (
+        <path d="M9.52,48.49c12.17-23.27,19.35-3.91,23.57-10.86,6.77-11.15,14.38-7.15,21.4,10.86H9.52Z" />
+      )}
+      {soort === "tijdrit" && (
+        // De klok is 32 breed, berg en heuvel ~45: 1,4x uitvergroot rond het
+        // middelpunt van de klok (32, 34,98) zodat 'ie even breed oogt.
+        <g transform="translate(32 34.98) scale(1.4) translate(-32 -34.98)">
+          <path d="M32,18.99c-8.82,0-15.99,7.17-15.99,15.99s7.17,15.99,15.99,15.99,15.99-7.17,15.99-15.99-7.17-15.99-15.99-15.99ZM42.99,34.98c0,6.06-4.93,10.99-10.99,10.99s-10.99-4.93-10.99-10.99,4.93-10.99,10.99-10.99,10.99,4.93,10.99,10.99Z" />
+          <polygon points="33.45 27.77 29.22 27.77 29.22 34.22 29.22 38.45 33.45 38.45 38.98 38.45 38.98 34.22 33.45 34.22 33.45 27.77" />
+          <rect x="25.78" y="12.03" width="12.43" height="5" />
+        </g>
+      )}
+      {soort !== "berg" && soort !== "heuvel" && soort !== "tijdrit" && (
+        <rect x="9.52" y="39.95" width="44.96" height="8.54" />
+      )}
+    </g>
+  );
 }
 
 /* ============================ WIELRENNEN: PROGRAMMA (ETAPPES) ================ */
@@ -4500,10 +4776,12 @@ function EtappeIcon({ soort, x, y, size, kleur }) {
 function WielrenProgrammaTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   // Maten gerond op hele pixels: 21 doorlopende rijen, telkens 8px
   // tussenruimte tussen de kolommen (was inconsistent 7px — nu gelijk aan de
-  // rest van de app) — rang-vak wisselt donker/donkerder i.p.v. wit/zebra,
-  // de andere drie kolommen volgen de gewone wit/zebra-wisseling.
+  // rest van de app); alle vier de kolommen, ook het rang-vak, volgen de
+  // gewone wit/zebra-wisseling.
   const xL = 101, xR = 979;
   const rankW = 63, iconW = 62, distW = 156, gap = 8;
   const rankR = xL + rankW;
@@ -4520,31 +4798,31 @@ function WielrenProgrammaTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} />
       {data.rijen.map((r, i) => {
         const y = y0 + i * rowH;
         const midY = y + rowH / 2 + 11;
         const zebra = i % 2 === 1;
         const fill = zebra ? themeEff.zebra : NOS.wit;
-        const rankFill = zebra ? "#4b4b4b" : "#1e1e1e";
+
         return (
           <g key={r.nr}>
-            <rect x={xL} y={y} width={rankW} height={rowH} fill={rankFill} />
+            <rect x={xL} y={y} width={rankW} height={rowH} fill={fill} />
             <rect x={mainX} y={y} width={mainW} height={rowH} fill={fill} />
             <rect x={iconX} y={y} width={iconW} height={rowH} fill={fill} />
             <rect x={distX} y={y} width={distW} height={rowH} fill={fill} />
             <text x={rankMidX} y={midY} textAnchor="middle" fontFamily={FONT}
-              fontWeight="700" fontSize="32" fill={NOS.wit}>{r.nr}</text>
+              fontWeight="700" fontSize="32" fill={NOS.tekst}>{r.nr}</text>
             <text x={mainX + 20} y={midY} fontFamily={FONT}
               fontWeight="700" fontSize="32" fill={NOS.tekst}>{r.route}</text>
-            <EtappeIcon soort={r.soort} x={iconMidX} y={y + rowH / 2} size={26} kleur={NOS.tekst} />
+            <EtappeIcon soort={r.soort} x={iconMidX} y={y + rowH / 2} size={32} kleur={NOS.tekst} />
             <text x={distX + distW - 16} y={midY} textAnchor="end" fontFamily={FONT}
               fontWeight="400" fontSize="32" fill={NOS.tekst}>{r.km}</text>
           </g>
@@ -4560,6 +4838,8 @@ function WielrenProgrammaTemplate({ data, setData }) {
 function TdFUitslagTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   // Maten gerond op hele pixels, volgens het systeem uit de design-update
   // (29 sept 2026): 8px tussenruimte tussen kolommen, en telkens 80px lucht
   // tussen het eind van de Kop-balk en het begin van de eerste inhoudsbalk
@@ -4582,30 +4862,28 @@ function TdFUitslagTemplate({ data, setData }) {
   const leidersBarH = 50;
   const leiderRowH = 50;
   const leidersY0 = leidersBarY + leidersBarH + 8;
-  const leiderIconW = rankR - xL;
-  const leiderNaamX = xL + leiderIconW + 48 + 30;
   const truien = data.theme.truien;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       {/* etappe-infobalk */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
-      <EtappeIcon soort={data.soort || "berg"} x={xL + 34} y={infoBarY + infoBarH / 2} size={32} kleur={NOS.wit} />
+      <EtappeIcon soort={data.soort || "berg"} x={xL + 34} y={infoBarY + infoBarH / 2} size={40} kleur={titelTekst(themeEff)} />
       <text x={xL + 68} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
-        fontSize="32" fill={NOS.wit}>{data.route}</text>
+        fontSize="32" fill={titelTekst(themeEff)}>{data.route}</text>
       <text x={xR - 18} y={infoBarY + infoBarH / 2 + 11} textAnchor="end" fontFamily={FONT}
-        fontWeight="700" fontSize="32" fill={NOS.wit}>{data.km}</text>
+        fontWeight="700" fontSize="32" fill={titelTekst(themeEff)}>{data.km}</text>
 
       {/* top-10 etappe-uitslag */}
       {data.rijen.map((r, i) => {
@@ -4634,19 +4912,23 @@ function TdFUitslagTemplate({ data, setData }) {
       {/* leiders klassementen */}
       <rect x={xL} y={leidersBarY} width={xR - xL} height={leidersBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={leidersBarY + leidersBarH / 2 + 10} fontFamily={FONT}
-        fontWeight="700" fontSize="28" fill={NOS.wit}>leiders klassementen</text>
+        fontWeight="700" fontSize="28" fill={titelTekst(themeEff)}>leiders klassementen</text>
       {data.leiders.map((l, i) => {
         const y = leidersY0 + i * leiderRowH;
         const midY = y + leiderRowH / 2 + 11;
         const fill = i % 2 === 0 ? NOS.wit : themeEff.zebra;
+        // Zelfde kolommen als de top-10 hierboven; de trui staat in het
+        // rang-vak (gecentreerd, 36px).
         return (
           <g key={i}>
-            <rect x={xL} y={y} width={xR - xL} height={leiderRowH} fill={fill} />
-            <rect x={xL} y={y} width={leiderIconW} height={leiderRowH} fill={NOS.zwart} />
-            <Shirt x={xL + 16} y={y + leiderRowH / 2 - 19} size={38}
+            <rect x={xL} y={y} width={rankR - xL} height={leiderRowH} fill={fill} />
+            <rect x={rankR + divW} y={y} width={teamL - divW - (rankR + divW)} height={leiderRowH} fill={fill} />
+            <rect x={teamL} y={y} width={teamR - teamL} height={leiderRowH} fill={fill} />
+            <rect x={teamR + divW} y={y} width={xR - (teamR + divW)} height={leiderRowH} fill={fill} />
+            <Shirt x={rankMidX - 18} y={y + leiderRowH / 2 - 17} size={36}
               kleur={truien[i].kleur} stip={!!truien[i].stip} stipKleur={truien[i].stipKleur} />
-            <Vlag code={l.land} x={xL + leiderIconW + 8} y={y + leiderRowH / 2 - 16} h={32} />
-            <FitText x={leiderNaamX} y={midY} maxW={teamL - leiderNaamX - 12}
+            <Vlag code={l.land} x={vlagX} y={y + leiderRowH / 2 - 16} h={32} />
+            <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
               weight="700" size={TS.tekst} fill={NOS.tekst}>{l.naam}</FitText>
             <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
               fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{l.team}</text>
@@ -4665,6 +4947,8 @@ function TdFUitslagTemplate({ data, setData }) {
 function TdFKlassementTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   // Zelfde kolomindeling (en dus dezelfde exacte maten) als de etappe-uitslag
   // — beide gecentreerd op het canvas, nu ook echt met identieke kolommen
   // i.p.v. een net iets andere breedte per tabel.
@@ -4679,7 +4963,11 @@ function TdFKlassementTemplate({ data, setData }) {
   const vlagX = rankR + divW + 16;
   const vlagW = 32 * 4 / 3;
   const naamTekstX = vlagX + vlagW + 14;
-  const naamMaxW = teamL - divW - naamTekstX - 40; // ruimte voor trui-icoon bij de leider
+  // Trui-icoon van de leider: rechts in het naamvak, met 16px marge tot de rand
+  // van de balk (zelfde marge als de rest van de tool) en 8px tot de naam.
+  const truiSize = 34;
+  const truiX = teamL - divW - 16 - truiSize;
+  const naamMaxW = truiX - 8 - naamTekstX;
   const teamMidX = (teamL + teamR) / 2;
   const isFoto = data.achtergrond === "foto" && !!data.foto;
   const themeEff = metFotoStijl(data.theme, isFoto);
@@ -4698,7 +4986,7 @@ function TdFKlassementTemplate({ data, setData }) {
         <Vlag code={r.land} x={vlagX} y={y + rowH / 2 - 16} h={32} />
         <FitText x={naamTekstX} y={midY} maxW={naamMaxW}
           weight="700" size={TS.tekst} fill={NOS.tekst}>{r.naam}</FitText>
-        {r.leider && <Shirt x={naamTekstX + naamMaxW + 8} y={y + rowH / 2 - 17} size={34} kleur="#FFD119" />}
+        {r.leider && <Shirt x={truiX} y={y + rowH / 2 - truiSize / 2} size={truiSize} kleur="#FFD119" />}
         <text x={teamMidX} y={midY} textAnchor="middle" fontFamily={FONT}
           fontWeight="400" fontSize={TS.tekst} fill={NOS.tekst}>{r.team}</text>
         <text x={xR - 16} y={midY} textAnchor="end" fontFamily={FONT}
@@ -4711,21 +4999,21 @@ function TdFKlassementTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
-        fontWeight="700" fontSize="28" fill={NOS.wit}>{data.subkop}</text>
+        fontWeight="700" fontSize="28" fill={titelTekst(themeEff)}>{data.subkop}</text>
 
       {data.rijen.map((r, i) => rij(r, tableY0 + i * rowH, i))}
-      {rij(data.extra, extraY, 1)}
+      {data.toonExtra !== false && rij(data.extra, extraY, 1)}
       </g>
     </svg>
   );
@@ -4754,6 +5042,8 @@ function KasseienIcon({ x, y, size, kleur = "#fff" }) {
 function ParijsRoubaixTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   // Zelfde kolomindeling als de etappe-uitslag/klassement (allemaal
   // gecentreerd op het canvas, met identieke kolombreedtes).
   const xL = 109, xR = 971;
@@ -4797,23 +5087,23 @@ function ParijsRoubaixTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       {/* route-infobalk: bij een eendagskoers is er geen etappetype, dus
           standaard geen icoontje (i.t.t. de etappe-uitslag) — tekst begint
           op dezelfde inspringing als waar het icoontje anders zou staan. */}
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
-        fontSize="32" fill={NOS.wit}>{data.route}</text>
+        fontSize="32" fill={titelTekst(themeEff)}>{data.route}</text>
       <text x={xR - 18} y={infoBarY + infoBarH / 2 + 11} textAnchor="end" fontFamily={FONT}
-        fontWeight="700" fontSize="32" fill={NOS.wit}>{data.km}</text>
+        fontWeight="700" fontSize="32" fill={titelTekst(themeEff)}>{data.km}</text>
 
       {data.rijen.map((r, i) => rij(r, tableY0 + i * rowH, i))}
       {data.toonExtra !== false && rij(data.extra, extraY, 1)}
@@ -4826,8 +5116,8 @@ function ParijsRoubaixTemplate({ data, setData }) {
 /* Rang + land + goud/zilver/brons. Het eigen land (bij NOS altijd Nederland)
    krijgt oranje/wit i.p.v. de gewone wit/lichtblauw-zebra — een los
    "highlight"-veld per rij i.p.v. een vaste taal-check, zodat het bij een
-   ander land net zo goed werkt. Balkkleur (#2c4c54) blijft vast, ook in
-   foto-modus: leest zelf al goed over vrijwel elke foto (zie THEMES.algemeen). */
+   ander land net zo goed werkt. Balkkleur (NOS Sport-blauw) blijft vast, ook
+   in foto-modus (zie THEMES.algemeen). */
 
 function MedaljeBadge({ cx, cy, buiten, binnen, tekst, cijfer }) {
   return (
@@ -4843,6 +5133,8 @@ function MedaljeBadge({ cx, cy, buiten, binnen, tekst, cijfer }) {
 function MedaillespiegelTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   // Maten exact overgenomen uit het design-update-referentieontwerp (29 sept
   // 2026): pos/land/goud/zilver/brons zijn 5 vlakken van 70/600/70/70/70px
   // met steeds 8px tussenruimte, tabel loopt van x=84 t/m x=996 (gecentreerd
@@ -4862,17 +5154,17 @@ function MedaillespiegelTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
+      <g transform={`translate(${offX}, ${offY})`}>
       {/* Titel/ondertitel omgedraaid, net als bij F1: "medaillespiegel" is de
           grote 58pt-titel, het evenement de 36pt-ondertitel — allebei aan te
           passen in de editor. */}
-      <Kop sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={160} />
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={data.theme} barY={160} />
 
       {/* subkop-balk + goud/zilver/brons kolomkoppen met medaille-badges */}
       <rect x={xL} y={subBarY} width={countryR - xL} height={subBarH} fill={data.theme.titel} />
@@ -4880,7 +5172,7 @@ function MedaillespiegelTemplate({ data, setData }) {
       <rect x={zilverL} y={subBarY} width={zilverR - zilverL} height={subBarH} fill={data.theme.titel} />
       <rect x={bronsL} y={subBarY} width={bronsR - bronsL} height={subBarH} fill={data.theme.titel} />
       <text x={xL + 19} y={subBarY + subBarH / 2 + 11} fontFamily={FONT}
-        fontWeight="700" fontSize="36" fill={NOS.wit}>{data.subkop}</text>
+        fontWeight="700" fontSize="36" fill={titelTekst(data.theme)}>{data.subkop}</text>
       <MedaljeBadge cx={goudMidX} cy={subBarY + subBarH / 2} buiten="#ffac1b" binnen="#ffd21e" tekst="#b37812" cijfer="1" />
       <MedaljeBadge cx={zilverMidX} cy={subBarY + subBarH / 2} buiten="#a6a6a6" binnen="#c3c3c3" tekst="#888" cijfer="2" />
       <MedaljeBadge cx={bronsMidX} cy={subBarY + subBarH / 2} buiten="#f66618" binnen="#f8925c" tekst="#ac470f" cijfer="3" />
@@ -4890,7 +5182,7 @@ function MedaillespiegelTemplate({ data, setData }) {
         const midY = y + rowH / 2 + 13;
         const zebra = i % 2 === 1;
         const fill = r.highlight ? "#f66618" : (zebra ? data.theme.zebra : NOS.wit);
-        const tekstKleur = r.highlight ? NOS.wit : data.theme.titel;
+        const tekstKleur = r.highlight ? NOS.wit : data.theme.tekst;
         return (
           <g key={r.pos}>
             <rect x={xL} y={y} width={rankR - xL} height={rowH} fill={fill} />
@@ -4933,9 +5225,10 @@ function MedaillespiegelDataEditor({ data, setData }) {
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Subkop (bv. "eindstand op 22 februari")</div>
       <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
 
       <div style={dpLabel}>Landen ({data.rijen.length}) — vink aan welk land wordt uitgelicht</div>
+      <SorteerKnop label="Sorteer op medailles" uitleg="Zet de landen op volgorde van goud, dan zilver, dan brons en nummert de posities opnieuw"
+        onClick={() => setData((d) => ({ ...d, rijen: rangschik(d.rijen, (r) => r.goud, (r) => r.zilver, (r) => r.brons) }))} />
       <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
@@ -4958,6 +5251,407 @@ function MedaillespiegelDataEditor({ data, setData }) {
   );
 }
 
+/* ======================= ALGEMEEN: PROGRAMMA LIVESTREAM ====================== */
+/* Maten afgerond op het 8px-raster t.o.v. het ontwerp (Programma Livestream NOS  */
+/* Sport.svg): tabel 792 breed (x=144), tijdvak 136 + 8 goot + omschrijving 648,  */
+/* alle balken 56 hoog (40pt tekst), dagbalk 440 breed en gecentreerd. Verticaal: 48 onder de */
+/* Kop, 32 tussen dagbalk en eerste evenement en tussen evenementen,    8    */
+/* tussen kopbalk en eerste regel, 80 tussen de laatste regel en de volgende dag. */
+const LS = {
+  x: 144, w: 792, tijdW: 136, goot: 8, h: 56, dagW: 440,
+  kopNaarDag: 48, kopNaarDagMax: 192, dagNaarGroep: 32, groepGap: 32, dagGap: 80, onderMarge: 80, kolomGoot: 48,
+  tekst: 40, inzet: 16, omschrijvingInzet: 20, dagKleur: "#1B2A6B",
+};
+
+// Ontwerp-hoogte 1920: titelbalk op y=192. In de kleinere formaten begint de
+// Kop op de gebruikelijke y=100; de inhoud loopt daaronder gewoon door.
+const livestreamBarY = (H) => (H >= 1920 ? 192 : 100);
+
+// Rekent alle posities uit, zowel voor de template als voor de melding in de
+// editor. Er mag nooit informatie van het canvas afvallen, dus:
+//  1. past het in één kolom, dan blijft het zoals ontworpen;
+//  2. zo niet en is het canvas breed genoeg (4:3 liggend): twee kolommen van
+//     792 naast elkaar, gesplitst tussen twee evenementen op de plek die de
+//     kolommen het best in balans brengt (begint kolom 2 midden in een dag,
+//     dan staat bovenaan weer de dagbalk van die dag);
+//  3. past het dan nog niet, dan wordt de hele inhoud (niet de Kop) gelijkmatig
+//     verkleind — zonder vervorming — tot het precies past.
+function livestreamIndeling(data, H, B) {
+  const top = livestreamBarY(H) + 140 + LS.kopNaarDag;
+  const beschikbaar = H - LS.onderMarge - top;
+  const segmenten = [];
+  data.dagen.forEach((dag, di) => {
+    if (!dag.groepen.length) segmenten.push({ di, dag: dag.dag, groep: null });
+    dag.groepen.forEach((groep) => segmenten.push({ di, dag: dag.dag, groep }));
+  });
+
+  const bouwKolom = (segs, x) => {
+    const blokken = [];
+    let y = top;
+    let vorigeDag = null;
+    segs.forEach((sg, idx) => {
+      if (sg.di !== vorigeDag) {
+        if (idx > 0) y += LS.dagGap;
+        blokken.push({ soort: "dag", x, y, tekst: sg.dag });
+        y += LS.h + (sg.groep ? LS.dagNaarGroep : 0);
+      } else {
+        y += LS.groepGap;
+      }
+      if (sg.groep) {
+        blokken.push({ soort: "groep", x, y, tekst: sg.groep.titel });
+        y += LS.h + LS.goot;
+        sg.groep.items.forEach((item, ri) => {
+          blokken.push({ soort: "regel", x, y, tijd: item.tijd, tekst: item.tekst, zebra: ri % 2 === 1 });
+          y += LS.h;
+        });
+      }
+      vorigeDag = sg.di;
+    });
+    return { blokken, hoogte: y - top };
+  };
+
+  const enkel = bouwKolom(segmenten, LS.x);
+  let kolommen = [enkel];
+  const tweeKolommenPast = B >= 2 * LS.w + LS.kolomGoot + 2 * 40;
+  if (enkel.hoogte > beschikbaar && tweeKolommenPast && segmenten.length > 1) {
+    const x1 = W / 2 - LS.kolomGoot / 2 - LS.w;
+    const x2 = W / 2 + LS.kolomGoot / 2;
+    let beste = null;
+    for (let k = 1; k < segmenten.length; k++) {
+      const l = bouwKolom(segmenten.slice(0, k), x1);
+      const r = bouwKolom(segmenten.slice(k), x2);
+      const m = Math.max(l.hoogte, r.hoogte);
+      if (!beste || m < beste.m) beste = { m, l, r };
+    }
+    kolommen = [beste.l, beste.r];
+  }
+  const hoogte = Math.max(...kolommen.map((k) => k.hoogte));
+  const schaal = hoogte > beschikbaar ? Math.max(0.3, beschikbaar / hoogte) : 1;
+  // Past alles zonder verkleining, dan groeit de afstand Kop -> eerste dag mee
+  // met de ruimte die over is (de inhoud staat verticaal in het midden van de
+  // beschikbare ruimte), tot LS.kopNaarDagMax. Het ontwerp (kopNaarDag) is de
+  // minimale afstand en geldt zodra de ruimte krap wordt.
+  const extra = schaal < 1 ? 0 : Math.min(LS.kopNaarDagMax - LS.kopNaarDag, Math.floor((beschikbaar - hoogte) / 2 / 8) * 8);
+  const blokken = kolommen.flatMap((k) => k.blokken).map((b) => (extra > 0 ? { ...b, y: b.y + extra } : b));
+  return { blokken, kolommen: kolommen.length, schaal, top: top + extra };
+}
+
+function LivestreamTemplate({ data, setData }) {
+  const H = hoogteVoor(data);
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
+  const isFoto = data.achtergrond === "foto" && !!data.foto;
+  const themeEff = metFotoStijl(data.theme, isFoto);
+  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
+  const { blokken, schaal, top } = livestreamIndeling(data, H, B);
+  const descW = LS.w - LS.tijdW - LS.goot;
+  const midY = (y) => y + LS.h / 2 + 13;
+
+  // Decoratieve ring uit het ontwerp (donut, wit -> transparant van links naar
+  // rechts, zonder clipping mask). Het ontwerp gebruikt mix-blend-mode "screen" met een wit->zwart
+  // verloop op 10% — dat is wiskundig gelijk aan wit met een alpha van 10% -> 0%,
+  // zonder blend-mode (die Illustrator niet betrouwbaar importeert).
+  const ringR = 736, ringBinnen = 360;
+  const ringCx = B / 2;
+  const ringCy = Math.round((H * 0.57) / 8) * 8;
+  const ringPad = (r) => `M${ringCx - r},${ringCy}a${r},${r} 0 1,0 ${2 * r},0a${r},${r} 0 1,0 ${-2 * r},0Z`;
+
+  return (
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
+      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
+        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
+      {!isFoto && (data.ring ?? true) && (
+        <g id="ring" shapeRendering="geometricPrecision">
+          <defs>
+            <linearGradient id="ringVerloop" x1={ringCx - ringR} y1="0" x2={ringCx + ringR} y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stopColor="#fff" stopOpacity="0.2" />
+              <stop offset="1" stopColor="#fff" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={ringPad(ringR) + ringPad(ringBinnen)} fillRule="evenodd" fill="url(#ringVerloop)" />
+        </g>
+      )}
+      <g transform={`translate(${offX}, 0)`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} barY={livestreamBarY(H)} logo={data.logo ?? H < 1920} />
+      <g transform={schaal < 1 ? `translate(${W / 2} ${top}) scale(${schaal}) translate(${-W / 2} ${-top})` : undefined}>
+      {blokken.map((b, i) => {
+        if (b.soort === "dag") {
+          return (
+            <g key={i}>
+              <rect x={b.x + (LS.w - LS.dagW) / 2} y={b.y} width={LS.dagW} height={LS.h} fill={LS.dagKleur} />
+              <FitText x={b.x + LS.w / 2} y={midY(b.y)} maxW={LS.dagW - 2 * LS.inzet} anchor="middle"
+                weight="700" size={LS.tekst} fill={NOS.wit}>{b.tekst}</FitText>
+            </g>
+          );
+        }
+        if (b.soort === "groep") {
+          return (
+            <g key={i}>
+              <rect x={b.x} y={b.y} width={LS.w} height={LS.h} fill={themeEff.titel} />
+              <FitText x={b.x + LS.inzet} y={midY(b.y)} maxW={LS.w - 2 * LS.inzet}
+                weight="700" size={LS.tekst} fill={titelTekst(themeEff)}>{b.tekst}</FitText>
+            </g>
+          );
+        }
+        const fill = b.zebra ? themeEff.zebra : NOS.wit;
+        return (
+          <g key={i}>
+            <rect x={b.x} y={b.y} width={LS.tijdW} height={LS.h} fill={fill} />
+            <rect x={b.x + LS.tijdW + LS.goot} y={b.y} width={descW} height={LS.h} fill={fill} />
+            <text x={b.x + LS.inzet} y={midY(b.y)} fontFamily={FONT} fontWeight="700"
+              fontSize={LS.tekst} fill={themeEff.tekst}>{b.tijd}</text>
+            <FitText x={b.x + LS.tijdW + LS.goot + LS.omschrijvingInzet} y={midY(b.y)} maxW={descW - LS.omschrijvingInzet - LS.inzet}
+              weight="700" size={LS.tekst} fill={themeEff.tekst}>{b.tekst}</FitText>
+          </g>
+        );
+      })}
+      </g>
+      </g>
+    </svg>
+  );
+}
+
+// Verplaatst een element in een lijst één plek omhoog (-1) of omlaag (+1).
+const verplaatsInLijst = (lijst, i, delta) => {
+  const j = i + delta;
+  if (j < 0 || j >= lijst.length) return lijst;
+  const nieuw = [...lijst];
+  [nieuw[i], nieuw[j]] = [nieuw[j], nieuw[i]];
+  return nieuw;
+};
+
+// Knoppen van de Livestream-editor: echte, omrande knoppen met hover-, actief-,
+// focus- en uitgeschakeld-stand (daarvoor een stylesheet i.p.v. inline styles).
+const LS_EDITOR_CSS = `
+.ls-ic{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;flex:none;padding:0;
+  border:1px solid #c3cbe0;border-radius:6px;background:#fff;color:#1B2A6B;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.ls-ic:hover:not(:disabled){background:#eaedf9;border-color:#284BBE}
+.ls-ic:active:not(:disabled){background:#d3dbf3}
+.ls-ic:disabled{opacity:.3;cursor:default}
+.ls-ic.gevaar{color:#b91c1c;border-color:#e3b9b9}
+.ls-ic.gevaar:hover:not(:disabled){background:#fee2e2;border-color:#ef4444}
+.ls-ic.gevaar:active:not(:disabled){background:#fecaca}
+.ls-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px 12px;border-radius:7px;
+  border:1px solid #284BBE;background:#fff;color:#284BBE;font-size:13px;font-weight:700;cursor:pointer;transition:background .12s,color .12s}
+.ls-add:hover{background:#284BBE;color:#fff}
+.ls-add:active{background:#1C357F;border-color:#1C357F;color:#fff}
+.ls-add.middel{background:#eaedf9}
+.ls-add.middel:hover{background:#284BBE}
+.ls-add.groot{background:#284BBE;color:#fff;padding:10px 12px;font-size:14px}
+.ls-add.groot:hover{background:#1C357F;border-color:#1C357F}
+.ls-ic:focus-visible,.ls-add:focus-visible{outline:2px solid #284BBE;outline-offset:2px}
+.ls-grip{display:inline-flex;align-items:center;justify-content:center;width:22px;height:26px;margin-left:-2px;border-radius:5px;color:#6b7280;cursor:grab;flex:none;touch-action:none}
+.ls-grip:hover{background:#dde3f1;color:#1B2A6B}
+.ls-grip:active{cursor:grabbing}
+#root .ls-grip svg{width:14px;height:14px;flex:none}
+#root .ls-ic svg{width:16px;height:16px;flex:none}
+#root .ls-add svg{width:14px;height:14px;flex:none}
+`;
+const lsPad = {
+  omhoog: "M4 10l4-4 4 4", omlaag: "M4 6l4 4 4-4", weg: "M4 4l8 8M12 4l-8 8", plus: "M8 3v10M3 8h10",
+};
+function LsIcoon({ pad, titel, onClick, disabled, gevaar }) {
+  return (
+    <button type="button" className={`ls-ic${gevaar ? " gevaar" : ""}`} onClick={onClick} disabled={disabled}
+      title={titel} aria-label={titel}>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"
+        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={pad} /></svg>
+    </button>
+  );
+}
+function LsToevoegen({ label, onClick, soort }) {
+  return (
+    <button type="button" className={`ls-add${soort ? " " + soort : ""}`} onClick={onClick}>
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4"
+        strokeLinecap="round" aria-hidden="true"><path d={lsPad.plus} /></svg>
+      {label}
+    </button>
+  );
+}
+// Pijltjes omhoog/omlaag + verwijderen, vast bij elkaar rechts van een veld.
+function LsBesturing({ i, aantal, wat, verplaats, verwijder }) {
+  return (
+    <div style={{ display: "flex", gap: 4, flex: "none" }}>
+      <LsIcoon pad={lsPad.omhoog} titel={`${wat} omhoog`} disabled={i === 0} onClick={() => verplaats(-1)} />
+      <LsIcoon pad={lsPad.omlaag} titel={`${wat} omlaag`} disabled={i === aantal - 1} onClick={() => verplaats(1)} />
+      <LsIcoon pad={lsPad.weg} titel={`${wat} verwijderen`} gevaar onClick={verwijder} />
+    </div>
+  );
+}
+
+/* Aan/uit-keuze met twee knoppen, in dezelfde stijl als de achtergrondkeuze. */
+function LsAanUit({ label, aan, zet }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={dpLabel}>{label}</div>
+      <div style={{ display: "flex", gap: 8 }}>
+        {[[true, "Aan"], [false, "Uit"]].map(([waarde, tekst]) => {
+          const actief = aan === waarde;
+          return (
+            <button key={tekst} onClick={() => zet(waarde)} style={{
+              flex: 1, padding: "9px 0", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer",
+              border: actief ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
+              background: actief ? "#fef2f2" : "#fff", color: "#111",
+            }}>{tekst}</button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function LivestreamDataEditor({ data, setData, metPlak = true }) {
+  const H = hoogteVoor(data);
+  const { schaal, kolommen } = livestreamIndeling(data, H, breedteVoor(data));
+  const wijzigDagen = (fn) => setData((d) => ({ ...d, dagen: fn(d.dagen) }));
+  const zetDag = (di, patch) => wijzigDagen((ds) => ds.map((dg, i) => (i === di ? { ...dg, ...patch } : dg)));
+  const zetGroepen = (di, fn) => wijzigDagen((ds) => ds.map((dg, i) => (i === di ? { ...dg, groepen: fn(dg.groepen) } : dg)));
+  const zetGroep = (di, gi, patch) => zetGroepen(di, (gs) => gs.map((g, j) => (j === gi ? { ...g, ...patch } : g)));
+  const zetItems = (di, gi, fn) => zetGroepen(di, (gs) => gs.map((g, j) => (j === gi ? { ...g, items: fn(g.items) } : g)));
+  const zetRegel = (di, gi, ri, patch) => zetItems(di, gi, (its) => its.map((r, k) => (k === ri ? { ...r, ...patch } : r)));
+  const kleinLabel = { fontSize: 10, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 3 };
+
+  // Evenementen slepen: een evenement kan binnen een dag of naar een andere dag
+  // (ook een lege) verplaatst worden. `naar.index` is de plek vóór het
+  // verwijderen van het versleepte evenement.
+  const [sleep, setSleep] = useState(null);
+  const [hover, setHover] = useState(null);
+  const klaarMetSleep = () => { setSleep(null); setHover(null); };
+  const verplaatsEvenement = (van, naar) => {
+    let index = naar.index;
+    if (van.di === naar.di && van.gi < index) index -= 1;
+    if (van.di === naar.di && van.gi === index) return;
+    wijzigDagen((ds) => {
+      const kopie = ds.map((dg) => ({ ...dg, groepen: [...dg.groepen] }));
+      const [evenement] = kopie[van.di].groepen.splice(van.gi, 1);
+      kopie[naar.di].groepen.splice(index, 0, evenement);
+      return kopie;
+    });
+  };
+  // Zone tussen/na de evenementen waar je een kaartje kunt neerzetten. Zones
+  // direct voor en na het versleepte kaartje doen niets en worden verborgen.
+  const dropzone = (di, index) => {
+    const zinloos = sleep && sleep.di === di && (sleep.gi === index || sleep.gi + 1 === index);
+    const sleutel = `${di}:${index}`;
+    const actief = !!sleep && !zinloos;
+    const boven = actief && hover === sleutel;
+    return (
+      <div key={`zone-${sleutel}`}
+        onDragOver={actief ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (hover !== sleutel) setHover(sleutel); } : undefined}
+        onDragLeave={actief ? () => setHover((h) => (h === sleutel ? null : h)) : undefined}
+        onDrop={actief ? (e) => { e.preventDefault(); verplaatsEvenement(sleep, { di, index }); klaarMetSleep(); } : undefined}
+        style={{
+          height: boven ? 40 : actief ? 16 : 8, margin: boven ? "0 0 8px" : 0, borderRadius: 6, boxSizing: "border-box",
+          border: boven ? "2px dashed #284BBE" : actief ? "1px dashed #aab6e5" : "none",
+          background: boven ? "#eaedf9" : "transparent", color: "#284BBE", fontSize: 12, fontWeight: 700,
+          display: "flex", alignItems: "center", justifyContent: "center", transition: "height .1s",
+        }}>
+        {boven ? "Hier neerzetten" : null}
+      </div>
+    );
+  };
+  return (
+    <div>
+      <style>{LS_EDITOR_CSS}</style>
+      <div style={dpLabel}>Titel</div>
+      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
+      <div style={dpLabel}>Ondertitel</div>
+      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
+
+      <LsAanUit label="NOS logo" aan={data.logo ?? H < 1920} zet={(v) => setData((d) => ({ ...d, logo: v }))} />
+      <LsAanUit label="Cirkel (O) op de achtergrond" aan={data.ring ?? true} zet={(v) => setData((d) => ({ ...d, ring: v }))} />
+
+      {metPlak && <PlakBox label="Plak programma van nos.nl (vervangt de dagen hieronder)"
+        placeholder={"vandaag\nvandaag, 20:45\nVoetbal: WK-kwalificatie Nederland - Hongarije (v)\nmorgen\nmorgen, 12:30\nWK baanwielrennen"}
+        onParse={(tekst) => {
+          const dagen = parseLivestreamPlak(tekst);
+          if (dagen.length) setData((d) => ({ ...d, dagen }));
+          return dagen.flatMap((dg) => dg.groepen.flatMap((g) => g.items));
+        }} />}
+
+      {(schaal < 1 || kolommen > 1) && (
+        <p style={{ fontSize: 12, color: "#92400e", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 7,
+          padding: "8px 10px", margin: "0 0 12px", lineHeight: 1.4 }}>
+          {schaal < 1
+            ? `Het programma is te lang voor dit formaat: alles is automatisch verkleind tot ${Math.round(schaal * 100)}%${kolommen > 1 ? " (in twee kolommen)" : ""} zodat er niets afvalt. Kies een hoger formaat of haal regels weg voor een grotere weergave.`
+            : "Het programma is te lang voor één kolom en staat daarom in twee kolommen."}
+        </p>
+      )}
+
+      <div style={dpLabel}>Programma · {data.dagen.length} {data.dagen.length === 1 ? "dag" : "dagen"}</div>
+      {data.dagen.map((dag, di) => (
+        <div key={di} style={{ marginBottom: 14, border: "1px solid #d5dbe8", borderLeft: "5px solid #1B2A6B", borderRadius: 10, padding: 10, background: "#fff" }}>
+          <div style={kleinLabel}>Dag {di + 1}</div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
+            <input value={dag.dag} onChange={(e) => zetDag(di, { dag: e.target.value })}
+              placeholder="bv. maandag 12 oktober" style={{ ...dpVeld, marginBottom: 0, flex: 1, minWidth: 0, fontWeight: 700 }} />
+            <LsBesturing i={di} aantal={data.dagen.length} wat="Dag"
+              verplaats={(d) => wijzigDagen((ds) => verplaatsInLijst(ds, di, d))}
+              verwijder={() => wijzigDagen((ds) => ds.filter((_, i) => i !== di))} />
+          </div>
+          {dag.groepen.map((groep, gi) => (
+            <React.Fragment key={gi}>
+            {dropzone(di, gi)}
+            <div style={{ background: "#f4f6fb", border: "1px solid #dde3f1", borderLeft: "5px solid #284BBE", borderRadius: 8, padding: 8,
+              opacity: sleep && sleep.di === di && sleep.gi === gi ? 0.4 : 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
+                <span className="ls-grip" draggable title="Sleep om dit evenement te verplaatsen" aria-label="Evenement verslepen"
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", "evenement");
+                    const kaart = e.currentTarget.parentElement.parentElement;
+                    if (kaart && e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(kaart, 16, 16);
+                    setSleep({ di, gi });
+                  }}
+                  onDragEnd={klaarMetSleep}>
+                  <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <circle cx="5" cy="3" r="1.4" /><circle cx="11" cy="3" r="1.4" /><circle cx="5" cy="8" r="1.4" />
+                    <circle cx="11" cy="8" r="1.4" /><circle cx="5" cy="13" r="1.4" /><circle cx="11" cy="13" r="1.4" />
+                  </svg>
+                </span>
+                <div style={{ ...kleinLabel, marginBottom: 0 }}>Evenement</div>
+              </div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
+                <input value={groep.titel} onChange={(e) => zetGroep(di, gi, { titel: e.target.value })}
+                  placeholder="bv. Badminton Dutch Open" style={{ ...dpVeld, marginBottom: 0, flex: 1, minWidth: 0, fontWeight: 700 }} />
+                <LsBesturing i={gi} aantal={dag.groepen.length} wat="Evenement"
+                  verplaats={(d) => zetGroepen(di, (gs) => verplaatsInLijst(gs, gi, d))}
+                  verwijder={() => zetGroepen(di, (gs) => gs.filter((_, j) => j !== gi))} />
+              </div>
+              <div style={{ display: "flex", gap: 6, ...kleinLabel, marginBottom: 3 }}>
+                <span style={{ width: 62, flex: "none" }}>Tijd</span><span>Omschrijving</span>
+              </div>
+              {groep.items.map((r, ri) => (
+                <div key={ri} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 5 }}>
+                  <input value={r.tijd} onChange={(e) => zetRegel(di, gi, ri, { tijd: e.target.value })}
+                    placeholder="13.00" style={{ ...dpCijfer, marginBottom: 0, width: 62, flex: "none" }} />
+                  <input value={r.tekst} onChange={(e) => zetRegel(di, gi, ri, { tekst: e.target.value })}
+                    placeholder="bv. finales" style={{ ...dpVeld, marginBottom: 0, flex: 1, minWidth: 0 }} />
+                  <LsBesturing i={ri} aantal={groep.items.length} wat="Regel"
+                    verplaats={(d) => zetItems(di, gi, (its) => verplaatsInLijst(its, ri, d))}
+                    verwijder={() => zetItems(di, gi, (its) => its.filter((_, k) => k !== ri))} />
+                </div>
+              ))}
+              <div style={{ marginTop: 6 }}>
+                <LsToevoegen label="Regel toevoegen" onClick={() => zetItems(di, gi, (its) => [...its, lsNieuweRegel()])} />
+              </div>
+            </div>
+            </React.Fragment>
+          ))}
+          {dropzone(di, dag.groepen.length)}
+          <LsToevoegen soort="middel" label="Evenement toevoegen"
+            onClick={() => zetGroepen(di, (gs) => [...gs, lsNieuwEvenement()])} />
+        </div>
+      ))}
+      <LsToevoegen soort="groot" label="Dag toevoegen"
+        onClick={() => wijzigDagen((ds) => [...ds, lsNieuweDag()])} />
+    </div>
+  );
+}
+
 /* ============================ SCHAATSEN: RESULTATEN ========================== */
 /* Zelfde kolomindeling als de wielren-uitslag, maar zonder ploegkolom —          */
 /* schaatsen is een individuele sport, dus de naamkolom krijgt die ruimte.        */
@@ -4965,6 +5659,8 @@ function MedaillespiegelDataEditor({ data, setData }) {
 function SchaatsenResultatenTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   const xL = 109, xR = 971;
   const infoBarY = 320, infoBarH = 50;
   const rowH = 50;
@@ -4985,18 +5681,18 @@ function SchaatsenResultatenTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={infoBarY} width={xR - xL} height={infoBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={infoBarY + infoBarH / 2 + 11} fontFamily={FONT} fontWeight="700"
-        fontSize="32" fill={NOS.wit}>{data.onderdeel}</text>
+        fontSize="32" fill={titelTekst(themeEff)}>{data.onderdeel}</text>
 
       {data.rijen.map((r, i) => {
         const y = tableY0 + i * rowH;
@@ -5038,7 +5734,6 @@ function SchaatsenResultatenDataEditor({ data, setData }) {
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Onderdeel (bv. "500m mannen")</div>
       <input value={data.onderdeel} onChange={(e) => setData((d) => ({ ...d, onderdeel: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
 
       <div style={dpLabel}>Uitslag ({data.rijen.length})</div>
       <div style={{ maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
@@ -5064,6 +5759,8 @@ function SchaatsenResultatenDataEditor({ data, setData }) {
 function SchaatsenWereldbekerstandTemplate({ data, setData }) {
   const H = hoogteVoor(data);
   const offY = (H - 1350) / 2;
+  const B = breedteVoor(data);
+  const offX = (B - W) / 2;
   const xL = 109, xR = 971;
   const subBarY = 320, subBarH = 50;
   const rowH = 50;
@@ -5105,21 +5802,21 @@ function SchaatsenWereldbekerstandTemplate({ data, setData }) {
   const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
+    <svg width={B} height={H} viewBox={`0 0 ${B} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
       onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
       onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
+      <Achtergrond B={B} theme={data.theme} foto={isFoto ? data.foto : null}
+        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos} fotoHelder={data.fotoHelder}
         fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
+      <g transform={`translate(${offX}, ${offY})`}>
+      <Kop H={H} B={B} sport={data.titel} titel={data.ondertitel} theme={themeEff} />
 
       <rect x={xL} y={subBarY} width={xR - xL} height={subBarH} fill={themeEff.titel} />
       <text x={xL + 18} y={subBarY + subBarH / 2 + 10} fontFamily={FONT}
-        fontWeight="700" fontSize="28" fill={NOS.wit}>{data.subkop}</text>
+        fontWeight="700" fontSize="28" fill={titelTekst(themeEff)}>{data.subkop}</text>
 
       {data.rijen.map((r, i) => rij(r, tableY0 + i * rowH, i))}
-      {rij(data.extra, extraY, 1)}
+      {data.toonExtra !== false && rij(data.extra, extraY, 1)}
       </g>
     </svg>
   );
@@ -5142,9 +5839,10 @@ function SchaatsenWereldbekerstandDataEditor({ data, setData }) {
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Subkop (bv. "eindstand na 3 wedstrijden")</div>
       <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
 
       <div style={dpLabel}>Stand ({data.rijen.length})</div>
+      <SorteerKnop label="Sorteer op punten" uitleg="Zet de rijders op volgorde van punten en nummert de posities opnieuw"
+        onClick={() => setData((d) => ({ ...d, rijen: rangschik(d.rijen, (r) => r.punten) }))} />
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
@@ -5160,102 +5858,22 @@ function SchaatsenWereldbekerstandDataEditor({ data, setData }) {
       </div>
       <button onClick={voegToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Rij toevoegen</button>
 
-      <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. verder terug geklasseerde rijder)</div>
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
-          style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
-        <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
-        <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
-          placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
-        <input type="number" value={data.extra.punten} onChange={(e) => zetExtra({ punten: Number(e.target.value) })}
-          placeholder="pnt" style={{ ...dpCijfer, marginBottom: 0, width: 60 }} />
-      </div>
-    </div>
-  );
-}
-
-/* ============================ SCHAATSEN: PROGRAMMA ============================ */
-
-function SchaatsenProgrammaTemplate({ data, setData }) {
-  const H = hoogteVoor(data);
-  const offY = (H - 1350) / 2;
-  const xL = 101, xR = 979;
-  const nrW = 63, tijdW = 156, gap = 8;
-  const nrR = xL + nrW;
-  const tijdX = xR - tijdW;
-  const mainX = nrR + gap;
-  const mainW = tijdX - gap - mainX;
-  const nrMidX = (xL + nrR) / 2;
-  const y0 = 320;
-  const rowH = 45;
-  const isFoto = data.achtergrond === "foto" && !!data.foto;
-  const themeEff = metFotoStijl(data.theme, isFoto);
-  const fotoSleep = useFotoSleep((pos) => setData && setData((d) => ({ ...d, fotoPos: pos })));
-
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges"
-      onPointerMove={isFoto ? fotoSleep.beweeg : undefined} onPointerUp={isFoto ? fotoSleep.stop : undefined}
-      onPointerCancel={isFoto ? fotoSleep.stop : undefined}>
-      <Achtergrond theme={data.theme} foto={isFoto ? data.foto : null}
-        fotoDim={data.fotoDim} fotoZoom={data.fotoZoom} fotoPos={data.fotoPos}
-        fotoSleep={isFoto && setData ? fotoSleep : null} H={H} />
-      <g transform={`translate(0, ${offY})`}>
-      <Kop sport={data.titel} titel={data.ondertitel} theme={themeEff} />
-      {data.rijen.map((r, i) => {
-        const y = y0 + i * rowH;
-        const midY = y + rowH / 2 + 11;
-        const zebra = i % 2 === 1;
-        const fill = zebra ? themeEff.zebra : NOS.wit;
-        const nrFill = zebra ? "#4b4b4b" : "#1e1e1e";
-        return (
-          <g key={r.nr}>
-            <rect x={xL} y={y} width={nrW} height={rowH} fill={nrFill} />
-            <rect x={mainX} y={y} width={mainW} height={rowH} fill={fill} />
-            <rect x={tijdX} y={y} width={tijdW} height={rowH} fill={fill} />
-            <text x={nrMidX} y={midY} textAnchor="middle" fontFamily={FONT}
-              fontWeight="700" fontSize="32" fill={NOS.wit}>{r.nr}</text>
-            <text x={mainX + 20} y={midY} fontFamily={FONT}
-              fontWeight="700" fontSize="32" fill={NOS.tekst}>{r.omschrijving}</text>
-            <text x={tijdX + tijdW - 16} y={midY} textAnchor="end" fontFamily={FONT}
-              fontWeight="400" fontSize="32" fill={NOS.tekst}>{r.tijd}</text>
-          </g>
-        );
-      })}
-      </g>
-    </svg>
-  );
-}
-
-function SchaatsenProgrammaDataEditor({ data, setData }) {
-  const zetRij = (i, patch) => setData((d) => ({ ...d, rijen: d.rijen.map((r, j) => (j === i ? { ...r, ...patch } : r)) }));
-  const verwijder = (i) => setData((d) => ({
-    ...d, rijen: d.rijen.filter((_, j) => j !== i).map((r, j) => ({ ...r, nr: j + 1 })),
-  }));
-  const voegToe = () => setData((d) => ({
-    ...d, rijen: [...d.rijen, { nr: d.rijen.length + 1, omschrijving: "", tijd: "" }],
-  }));
-  return (
-    <div>
-      <div style={dpLabel}>Titel</div>
-      <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
-      <div style={dpLabel}>Ondertitel</div>
-      <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
-
-      <div style={dpLabel}>Programma ({data.rijen.length})</div>
-      <div style={{ maxHeight: 560, overflowY: "auto", paddingRight: 4 }}>
-        {data.rijen.map((r, i) => (
-          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-            <span style={{ ...dpPos, width: 30 }}>{r.nr}</span>
-            <input value={r.omschrijving} onChange={(e) => zetRij(i, { omschrijving: e.target.value })}
-              placeholder="Onderdeel" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
-            <input value={r.tijd} onChange={(e) => zetRij(i, { tijd: e.target.value })}
-              placeholder="Tijd" style={{ ...dpCijfer, marginBottom: 0, width: 84 }} />
-            <button onClick={() => verwijder(i)} style={dpX} title="Rij verwijderen">×</button>
-          </div>
-        ))}
-      </div>
-      <button onClick={voegToe} style={{ ...dpKnop, width: "100%", marginTop: 8 }}>+ Onderdeel toevoegen</button>
+      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }}>
+        <input type="checkbox" checked={data.toonExtra !== false}
+          onChange={(e) => setData((d) => ({ ...d, toonExtra: e.target.checked }))} />
+        Extra rij tonen (met tussenruimte, bv. verder terug geklasseerde rijder)
+      </label>
+      {data.toonExtra !== false && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 8 }}>
+          <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
+            style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
+          <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
+          <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
+            placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.6 }} />
+          <input type="number" value={data.extra.punten} onChange={(e) => zetExtra({ punten: Number(e.target.value) })}
+            placeholder="pnt" style={{ ...dpCijfer, marginBottom: 0, width: 60 }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -5398,6 +6016,31 @@ const dpKnop = {
   color: "#374151", fontSize: 12, fontWeight: 700, cursor: "pointer",
 };
 const dpKnopRood = { ...dpKnop, border: "none", background: NOS.rood, color: "#fff", width: "100%", padding: "9px 0" };
+
+// Nieuwe volgorde na het handmatig aanpassen van punten/medailles: sorteert
+// op de opgegeven sleutels (aflopend, in volgorde van belang), laat rijen met
+// een gelijke stand in hun huidige volgorde en nummert de posities opnieuw.
+// Lege of ongeldige waardes tellen als de laagste score.
+const sorteerGetal = (v) => (v === "" || v === null || v === undefined || Number.isNaN(Number(v)) ? -Infinity : Number(v));
+function rangschik(rijen, ...sleutels) {
+  return rijen
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => {
+      for (const sleutel of sleutels) {
+        const verschil = sorteerGetal(sleutel(b.r)) - sorteerGetal(sleutel(a.r));
+        if (verschil) return verschil;
+      }
+      return a.i - b.i;
+    })
+    .map(({ r }, i) => ({ ...r, pos: i + 1 }));
+}
+function SorteerKnop({ onClick, label, uitleg }) {
+  return (
+    <button onClick={onClick} title={uitleg} style={{ ...dpKnop, width: "100%", marginBottom: 8 }}>
+      ↕ {label}
+    </button>
+  );
+}
 const dpX = {
   width: 24, height: 24, borderRadius: 6, border: "none", background: "transparent",
   color: "#9ca3af", fontSize: 15, cursor: "pointer", flexShrink: 0,
@@ -5588,9 +6231,13 @@ function StandDataEditor({ data, setData, competitie }) {
         Doelsaldo tonen (DS)
       </label>
 
-      {/* Alleen bij de nog in te vullen competitie: Eredivisie/Premier
-          League hebben al hun eigen huisstijl-illustratie als achtergrond. */}
-      {competitie === "eigen" && <AchtergrondKiezer data={data} setData={setData} />}
+      {/* Eredivisie/
+          Premier League/Champions League hebben hun eigen illustratie, die
+          met de toggle uit kan (dan het gewone kleurverloop). */}
+      {competitie !== "eigen" && data.achtergrond !== "foto" && (
+        <LsAanUit label="Achtergrond-graphic" aan={data.illustratie !== false}
+          zet={(aan) => setData((d) => ({ ...d, illustratie: aan }))} />
+      )}
 
       <PlakBox label="Plak de standen-tabel (incl. kolomkoppen Rg/Team/Ptn/Wd/W/G/V/…)"
         placeholder={"Rg\tTeam\tPtn\tWd\tW\tG\tV\tDV\tDT\tDS\n1\n\nAZ\nAZ\n12\t4\t4\t0\t0\t13\t3\t10\n2\n…"}
@@ -5601,6 +6248,8 @@ function StandDataEditor({ data, setData, competitie }) {
         }} />
 
       <div style={dpLabel}>Rijen ({data.rijen.length})</div>
+      <SorteerKnop label="Sorteer op punten" uitleg="Zet de rijen op volgorde van punten (bij gelijk aantal: doelsaldo) en nummert de posities opnieuw"
+        onClick={() => setData((d) => ({ ...d, rijen: rangschik(d.rijen, (r) => r.pt, (r) => r.ds) }))} />
       {/* Club en de 5 cijferkolommen staan op aparte regels: bij een smal
           paneel liep de clubnaam anders in de verdrukking, samengeknepen
           tussen de vaste rangcel en vijf vaste cijfercellen tot er soms maar
@@ -5655,9 +6304,13 @@ function ProgrammaDataEditor({ data, setData, competitie }) {
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
 
-      {/* Alleen bij de nog in te vullen competitie: Eredivisie/Premier
-          League hebben al hun eigen huisstijl-illustratie als achtergrond. */}
-      {competitie === "eigen" && <AchtergrondKiezer data={data} setData={setData} />}
+      {/* Eredivisie/
+          Premier League/Champions League hebben hun eigen illustratie, die
+          met de toggle uit kan (dan het gewone kleurverloop). */}
+      {competitie !== "eigen" && data.achtergrond !== "foto" && (
+        <LsAanUit label="Achtergrond-graphic" aan={data.illustratie !== false}
+          zet={(aan) => setData((d) => ({ ...d, illustratie: aan }))} />
+      )}
 
       <PlakBox label="Plak het programma (hele pagina, incl. tijden en speelronde)"
         placeholder={"vrijdag 3 april\n\nEredivisie,  Speelronde 19, Wedstrijd op het programma tussen Ajax en PSV om \n20:00\nSpeelronde 19\nAjax\n\n20:00\n\nPSV\n…"}
@@ -5743,7 +6396,7 @@ const ETAPPE_SOORT_LABEL = { vlak: "Vlak", heuvel: "Heuvel", berg: "Berg", tijdr
    thema (standaard), of een eigen geüploade foto — dan wisselen alle balken
    (Kop + info-/leiders-/subbalk) automatisch naar de vaste blauwe stijl, zie
    FOTO_ACCENT/metFotoStijl bij Achtergrond(). */
-function AchtergrondKiezer({ data, setData }) {
+function AchtergrondKiezer({ data, setData, verloopLabel = "Kleurverloop" }) {
   const modus = data.achtergrond || "verloop";
   const zetFoto = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -5770,7 +6423,7 @@ function AchtergrondKiezer({ data, setData }) {
         const uri = canvas.toDataURL("image/jpeg", 0.85);
         setData((d) => ({
           ...d, foto: uri, achtergrond: "foto",
-          fotoDim: { w, h }, fotoZoom: 1, fotoPos: { x: 0, y: 0 },
+          fotoDim: { w, h }, fotoZoom: 1, fotoPos: { x: 0, y: 0 }, fotoHelder: 0,
         }));
       };
       img.src = reader.result;
@@ -5784,7 +6437,7 @@ function AchtergrondKiezer({ data, setData }) {
     <div style={{ marginBottom: 14 }}>
       <div style={dpLabel}>Achtergrond</div>
       <div style={{ display: "flex", gap: 8, marginBottom: modus === "foto" ? 8 : 0 }}>
-        {[["verloop", "Kleurverloop"], ["foto", "Foto"]].map(([k, label]) => (
+        {[["verloop", verloopLabel], ["foto", "Foto"]].map(([k, label]) => (
           <button key={k} onClick={() => setData((d) => ({ ...d, achtergrond: k }))} style={{
             flex: 1, padding: "9px 0", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer",
             border: modus === k ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
@@ -5811,6 +6464,16 @@ function AchtergrondKiezer({ data, setData }) {
               <button onClick={resetPositie} style={{ ...dpKnop, padding: "4px 10px", fontSize: 12 }}>Reset</button>
             </div>
           )}
+          {data.foto && (
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+              <span style={{ fontSize: 12, color: "#6b7280", flexShrink: 0 }}>Helderheid</span>
+              <input type="range" min="-80" max="80" step="5" value={data.fotoHelder || 0}
+                onChange={(e) => setData((d) => ({ ...d, fotoHelder: Number(e.target.value) }))} style={{ flex: 1 }} />
+              <span style={{ fontSize: 12, color: "#6b7280", width: 34, textAlign: "right", flexShrink: 0 }}>
+                {(data.fotoHelder || 0) > 0 ? "+" : ""}{data.fotoHelder || 0}
+              </span>
+            </div>
+          )}
           {data.foto && data.fotoDim && (
             <p style={{ fontSize: 12, color: "#9ca3af", margin: "6px 0 0" }}>
               Sleep de foto in de preview om 'm te verschuiven.
@@ -5822,17 +6485,65 @@ function AchtergrondKiezer({ data, setData }) {
   );
 }
 
+/* ---- Titelkleur: palet uit het ontwerp (3 rijen van 15: donker/midden/licht) -- */
+/* Alleen voor uitzonderingen: standaard houdt elke graphic zijn eigen kleur.    */
+const TITEL_PALET = [
+  "#5c0c08", "#632908", "#66450b", "#665413", "#575425", "#3a4f28", "#465740", "#2c4c54", "#184066", "#312c4a", "#3f1b2e", "#4e131b", "#662c2c", "#363636", "#101e4c",
+  "#a1150e", "#ac470f", "#b37813", "#b39421", "#98943f", "#648a45", "#7a9871", "#4c8493", "#2a70b3", "#553d82", "#6f2f51", "#881f30", "#b34d4d", "#5f5f5f", "#1c357f",
+  "#e61e14", "#f66618", "#ffac1b", "#ffd21e", "#d9d45e", "#8fc46a", "#aed9a1", "#6dbdd0", "#3ca0ff", "#7a6fb9", "#9e4374", "#c23044", "#ff6e6e", "#888888", "#284bbe",
+];
+function TitelKleurKiezer({ data, setData }) {
+  const gekozen = data.titelKleur || null;
+  return (
+    <details style={{ marginBottom: 14 }}>
+      <summary style={{ ...dpLabel, cursor: "pointer", marginBottom: 0 }}>
+        Titelkleur{gekozen || data.titelDonker ? " (aangepast)" : ""}
+      </summary>
+      <div style={{ marginTop: 8 }}>
+        <button onClick={() => setData((d) => ({ ...d, titelKleur: null }))} style={{
+          width: "100%", padding: "8px 0", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 8,
+          border: !gekozen ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
+          background: !gekozen ? "#fef2f2" : "#fff", color: "#111",
+        }}>Standaard</button>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(15, 1fr)", gap: 3 }}>
+          {TITEL_PALET.map((kleur) => (
+            <button key={kleur} title={kleur} onClick={() => setData((d) => ({ ...d, titelKleur: kleur }))}
+              style={{
+                aspectRatio: "1", padding: 0, borderRadius: 3, background: kleur, cursor: "pointer",
+                border: gekozen === kleur ? `2px solid ${NOS.rood}` : "1px solid #e5e7eb",
+                boxShadow: gekozen === kleur ? "0 0 0 1px #fff inset" : "none",
+              }} />
+          ))}
+        </div>
+        <div style={{ ...dpLabel, marginTop: 12 }}>Tekst in de balken</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[[false, "Wit"], [true, "Donker"]].map(([donker, label]) => (
+            <button key={label} onClick={() => setData((d) => ({ ...d, titelDonker: donker }))} style={{
+              flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
+              border: !!data.titelDonker === donker ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
+              background: !!data.titelDonker === donker ? "#fef2f2" : "#fff", color: "#111",
+            }}>{label}</button>
+          ))}
+        </div>
+        <p style={{ fontSize: 12, color: "#9ca3af", margin: "6px 0 0" }}>
+          Alleen bij uitzondering. Wit is de standaard; donker (#1e1e1e) kan beter leesbaar zijn op een lichte kleur.
+        </p>
+      </div>
+    </details>
+  );
+}
+
 // Canvas-formaat, zelfde plek/stijl als AchtergrondKiezer erboven — werkt op
 // elk data-object met een (optioneel) .formaat-veld, dus ook op opst.
 function FormaatKiezer({ data, setData }) {
-  const modus = data.formaat === "1080x1440" ? "1080x1440" : "1080x1350";
+  const modus = HOOGTE_PER_FORMAAT[data.formaat] ? data.formaat : "1080x1350";
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={dpLabel}>Formaat</div>
-      <div style={{ display: "flex", gap: 8 }}>
-        {[["1080x1350", "1080 × 1350", "4:5"], ["1080x1440", "1080 × 1440", "3:4"]].map(([k, label, sub]) => (
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {[["1080x1350", "1080 × 1350", "4:5"], ["1080x1440", "1080 × 1440", "3:4"], ["1080x1920", "1080 × 1920", "9:16"], ["1800x1350", "1800 × 1350", "4:3 liggend"]].map(([k, label, sub]) => (
           <button key={k} onClick={() => setData((d) => ({ ...d, formaat: k }))} style={{
-            flex: 1, padding: "9px 0", borderRadius: 8, cursor: "pointer",
+            flex: "1 1 30%", padding: "9px 0", borderRadius: 8, cursor: "pointer",
             border: modus === k ? `2px solid ${NOS.rood}` : "2px solid #e5e7eb",
             background: modus === k ? "#fef2f2" : "#fff", color: "#111",
           }}>
@@ -5859,7 +6570,6 @@ function WielrenProgrammaDataEditor({ data, setData }) {
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
       <p style={{ fontSize: 12, color: "#9ca3af", margin: "0 0 12px" }}>
         Plakken kan hier nog niet — vul het etappeoverzicht met de hand in.
       </p>
@@ -5894,7 +6604,6 @@ function WielrenUitslagDataEditor({ data, setData }) {
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ width: 108 }}>
           <div style={dpLabel}>Type</div>
@@ -5939,9 +6648,35 @@ function WielrenUitslagDataEditor({ data, setData }) {
   );
 }
 
+/* Optionele extra rij onder de uitslag/het klassement (met tussenruimte, bv. de
+   laatste Nederlander). Aan- en uitvinkbaar; staat standaard aan. */
+function WielrenExtraRijEditor({ data, setData }) {
+  const zetExtra = (patch) => setData((d) => ({ ...d, extra: { ...d.extra, ...patch } }));
+  return (
+    <>
+      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }}>
+        <input type="checkbox" checked={data.toonExtra !== false}
+          onChange={(e) => setData((d) => ({ ...d, toonExtra: e.target.checked }))} />
+        Extra rij tonen (met tussenruimte, bv. laatste Nederlander)
+      </label>
+      {data.toonExtra !== false && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 8 }}>
+          <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
+            style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
+          <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
+          <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
+            placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
+          <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
+          <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
+            placeholder="tijd" style={{ ...dpCijfer, marginBottom: 0, width: 72 }} />
+        </div>
+      )}
+    </>
+  );
+}
+
 function WielrenKlassementDataEditor({ data, setData }) {
   const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
-  const zetExtra = (patch) => setData((d) => ({ ...d, extra: { ...d.extra, ...patch } }));
   return (
     <div>
       <div style={dpLabel}>Titel</div>
@@ -5950,7 +6685,6 @@ function WielrenKlassementDataEditor({ data, setData }) {
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Subkop (bv. "na etappe 21")</div>
       <input value={data.subkop} onChange={(e) => setData((d) => ({ ...d, subkop: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
 
       <PlakBox label="Plak het algemeen klassement (incl. kolomkoppen Rg/Nr./Land/Naam/Team/Resultaat)"
         placeholder={"Rg\tNr.\tLand\tNaam\tTeam\tResultaat\n1\t21\t\nSpanje\nSPA\nEnric Mas\nMovistar Team\nMovistar Team\n32:41:44\n2\t1\t…"}
@@ -5963,17 +6697,7 @@ function WielrenKlassementDataEditor({ data, setData }) {
       <div style={dpLabel}>Klassement ({data.rijen.length}) — vink aan wie het truitje-icoon krijgt</div>
       <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} toonLeider teamSoort="wielrennen" />
 
-      <div style={{ ...dpLabel, marginTop: 16 }}>Extra rij (met tussenruimte, bv. laatste Nederlander)</div>
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
-          style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
-        <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
-        <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
-          placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
-        <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
-        <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
-          placeholder="tijd" style={{ ...dpCijfer, marginBottom: 0, width: 72 }} />
-      </div>
+      <WielrenExtraRijEditor data={data} setData={setData} />
     </div>
   );
 }
@@ -5982,14 +6706,12 @@ function WielrenKlassementDataEditor({ data, setData }) {
    alleen een langere uitslag (15 rijen) + 1 losse extra rij. */
 function ParijsRoubaixDataEditor({ data, setData }) {
   const zetRijen = (rijen) => setData((d) => ({ ...d, rijen }));
-  const zetExtra = (patch) => setData((d) => ({ ...d, extra: { ...d.extra, ...patch } }));
   return (
     <div>
       <div style={dpLabel}>Titel</div>
       <input value={data.titel} onChange={(e) => setData((d) => ({ ...d, titel: e.target.value }))} style={dpVeld} />
       <div style={dpLabel}>Ondertitel</div>
       <input value={data.ondertitel} onChange={(e) => setData((d) => ({ ...d, ondertitel: e.target.value }))} style={dpVeld} />
-      <AchtergrondKiezer data={data} setData={setData} />
       <div style={{ display: "flex", gap: 8 }}>
         <div style={{ flex: 1 }}>
           <div style={dpLabel}>Route</div>
@@ -6012,23 +6734,7 @@ function ParijsRoubaixDataEditor({ data, setData }) {
       <div style={dpLabel}>Uitslag ({data.rijen.length})</div>
       <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} teamSoort="wielrennen" />
 
-      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 13, fontWeight: 700, color: "#374151", cursor: "pointer" }}>
-        <input type="checkbox" checked={data.toonExtra !== false}
-          onChange={(e) => setData((d) => ({ ...d, toonExtra: e.target.checked }))} />
-        Extra rij tonen (met tussenruimte, bv. laatste Nederlander)
-      </label>
-      {data.toonExtra !== false && (
-        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 8 }}>
-          <input type="number" value={data.extra.pos} onChange={(e) => zetExtra({ pos: Number(e.target.value) })}
-            style={{ ...dpVeld, ...dpPos, marginBottom: 0, width: 40 }} />
-          <LandSelect value={data.extra.land} onChange={(v) => zetExtra({ land: v })} />
-          <input value={data.extra.naam} onChange={(e) => zetExtra({ naam: e.target.value })}
-            placeholder="Naam" style={{ ...dpVeld, marginBottom: 0, flex: 1.2 }} />
-          <WielerTeamSelect value={data.extra.team} onChange={(v) => zetExtra({ team: v })} />
-          <input value={data.extra.tijd} onChange={(e) => zetExtra({ tijd: e.target.value })}
-            placeholder="tijd" style={{ ...dpCijfer, marginBottom: 0, width: 72 }} />
-        </div>
-      )}
+      <WielrenExtraRijEditor data={data} setData={setData} />
     </div>
   );
 }
@@ -6203,6 +6909,8 @@ function F1WKStandCoureursDataEditor({ data, setData }) {
         }} />
 
       <div style={dpLabel}>Coureurs ({data.rijen.length})</div>
+      <SorteerKnop label="Sorteer op punten" uitleg="Zet de coureurs op volgorde van punten en nummert de posities opnieuw"
+        onClick={() => zetRijen(rangschik(data.rijen, (r) => r.punten))} />
       <PersonenRijenEditor rijen={data.rijen} setRijen={zetRijen} toonTijd={false} toonPunten teamSoort="f1" />
     </div>
   );
@@ -6230,6 +6938,8 @@ function F1WKStandTeamsDataEditor({ data, setData }) {
         }} />
 
       <div style={dpLabel}>Teams ({data.rijen.length})</div>
+      <SorteerKnop label="Sorteer op punten" uitleg="Zet de teams op volgorde van punten en nummert de posities opnieuw"
+        onClick={() => setData((d) => ({ ...d, rijen: rangschik(d.rijen, (r) => r.punten) }))} />
       <div style={{ maxHeight: 420, overflowY: "auto", paddingRight: 4 }}>
         {data.rijen.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
@@ -6260,9 +6970,10 @@ function DataPanel({ sport, competitie, type, editData, setEditData }) {
   if (sport === "wielrennen" && type === "uitslag") return <WielrenUitslagDataEditor data={editData} setData={setEditData} />;
   if (sport === "wielrennen" && type === "klassement") return <WielrenKlassementDataEditor data={editData} setData={setEditData} />;
   if (sport === "algemeen" && type === "medaillespiegel") return <MedaillespiegelDataEditor data={editData} setData={setEditData} />;
+  if (sport === "algemeen" && competitie === "livestream" && type === "programma") return <LivestreamDataEditor data={editData} setData={setEditData} />;
   if (sport === "schaatsen" && type === "resultaten") return <SchaatsenResultatenDataEditor data={editData} setData={setEditData} />;
   if (sport === "schaatsen" && type === "wereldbekerstand") return <SchaatsenWereldbekerstandDataEditor data={editData} setData={setEditData} />;
-  if (sport === "schaatsen" && type === "programma") return <SchaatsenProgrammaDataEditor data={editData} setData={setEditData} />;
+  if (sport === "schaatsen" && type === "programma") return <LivestreamDataEditor data={editData} setData={setEditData} metPlak={false} />;
   return (
     <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.5 }}>
       Voor deze graphic staat de handmatige editor er nog niet — hij toont voorbeelddata.
@@ -6279,8 +6990,8 @@ function App() {
   const [opst, setOpst] = useState({
     a: legePloeg("#FFF000"),
     b: legePloeg("#39B54A"),
-    achtergrond: ACHTERGROND_KLEUREN[ACHTERGROND_KLEUREN.length - 1],
     formaat: "1080x1350",
+    toonTitel: false, titel: "competitie", ondertitel: "omschrijving",
   });
   const svgWrap = useRef(null);
 
@@ -6349,6 +7060,14 @@ function App() {
   }
 
   const toonPreview = !!editData || (isOpstelling && !!type);
+  // Handmatig gekozen titelkleur overschrijft het thema, alleen voor de weergave.
+  const toonData = editData && (editData.titelKleur || editData.titelDonker)
+    ? { ...editData, theme: {
+        ...editData.theme,
+        ...(editData.titelKleur ? { titel: editData.titelKleur, titelVast: true } : {}),
+        ...(editData.titelDonker ? { titelTekst: NOS_DONKER } : {}),
+      } }
+    : editData;
   const wijzigPloeg = (zijde) => (patch) =>
     setOpst((o) => ({ ...o, [zijde]: { ...o[zijde], ...patch } }));
 
@@ -6574,19 +7293,20 @@ function App() {
                     </p>
                     <div style={{ marginTop: 14 }}>
                       <FormaatKiezer data={opst} setData={setOpst} />
-                      <h3 style={secTitel}>Achtergrondkleur</h3>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                        {ACHTERGROND_KLEUREN.map((kleur) => (
-                          <button key={kleur} onClick={() => setOpst((o) => ({ ...o, achtergrond: kleur }))}
-                            title={kleur}
-                            style={{
-                              width: 32, height: 32, borderRadius: "50%", background: kleur,
-                              cursor: "pointer", padding: 0,
-                              border: opst.achtergrond === kleur ? `3px solid ${NOS.rood}` : "2px solid #e5e7eb",
-                              boxShadow: opst.achtergrond === kleur ? "0 0 0 2px #fff inset" : "none",
-                            }} />
-                        ))}
-                      </div>
+                      <AchtergrondKiezer data={opst} setData={setOpst} verloopLabel="Blauw" />
+                      <LsAanUit label="Titel" aan={!!opst.toonTitel}
+                        zet={(aan) => setOpst((o) => ({ ...o, toonTitel: aan }))} />
+                      {opst.toonTitel && (
+                        <>
+                          <label style={dpLabel}>Titel</label>
+                          <input style={veldStijl} value={opst.titel}
+                            onChange={(e) => setOpst((o) => ({ ...o, titel: e.target.value }))} />
+                          <label style={dpLabel}>Ondertitel</label>
+                          <input style={veldStijl} value={opst.ondertitel}
+                            onChange={(e) => setOpst((o) => ({ ...o, ondertitel: e.target.value }))} />
+                          <TitelKleurKiezer data={opst} setData={setOpst} />
+                        </>
+                      )}
                     </div>
                     <div style={{ marginTop: 12, maxHeight: 520, overflowY: "auto", paddingRight: 4 }}>
                       <PloegEditor titel={type === "duel" ? "Team boven" : null}
@@ -6627,23 +7347,24 @@ function App() {
               <div ref={svgWrap} style={{ width: "100%" }}>
                 <PreviewGrens sleutel={`${sport}-${competitie}-${race}-${type}`}>
                 <div style={{ width: "100%", maxWidth: 640, margin: "0 auto" }}>
-                  {sport === "formule1" && type === "uitslag" && <UitslagTemplate data={editData} />}
-                  {sport === "formule1" && type === "kwalificatie" && <UitslagTemplate data={editData} />}
-                  {sport === "formule1" && type === "grid" && <GridTemplate data={editData} />}
-                  {sport === "formule1" && type === "wkstandcoureurs" && <WKStandCoureursTemplate data={editData} />}
-                  {sport === "formule1" && type === "wkstandteams" && <WKStandTeamsTemplate data={editData} />}
-                  {sport === "voetbal" && type === "stand" && <StandTemplate data={editData} setData={setEditData} />}
-                  {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={editData} setData={setEditData} />}
-                  {sport === "wielrennen" && type === "programma" && <WielrenProgrammaTemplate data={editData} setData={setEditData} />}
-                  {sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie) && <ParijsRoubaixTemplate data={editData} setData={setEditData} />}
-                  {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={editData} setData={setEditData} />}
-                  {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={editData} setData={setEditData} />}
-                  {sport === "algemeen" && type === "medaillespiegel" && <MedaillespiegelTemplate data={editData} setData={setEditData} />}
-                  {sport === "schaatsen" && type === "resultaten" && <SchaatsenResultatenTemplate data={editData} setData={setEditData} />}
-                  {sport === "schaatsen" && type === "wereldbekerstand" && <SchaatsenWereldbekerstandTemplate data={editData} setData={setEditData} />}
-                  {sport === "schaatsen" && type === "programma" && <SchaatsenProgrammaTemplate data={editData} setData={setEditData} />}
-                  {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} />}
-                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate ploeg={opst.a} sleep={sleep} kleur={opst.achtergrond} formaat={opst.formaat} />}
+                  {sport === "formule1" && type === "uitslag" && <UitslagTemplate data={toonData} setData={setEditData} />}
+                  {sport === "formule1" && type === "kwalificatie" && <UitslagTemplate data={toonData} setData={setEditData} />}
+                  {sport === "formule1" && type === "grid" && <GridTemplate data={toonData} setData={setEditData} />}
+                  {sport === "formule1" && type === "wkstandcoureurs" && <WKStandCoureursTemplate data={toonData} setData={setEditData} />}
+                  {sport === "formule1" && type === "wkstandteams" && <WKStandTeamsTemplate data={toonData} setData={setEditData} />}
+                  {sport === "voetbal" && type === "stand" && <StandTemplate data={toonData} setData={setEditData} />}
+                  {sport === "voetbal" && type === "programma" && <ProgrammaTemplate data={toonData} setData={setEditData} />}
+                  {sport === "wielrennen" && type === "programma" && <WielrenProgrammaTemplate data={toonData} setData={setEditData} />}
+                  {sport === "wielrennen" && type === "uitslag" && EENDAAGSE_COMPETITIES.has(competitie) && <ParijsRoubaixTemplate data={toonData} setData={setEditData} />}
+                  {sport === "wielrennen" && type === "uitslag" && !EENDAAGSE_COMPETITIES.has(competitie) && <TdFUitslagTemplate data={toonData} setData={setEditData} />}
+                  {sport === "wielrennen" && type === "klassement" && <TdFKlassementTemplate data={toonData} setData={setEditData} />}
+                  {sport === "algemeen" && type === "medaillespiegel" && <MedaillespiegelTemplate data={toonData} setData={setEditData} />}
+                  {sport === "algemeen" && competitie === "livestream" && type === "programma" && <LivestreamTemplate data={toonData} setData={setEditData} />}
+                  {sport === "schaatsen" && type === "resultaten" && <SchaatsenResultatenTemplate data={toonData} setData={setEditData} />}
+                  {sport === "schaatsen" && type === "wereldbekerstand" && <SchaatsenWereldbekerstandTemplate data={toonData} setData={setEditData} />}
+                  {sport === "schaatsen" && type === "programma" && <LivestreamTemplate data={toonData} setData={setEditData} />}
+                  {isOpstelling && type === "duel" && <OpstellingDuelTemplate opst={opst} sleep={sleep} setOpst={setOpst} />}
+                  {isOpstelling && type === "enkel" && <OpstellingEnkelTemplate opst={opst} sleep={sleep} setOpst={setOpst} />}
                 </div>
                 </PreviewGrens>
               </div>
@@ -6659,6 +7380,8 @@ function App() {
               <>
                 <h3 style={secTitel}>Data</h3>
                 <FormaatKiezer data={editData} setData={setEditData} />
+                <AchtergrondKiezer data={editData} setData={setEditData} />
+                <TitelKleurKiezer data={editData} setData={setEditData} />
                 <DataPanel sport={sport} competitie={competitie} type={type} editData={editData} setEditData={setEditData} />
               </>
             ) : (
