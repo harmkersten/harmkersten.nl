@@ -38,6 +38,7 @@ nav{display:flex;height:100%;margin-left:12px}
 nav button{border:0;background:none;padding:0 14px;font:600 13px/1 var(--body);cursor:pointer;color:var(--muted);border-bottom:2px solid transparent}
 nav button:hover{color:var(--text)}
 nav button.on{color:var(--text);border-bottom-color:var(--acc)}
+#hit .stickyfield{position:static}
 #hitField{touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
 .aim{fill:none;stroke:#fff;stroke-width:1.6;stroke-dasharray:4 4;opacity:.8}
 .aimtxt{font:600 10px var(--body);fill:#fff;text-anchor:middle;paint-order:stroke;stroke:#0f1115;stroke-width:3px}
@@ -112,6 +113,7 @@ h2{font:600 16px/1.3 var(--body);margin:0 0 10px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
 .chip{border:1px solid var(--line2);background:none;padding:5px 10px;border-radius:3px;font:500 12.5px/1.2 var(--body);cursor:pointer;color:var(--muted)}
 .chip.on{background:var(--panel2);border-color:var(--acc);color:var(--text)}
+.chip:disabled{opacity:.35;cursor:not-allowed}
 .big{display:block;width:100%;border:0;background:var(--acc);color:#fff;font:600 14px/1 var(--body);padding:13px;border-radius:4px;cursor:pointer;margin-top:18px}
 .big:hover:not(:disabled){background:var(--acc-dk)}
 .big:disabled{background:var(--panel2);color:var(--dim);cursor:not-allowed}
@@ -342,18 +344,20 @@ summary:hover{color:var(--text)}
     <p class="sub" data-i18n="hitSub"></p>
     <div class="grid2">
       <div class="stickyfield">
-        <div data-i18n-title="pnlField" class="card fieldbox">
-          <svg class="field" id="hitField" viewBox="0 105 400 320" role="img"></svg>
-          <div class="legend"><span><i style="background:var(--me)"></i><span data-i18n="lgChosen"></span></span><span><i style="background:#e4572e"></i><span data-i18n="lgRunner"></span></span><span><i class="a"></i><span data-i18n="lgMove"></span></span><span><i class="l"></i><span data-i18n="lgThrow"></span></span></div>
-          <div class="row" style="margin-top:10px"><button class="btn" id="hitReset" data-i18n="hitReset"></button><button class="btn" id="hitReplay" data-i18n="replay"></button></div>
-        </div>
-      </div>
-      <div>
         <div data-i18n-title="pnlSetupHit" class="card" style="margin-bottom:14px">
-          <div class="lbl" style="margin-top:0" data-i18n="lblRun"></div>
+          <div class="lbl" style="margin-top:0" data-i18n="lblHitKind"></div>
+          <div class="chips" id="hType">
+            <button class="chip on" data-v="auto" data-i18n="hkAuto"></button>
+            <button class="chip" data-v="flyout" data-i18n="hkFly"></button>
+            <button class="chip" data-v="pop" data-i18n="hkPop"></button>
+            <button class="chip" data-v="bunt" data-i18n="hkBunt"></button>
+          </div>
+          <div class="lbl" data-i18n="lblRun"></div>
           <div class="chips" id="hRun">
             <button class="chip" data-v="1" data-i18n="chipR1"></button>
             <button class="chip" data-v="2" data-i18n="chipR2"></button>
+            <button class="chip" data-v="3" data-i18n="chipR3"></button>
+            <button class="chip" data-v="all" data-i18n="chipLoaded"></button>
           </div>
           <div class="lbl" data-i18n="lblOuts"></div>
           <div class="chips" id="hOuts">
@@ -362,6 +366,13 @@ summary:hover{color:var(--text)}
             <button class="chip" data-v="2">2</button>
           </div>
         </div>
+        <div data-i18n-title="pnlField" class="card fieldbox">
+          <svg class="field" id="hitField" viewBox="0 105 400 320" role="img"></svg>
+          <div class="legend"><span><i style="background:var(--me)"></i><span data-i18n="lgChosen"></span></span><span><i style="background:#e4572e"></i><span data-i18n="lgRunner"></span></span><span><i class="a"></i><span data-i18n="lgMove"></span></span><span><i class="l"></i><span data-i18n="lgThrow"></span></span></div>
+          <div class="row" style="margin-top:10px"><button class="btn" id="hitReset" data-i18n="hitReset"></button><button class="btn" id="hitReplay" data-i18n="replay"></button></div>
+        </div>
+      </div>
+      <div>
         <div data-i18n-title="pnlSit" class="card sit">
           <div id="hEmpty" class="note" style="margin-top:0" data-i18n="hitEmpty"></div>
           <div id="hBody" style="display:none">
@@ -392,17 +403,19 @@ const UI = {
   hitTitle:['Sla zelf de bal','Hit the ball yourself'],
   hitSub:['Kies de lopers en het aantal uit. Sleep dan met je vinger of muis over het veld naar de plek waar de bal heen moet, en laat los. Alle spelers nemen hun positie in.',
           'Pick the runners and the number of outs. Then drag your finger or mouse across the field to where the ball should go, and let go. Every player moves into position.'],
-  hitEmpty:['Sleep over het veld om de bal te slaan. Kort in het infield is een grondbal, in het outfield een honkslag, diep bij het hek een extra-base hit.',
-            'Drag across the field to hit the ball. Short into the infield is a ground ball, into the outfield a single, deep by the fence an extra-base hit.'],
+  hitEmpty:['Sleep over het veld om de bal te slaan. Bij "Slag": kort in het infield is een grondbal, in het outfield een honkslag, diep bij het hek een extra-base hit. Bij vangbal en pop-up kies je de richting; een stootslag blijft vlak voor de plaat.',
+            'Drag across the field to hit the ball. With "Hit": short into the infield is a ground ball, into the outfield a single, deep by the fence an extra-base hit. For a fly out and pop-up you pick the direction; a bunt stays right in front of the plate.'],
   hitReset:['Opnieuw slaan','Hit again'], hitPractice:['Oefen deze situatie','Practise this situation'],
   lblOuts:['Aantal uit','Outs'], pnlSetupHit:['Wedstrijdsituatie','Game situation'],
+  lblHitKind:['Soort slag','Type of hit'], hkAuto:['Slag','Hit'], hkFly:['Vangbal','Fly out'], hkPop:['Pop-up','Pop-up'], hkBunt:['Stootslag','Bunt'],
+  chipLoaded:['Honken vol','Bases loaded'],
   setupTitle:['Welke positie speel jij?','Which position do you play?'],
   setupSub:['Je krijgt een spelsituatie te zien. Kies wat jij op jouw positie doet. Na elke keuze legt de gids uit waarom die goed of fout is.',
             'You get a game situation. Choose what you do at your position. After every answer the guide explains why it is right or wrong.'],
   pickNote:['Tik op een speler in het veld of kies een positie uit de lijst.','Tap a player on the field or pick a position from the list.'],
   lblPos:['Positie','Position'], lblType:['Soort slag','Type of hit'], lblRun:['Lopers op de honken','Runners on base'], lblLen:['Aantal vragen','Number of questions'],
   chipFly:['Honkslagen','Singles'], chipGround:['Grondballen','Ground balls'], chipXbh:['Extra-base hits','Extra-base hits'],
-  chipTag:['Vangbal + tag-up','Fly out + tag-up'], chipPop:['Pop-ups','Pop-ups'], chipBunt:['Stootslagen','Bunts'],
+  chipTag:['Vangballen','Fly outs'], chipPop:['Pop-ups','Pop-ups'], chipBunt:['Stootslagen','Bunts'],
   chipR0:['Geen','None'], chipR1:['Op 1','On 1st'], chipR2:['Op 2','On 2nd'], chipR12:['Op 1 en 2','On 1st & 2nd'], chipR3:['Op 3','On 3rd'], chipAll:['Alles','All'],
   modeSit:['Situaties','Situations'], modeSitSub:['Wat doe jij op jouw positie?','What do you do at your position?'],
   modeTh:['Theorie','Theory'], modeThSub:['Regels, roepen en techniek','Rules, calls and technique'],
@@ -444,7 +457,8 @@ const AREA = {LF:['het linksveld','left field'],CF:['het midveld','center field'
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 const runKey = S => S.run.join('') || '0';
 const RUNTXT = {'0':['Geen lopers op de honken','No runners on base'],'1':['Loper op het eerste honk','Runner on first base'],'2':['Loper op het tweede honk','Runner on second base'],
-  '12':['Lopers op het eerste en tweede honk','Runners on first and second base'],'3':['Loper op het derde honk','Runner on third base'],'13':['Lopers op het eerste en derde honk','Runners on first and third base']};
+  '12':['Lopers op het eerste en tweede honk','Runners on first and second base'],'3':['Loper op het derde honk','Runner on third base'],'13':['Lopers op het eerste en derde honk','Runners on first and third base'],
+  '23':['Lopers op het tweede en derde honk','Runners on second and third base'],'123':['Honken vol','Bases loaded']};
 const runTxt = S => RUNTXT[S.showRun?(S.showRun.join('')||'0'):runKey(S)][LANG==='en'?1:0] + (S.outN!==undefined?' · '+OUTS(S.outN):S.outs?L(', minder dan 2 uit',', less than 2 outs'):'');
 const WHERE = {LFline:['langs de linkerlijn','down the left-field line'],LCgap:['in het gat links-midden','to the left-center gap'],
   RCgap:['in het gat rechts-midden','to the right-center gap'],RFline:['langs de rechterlijn','down the right-field line']};
@@ -460,7 +474,7 @@ const sitTitle = S => {
     case 'bunt': return S.to==='H'?L('Squeeze play','Squeeze play'):L('Opofferingsstootslag','Sacrifice bunt');
   }
 };
-const KIND = {fly:['Honkslag','Single'],ground:['Grondbal','Ground ball'],xbh:['Extra-base hit','Extra-base hit'],tag:['Vangbal + tag-up','Fly out + tag-up'],pop:['Pop-up','Pop-up'],bunt:['Stootslag','Bunt']};
+const KIND = {fly:['Honkslag','Single'],ground:['Grondbal','Ground ball'],xbh:['Extra-base hit','Extra-base hit'],tag:['Vangbal','Fly out'],pop:['Pop-up','Pop-up'],bunt:['Stootslag','Bunt']};
 const kindTxt = S => KIND[S.type][LANG==='en'?1:0];
 const SRC = {get EXP(){return L('Correctie op basis van algemene honkbalpraktijk','Correction based on standard baseball practice')},TRC:'TRC Baseball – Defensive Situations',WR:'White Rock South Surrey – Cut-offs and Relays',BD:'Baseball Dudes – 30 Fundamental Situations',PH:'Perry Hill Infield System',CO:'Defensive situations and strategies (cut-off)'};
 
@@ -708,6 +722,32 @@ const SIT = [
   '3B':['bunt_charge_3B','As the runner at third breaks for home plate, third baseman breaks with him.'],
   LF:['rf_toward_infield','Move toward infield to back up bases.'], CF:['rf_toward_infield','Move toward infield to back up bases.'], RF:['rf_toward_infield','Move toward infield to back up bases.']}},
 ];
+/* afgeleide situaties: honken vol bij een grondbal, en vangballen met een loper op 2 of 1 */
+(function(){
+  const find=(t,b,k)=>SIT.find(S=>S.type===t&&S.ball===b&&runKey(S)===k);
+  const add=[];
+  for(const f of ['3B','SS','2B','1B','P']){
+    const T=find('ground',f,'12'), d=Object.assign({},T.d);
+    d.C=['protect_home','Stand on home plate for the force out, then look to throw to first.','EXP'];
+    if(f!=='1B'&&f!=='P') d.P=['backup_home','Back up home plate.','EXP'];
+    d[f]=['field_H','Field the ball and throw home for the force out.','EXP'];
+    add.push({type:'ground',ball:f,run:[1,2,3],to:'H',src:'EXP',d,
+      w:{C:['Alle honken zijn bezet, dus ook de loper op het derde honk is gedwongen. Jij staat met je voet op de thuisplaat: een force out, je hoeft niet te taggen. Komt de worp naar jou, stap op de plaat en kijk of je nog naar het eerste honk kunt gooien voor een dubbelspel.',
+            'The bases are loaded, so the runner on third is forced too. You keep your foot on home plate: a force out, no tag needed. If the throw comes to you, step on the plate and see if you can still throw to first for a double play.']}});
+  }
+  for(const f of ['LF','CF','RF']){
+    const R1=find('fly',f,'1'), R0=find('fly',f,'0');
+    add.push({type:'tag',ball:f,run:[2],outs:true,to:'3B',src:'EXP',
+      d:Object.assign({},R1.d,{'1B':['cover1B','Cover first base.','EXP'],[f]:['catch_throw_3B','Catch the ball moving forward and throw to third through the cut-off.','EXP']}),
+      w:{'1B':['Bij een vangbal is de slagman uit, dus je hoeft niet te kijken of hij het honk aanraakt. Blijf bij je honk, zodat er altijd iemand is om naar te gooien.',
+               'On a fly out the batter is out, so you don\'t need to watch him touch the bag. Stay at your base, so there is always someone to throw to.']}});
+    add.push({type:'tag',ball:f,run:[1],outs:true,to:'2B',src:'EXP',
+      d:Object.assign({},R0.d,{C:['protect_home','Stay at home plate.','EXP'],'1B':['cover1B','Cover first base.','EXP'],[f]:['catch_throw_2B','Catch the ball and get it quickly to the cut-off or second base.','EXP']}),
+      w:{C:['Bij een vangbal is de slagman uit, dus je hoeft niet mee naar het eerste honk. Jij blijft bij de thuisplaat, zodat daar altijd iemand staat.',
+            'On a fly out the batter is out, so you don\'t need to run to first. You stay at home plate, so someone is always there.']}});
+  }
+  SIT.push(...add);
+})();
 SIT.forEach((S,i)=>{S.id=i;S.src=S.src||'TRC';});
 
 /* ---------- aantal uit: bij grondballen met lopers hangt de keuze van de veldspeler ervan af ----------
@@ -725,13 +765,20 @@ function outsPlan(S){
     '1B':{0:{to:'1B',ok:['field_run1B_check3','field_2B']},1:{to:'2B',ok:['field_2B','field_run1B_check3']},2:{to:'1B',ok:['field_run1B_check3','field_2B']}},
     P:{0:{to:'3B',ok:['field_3B','field_2B']},1:{to:'2B',ok:['field_2B','field_3B']},2:{to:'3B',ok:['field_3B','field_2B','field_1B']}},
   }[f];
+  if(k==='123') return {
+    '3B':{0:{to:'H',ok:['field_H','field_tag3','field_2B']},1:{to:'2B',ok:['field_2B','field_tag3','field_H']},2:{to:'3B',ok:['field_tag3','field_H','field_2B','field_1B']}},
+    SS:{0:{to:'H',ok:['field_H','field_2B']},1:{to:'2B',ok:['field_2B','field_H']},2:{to:'2B',ok:['field_2B','field_3B','field_H','field_1B']}},
+    '2B':{0:{to:'H',ok:['field_H','field_2B']},1:{to:'2B',ok:['field_2B','field_H']},2:{to:'2B',ok:['field_2B','field_1B','field_H']}},
+    '1B':{0:{to:'H',ok:['field_H','field_run1B_check3']},1:{to:'H',ok:['field_H','field_2B']},2:{to:'1B',ok:['field_run1B','field_H','field_2B']}},
+    P:{0:{to:'H',ok:['field_H','field_2B']},1:{to:'H',ok:['field_H','field_2B']},2:{to:'H',ok:['field_H','field_2B','field_3B','field_1B']}},
+  }[f];
   return null;
 }
 SIT.forEach(S=>{ if(S.type==='ground' && S.run.length) S.ov=outsPlan(S); });
 /* de situatie zoals hij met n uit gespeeld wordt */
 function withOuts(S,n){
   const v=S.ov[n], f=S.ball, same=v.ok[0]===S.d[f][0];
-  const eq=n===2||(n===0&&runKey(S)==='12');   // alle goede antwoorden even goed
+  const eq=n===2||(n===0&&['12','123'].includes(runKey(S)));   // alle goede antwoorden even goed
   return Object.assign({},S,{base:S,outN:n,to:v.to,ok:v.ok,okEq:eq,d:Object.assign({},S.d,{[f]:same?S.d[f]:[v.ok[0],null,'EXP']})});
 }
 /* realistisch aantal uit per soort situatie */
@@ -758,6 +805,16 @@ function outsWhy(S,n){
     if(n<2) return L(`Met ${n} uit telt de loper op het tweede honk: hij mag niet zomaar naar het derde. `,`With ${n} out${n===1?'':'s'} the runner on second matters: he can't just walk to third. `)+A[S.d[f][0]].why(S,f);
     return L('Met 2 uit maakt de loper op het tweede honk niet meer uit: een uit op het eerste honk beëindigt de inning voordat hij kan scoren. Gooi meteen en zeker naar het eerste honk. Eerst even terugkijken mag ook, maar is niet nodig.',
              'With 2 outs the runner on second no longer matters: an out at first ends the inning before he can score. Throw straight and sure to first. Looking him back first is fine too, but not needed.');
+  }
+  if(k==='123'){
+    if(n===0) return L('Honken vol en 0 uit: elke loper is gedwongen. Gooi naar de thuisplaat voor de force out: dan scoort er niemand, en de catcher kan nog naar het eerste honk gooien voor een dubbelspel. Een dubbelspel via het tweede honk mag ook, maar dan telt het punt van de loper op het derde honk.',
+                       'Bases loaded, 0 outs: every runner is forced. Throw home for the force out: then nobody scores, and the catcher can still throw to first for a double play. A double play through second is fine too, but then the runner from third scores.');
+    if(n===1) return L(`Honken vol en 1 uit: een dubbelspel beëindigt de inning voordat het punt telt, dus dat is de beste keuze (${['1B','P'].includes(f)?'via de thuisplaat en dan het eerste honk':'via het tweede honk en dan het eerste'}). Alleen een force out kan ook, maar dan gaat de inning door.`,
+                       `Bases loaded, 1 out: a double play ends the inning before the run counts, so that is the best choice (${['1B','P'].includes(f)?'home, then first':'second, then first'}). A single force out also works, but then the inning goes on.`);
+    const nb={'3B':['Voor jou is dat zelf op het derde honk stappen.','For you that is stepping on third yourself.'],SS:['Voor jou is dat het tweede honk (korte worp).','For you that is second base (short throw).'],
+      '2B':['Voor jou is dat het tweede honk.','For you that is second base.'],'1B':['Voor jou is dat zelf op het eerste honk stappen.','For you that is stepping on first yourself.'],
+      P:['Voor jou is dat de thuisplaat: de catcher staat vlakbij.','For you that is home plate: the catcher is right there.']}[f];
+    return L(`Honken vol en 2 uit: één force out op welk honk dan ook beëindigt de inning. Neem de dichtstbijzijnde. ${nb[0]}`,`Bases loaded, 2 outs: one force out at any base ends the inning. Take the closest. ${nb[1]}`);
   }
   if(n===0){
     if(f==='2B') return L('Met 0 uit wil je een dubbelspel. Voor jou is de worp naar het derde honk lang en dwars over het veld, dus start je het dubbelspel via het tweede honk (4-6-3).',
@@ -793,6 +850,10 @@ function idea(S){
 }
 function ideaBase(S){
   const k = runKey(S);
+  if(S.ov && S.outN!==undefined && k==='123')
+    return [L('Honken vol, 0 uit: elke loper is gedwongen. Een force out op de thuisplaat houdt het punt tegen; een dubbelspel kan ook.','Bases loaded, 0 outs: every runner is forced. A force out at home stops the run; a double play is fine too.'),
+            L('Honken vol, 1 uit: een dubbelspel beëindigt de inning voordat het punt telt.','Bases loaded, 1 out: a double play ends the inning before the run counts.'),
+            L('Honken vol, 2 uit: één force out op elk honk is genoeg.','Bases loaded, 2 outs: one force out at any base is enough.')][S.outN];
   if(S.ov && S.outN!==undefined){
     const n=S.outN;
     if(k==='1') return n<2?L('De loper op het eerste honk moet doorlopen. Met minder dan 2 uit is het dubbelspel het doel: force out op het tweede honk en door naar het eerste.','The runner on first is forced. With less than 2 outs the goal is the double play: force out at second and on to first.')
@@ -803,6 +864,8 @@ function ideaBase(S){
             L('Lopers op 1 en 2, 1 uit: een dubbelspel beëindigt de inning, dus dat heeft de voorkeur.','Runners on 1st and 2nd, 1 out: a double play ends the inning, so that is preferred.'),
             L('Lopers op 1 en 2, 2 uit: één uit is genoeg. Neem de makkelijkste force out.','Runners on 1st and 2nd, 2 outs: one out is enough. Take the easiest force out.')][n];
   }
+  if(S.type==='ground' && k==='123') return L('Honken vol: elke loper is gedwongen, dus er is een force out mogelijk op elk honk, ook op de thuisplaat. Het aantal uit bepaalt de beste keuze.',
+                                             'Bases loaded: every runner is forced, so there is a force out at every base, home plate included. The number of outs decides the best choice.');
   if(S.type==='fly'){
     if(k==='0') return L('Geen lopers: alleen de slagman loopt. De bal moet zo snel mogelijk naar het tweede honk, zodat de slagman niet verder komt dan het eerste honk.',
                          'No runners: only the batter is running. The ball has to get to second base as fast as possible, so the batter stops at first.');
@@ -817,6 +880,10 @@ function ideaBase(S){
     return L('Een tweehonkslag met een loper op het eerste honk: die loper probeert te scoren. Is het eerste honk bezet, dan lijn je op naar de thuisplaat, met een relay-man, een trailer en een tweede cut-off.',
              'A double with a runner on first: that runner will try to score. With first base occupied you line up to home plate, with a relay man, a trailer and a second cut-off.');
   }
+  if(S.type==='tag' && S.to==='3B') return L('Vangbal met een loper op het tweede honk: na de vangst kan hij optikken en naar het derde honk lopen. De worp gaat laag naar het derde honk via de cut-off.',
+                                              'Fly out with a runner on second: after the catch he can tag up and run to third. The throw goes low to third through the cut-off.');
+  if(S.type==='tag' && S.to==='2B') return L('Vangbal zonder loper op het tweede of derde honk: de slagman is uit en een loper op het eerste honk moet terug. Gooi de bal snel binnen via de cut-off, zodat niemand verder komt.',
+                                              'Fly out with no runner on second or third: the batter is out and a runner on first has to go back. Get the ball in quickly through the cut-off, so nobody advances.');
   if(S.type==='tag') return L('Vangbal met minder dan twee uit en lopers op 1 en 3: de loper op het derde honk tagt op (wacht tot de vangst) en probeert te scoren. De worp gaat laag naar huis via de cut-off. Laat ook de loper op het eerste honk niet zomaar doorlopen naar het tweede.',
                               'Fly out with less than two outs and runners on 1st and 3rd: the runner on third tags up (waits for the catch) and tries to score. The throw goes low to home through the cut-off. Don\'t let the runner on first walk into second either.');
   if(S.type==='pop') return L('Een korte pop-up tussen infield en outfield: meerdere spelers kunnen erbij, dus roepen is alles. Volgorde van voorrang: midvelder, dan links- en rechtsvelder, dan korte stop, tweede, derde en eerste honkman, catcher en als laatste de werper. Wie de bal heeft roept luid "I got it!".',
@@ -877,8 +944,19 @@ const throwOut = base => ({l:()=>L(`Hard naar ${BN(base)} gooien, of naar de cut
            `You get the ball. ${idea(S)} Throw hard and low to ${BN(base)}. If it's too far, hit the cut-off (${de(cutPos(S))}) who lines up between you and the base.`)});
 
 const A = {
+  field_H:{l:()=>L('De bal fielden en naar de thuisplaat gooien (force out)','Field the ball and throw home (force out)'),g:['fH'],field:'H',
+    why:S=>L('De bal komt naar jou en alle honken zijn bezet, dus ook de loper op het derde honk is gedwongen. Gooi naar de thuisplaat: de catcher staat op de plaat voor de force out (geen tag nodig) en kan daarna nog naar het eerste honk gooien voor een dubbelspel.',
+             'The ball comes to you and the bases are loaded, so the runner on third is forced too. Throw home: the catcher has his foot on the plate for the force out (no tag needed) and can then throw to first for a double play.')},
+  catch_throw_3B:{l:()=>L('Achter de bal gaan staan, vangen en laag naar het derde honk gooien','Get behind the ball, catch it and throw low to third base'),g:['o3B'],field:'3B',
+    why:S=>L(`De loper op het tweede honk wacht tot de vangst en probeert dan naar het derde honk te lopen (optikken). Ga achter de bal staan, zodat je vangt terwijl je naar voren komt, en gooi laag naar het derde honk via de cut-off (${de(cutPos(S))}).`,
+             `The runner on second waits for the catch and then tries to run to third (tag up). Get behind the ball so you catch it moving forward, and throw low to third through the cut-off (${de(cutPos(S))}).`)},
+  catch_throw_2B:{l:()=>L('Vangen en de bal snel naar de cut-off of het tweede honk gooien','Catch it and get the ball quickly to the cut-off or second base'),g:['o2B'],field:'2B',
+    why:S=>L('Na de vangst is de slagman uit en moeten de lopers terug naar hun honk. Gooi de bal snel naar de cut-off of het tweede honk, zodat niemand verder komt. Staat een loper te ver van zijn honk, dan kan hij misschien nog uitgemaakt worden.',
+             'After the catch the batter is out and the runners have to go back to their bases. Get the ball quickly to the cut-off or second base, so nobody advances. If a runner strays too far, he may still be thrown out.')},
   backup_home:{l:()=>L('Diep achter de thuisplaat gaan staan als back-up','Back up home plate, deep behind the catcher'),g:['bH'],
-    why:S=>L('De worp gaat naar de thuisplaat. Jij gaat zo diep mogelijk achter de catcher staan, in lijn met de worp. Gaat de bal langs hem, dan stop jij hem en kunnen de andere lopers niet doorlopen.',
+    why:S=>S.to!=='H'?L('Er kan een worp naar de thuisplaat komen. Jij gaat diep achter de catcher staan, in lijn met die worp. Gaat de bal langs hem, dan stop jij hem en kunnen de andere lopers niet doorlopen.',
+                        'A throw may come home. Get deep behind the catcher, in line with that throw. If the ball gets past him, you stop it and the other runners can\'t advance.')
+      :L('De worp gaat naar de thuisplaat. Jij gaat zo diep mogelijk achter de catcher staan, in lijn met de worp. Gaat de bal langs hem, dan stop jij hem en kunnen de andere lopers niet doorlopen.',
              'The throw goes home. Get as deep as possible behind the catcher, in line with the throw. If the ball gets past him, you stop it and the other runners can\'t advance.')},
   relay_lead:{l:()=>L('Als relay-man naar buiten sprinten, in lijn tussen de bal en het honk','Sprint out as the relay man, in line between the ball and the base'),g:['cut'],
     why:S=>L(`De bal ligt diep in het veld: te ver voor één worp. Jij sprint naar buiten en gaat in één lijn staan tussen de bal en ${BN(S.to)}, met je handen omhoog als doel. Vang de bal aan je handschoenkant, draai en gooi door. De trailer achter je roept waar de bal heen moet.`,
@@ -936,8 +1014,11 @@ const A = {
     why:S=>L(`De bal komt naar jou en je staat al vlak bij het eerste honk. ${S.run.length>1?'Voor een force out op het derde honk sta je te ver weg, dus neem je de zekere uit op het eerste honk.':'De loper op het tweede honk is niet gedwongen, dus neem je de zekere uit op het eerste honk.'} Loop zelf naar het honk of gooi naar de werper. Kijk daarna meteen naar de loper die richting het derde honk gaat: misschien probeert hij nog door te lopen.`,
              `The ball comes to you and you are already close to first base. ${S.run.length>1?'You are too far away for a force out at third, so you take the sure out at first.':'The runner on second is not forced, so you take the sure out at first.'} Take the bag yourself or throw to the pitcher. Then look right away at the runner heading to third: he may try to keep going.`)},
   hold_throw1B:{l:()=>L('De loper met je ogen vasthouden en dan naar het eerste honk gooien','Hold the runner with your eyes, then throw to first base'),g:['f1'],field:'1B',
-    why:S=>L('De bal komt naar jou en er staat een loper op het tweede honk. Die loper is niet gedwongen om te lopen. Kijk hem eerst even terug (vasthouden met je ogen) zodat hij niet doorloopt naar het derde honk, en gooi daarna de slagman uit op het eerste honk.',
-             'The ball comes to you and there is a runner on second. That runner is not forced to run. Look him back first (hold him with your eyes) so he doesn\'t go to third, then throw the batter out at first.')},
+    why:S=>(S.showRun||S.run).includes(3)
+      ? L('De bal komt naar jou en er staat een loper op het derde honk. Die is niet gedwongen om te lopen. Kijk hem eerst terug zodat hij blijft staan, en gooi dan de slagman uit op het eerste honk. Breekt hij toch naar huis, gooi dan naar de thuisplaat.',
+          'The ball comes to you and there is a runner on third. He is not forced to run. Look him back first so he stays put, then throw the batter out at first. If he breaks for home anyway, throw home.')
+      : L('De bal komt naar jou en er staat een loper op het tweede honk. Die loper is niet gedwongen om te lopen. Kijk hem eerst even terug (vasthouden met je ogen) zodat hij niet doorloopt naar het derde honk, en gooi daarna de slagman uit op het eerste honk.',
+          'The ball comes to you and there is a runner on second. That runner is not forced to run. Look him back first (hold him with your eyes) so he doesn\'t go to third, then throw the batter out at first.')},
   field_2B:{l:()=>L('De bal fielden en naar het tweede honk gooien','Field the ball and throw to second base'),g:['f2'],field:'2B',
     why:S=>S.run.includes(2)?L('De bal komt naar jou en beide lopers zijn gedwongen. Het derde honk ligt ver weg en de worp ernaartoe gaat dwars over het veld. Gooi daarom naar het tweede honk: de korte stop maakt de force out en gooit door naar het eerste honk voor het dubbelspel.',
                                  'The ball comes to you and both runners are forced. Third base is far away and the throw goes across the diamond. So feed second: the shortstop makes the force out and relays to first for the double play.')
@@ -1072,18 +1153,18 @@ const lbl = a => A[a].l();
 
 /* welke foute opties passen bij een positie */
 const POOL = {
-  P:['cover1B','cover3B','cover_home','cover2B','backup_1B','backup_3B','backup_2B','backup_home','p_backup_mound_2B','p_backup_mound_SS','p_backup_3B_home','p_backup_1B_home','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover_backup_1B','cover_backup_3B','bunt_pitcher','bunt_p_3Bline'],
+  P:['field_H','cover1B','cover3B','cover_home','cover2B','backup_1B','backup_3B','backup_2B','backup_home','p_backup_mound_2B','p_backup_mound_SS','p_backup_3B_home','p_backup_1B_home','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover_backup_1B','cover_backup_3B','bunt_pitcher','bunt_p_3Bline'],
   C:['protect_home','follow_runner_1B','backup_1B','cover3B','backup_3B','cover1B','backup_P','cover_home','bunt_catcher'],
-  '1B':['cover1B','cover1B_after_touch','field_run1B','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover2B','backup_P','backup_2B','trail_runner_2B','trailer','second_cut_home','bunt_charge_1B','popup_priority','popup_yield'],
-  '2B':['cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_1B','backup_P','cover1B','backup_SS','relay_lead','trailer','popup_priority','popup_yield'],
-  SS:['cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_3B','cover3B','backup_2B','backup_P','relay_lead','trailer','popup_priority','popup_yield'],
-  '3B':['cover3B','stay_near3B','backup_SS','field_1B','field_2B','field_3B','field_tag3','hold_throw1B','cutoff','cover_home','cover2B','bunt_charge_3B','relay_lead','popup_priority','popup_yield'],
-  LF:['backup_3B','backup_SS','backup_CF','backup_2B','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','rf_toward_infield','cover3B','popup_priority','popup_yield'],
-  CF:['backup_2B','backup_LF','backup_RF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','cover2B','rf_toward_infield','popup_priority','popup_yield'],
-  RF:['backup_1B','backup_2B','backup_CF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','rf_toward_infield','cover1B','cover2B','popup_priority','popup_yield'],
+  '1B':['field_H','cover1B','cover1B_after_touch','field_run1B','field_1B','field_2B','field_3B','hold_throw1B','cutoff','cover2B','backup_P','backup_2B','trail_runner_2B','trailer','second_cut_home','bunt_charge_1B','popup_priority','popup_yield'],
+  '2B':['field_H','cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_1B','backup_P','cover1B','backup_SS','relay_lead','trailer','popup_priority','popup_yield'],
+  SS:['field_H','cover2B','cover2B_or_cut','cutoff','field_1B','field_2B','field_3B','hold_throw1B','backup_3B','cover3B','backup_2B','backup_P','relay_lead','trailer','popup_priority','popup_yield'],
+  '3B':['field_H','cover3B','stay_near3B','backup_SS','field_1B','field_2B','field_3B','field_tag3','hold_throw1B','cutoff','cover_home','cover2B','bunt_charge_3B','relay_lead','popup_priority','popup_yield'],
+  LF:['catch_throw_3B','catch_throw_2B','backup_3B','backup_SS','backup_CF','backup_2B','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','rf_toward_infield','cover3B','popup_priority','popup_yield'],
+  CF:['catch_throw_3B','catch_throw_2B','backup_2B','backup_LF','backup_RF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','cover2B','rf_toward_infield','popup_priority','popup_yield'],
+  RF:['catch_throw_3B','catch_throw_2B','backup_1B','backup_2B','backup_CF','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','cutoff','rf_toward_infield','cover1B','cover2B','popup_priority','popup_yield'],
 };
 const SELF = {P:'backup_P','1B':'backup_1B','2B':'backup_2B',SS:'backup_SS','3B':'backup_3B',LF:'backup_LF',CF:'backup_CF',RF:'backup_RF'};
-const OUT_ONLY = ['throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','rf_toward_infield'];
+const OUT_ONLY = ['catch_throw_3B','catch_throw_2B','throw_2B_or_cut','throw_3B_or_cut','throw_home_or_cut','throw_relay','catch_throw_home','rf_toward_infield'];
 const P_ONLY = ['backup_home','bunt_pitcher','bunt_p_3Bline','p_backup_mound_2B','p_backup_mound_SS','p_backup_3B_home','p_backup_1B_home'];
 const conflicts = (a,b) => a===b || A[a].g.some(x=>A[b].g.includes(x));
 const shuffle = a => {a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -1319,7 +1400,7 @@ function drawField(svg,{S,me,mode,onPick,animate=true,runners}){
     let pts=[sp];
     if(['fly','xbh','tag'].includes(S.type) && cp) pts.push(T[cp]);
     if(S.to) pts.push(fieldAct==='field_tag3'?B['3B']:dest);
-    if(S.type==='ground' && S.to==='2B' && S.outN!==2) pts.push(B['1B']);   // dubbelspel: door naar het eerste honk
+    if(S.type==='ground' && (S.to==='2B'||(S.to==='H'&&runKey(S)==='123')) && S.outN!==2) pts.push(B['1B']);   // dubbelspel: door naar het eerste honk
     if(S.to && len(sub(pts[pts.length-1],sp))>8){
       const tp=el('path',{d:'M'+pts.map(q=>q.join(',')).join(' L'),class:'throw','marker-end':`url(#${id}r)`},lay.thr);
       if(animate){tp.style.opacity=0;tp.style.transition='opacity .4s';setTimeout(()=>tp.style.opacity=1,1000);}
@@ -1619,7 +1700,7 @@ $('#toSetup').onclick=()=>show('setup');
 
 /* ---------- studeren ---------- */
 const study={S:SIT[0],pos:null};
-const RUNSHORT={'0':['leeg','empty'],'1':['1','1'],'2':['2','2'],'12':['1+2','1+2'],'3':['3','3'],'13':['1+3','1+3']};
+const RUNSHORT={'0':['leeg','empty'],'1':['1','1'],'2':['2','2'],'12':['1+2','1+2'],'3':['3','3'],'13':['1+3','1+3'],'23':['2+3','2+3'],'123':['vol','loaded']};
 const shortName = S => S.type==='xbh'?{LFline:'LF-lijn',LCgap:'LC',RCgap:'RC',RFline:'RF-lijn'}[S.where].replace('lijn',L('lijn','line'))
   : S.type==='bunt'?(S.to==='H'?'squeeze':'bunt'):S.ball;
 function renderStudyList(){
@@ -1642,34 +1723,75 @@ function renderStudy(animate=true){
 $('#replay').onclick=()=>renderStudy(true);
 
 /* ---------- zelf slaan ---------- */
-const hit={run:new Set(),outs:0,xy:null,S:null,pos:null,note:null};
+const hit={kind:'auto',run:new Set(),outs:0,xy:null,S:null,pos:null,note:null};
 const angDist = xy => { const v=sub(xy,H); return {th:Math.atan2(v[0],-v[1])*180/Math.PI, d:len(v)}; };
-/* bal altijd binnen de lijnen en binnen het hek */
+const polar = (th,d) => { const r=th*Math.PI/180; return [H[0]+Math.sin(r)*d, H[1]-Math.cos(r)*d]; };
+/* bal altijd binnen de lijnen; per soort slag een passende afstand */
 function clampFair(xy){
-  let {th,d}=angDist(xy); th=Math.max(-43,Math.min(43,th)); d=Math.max(28,Math.min(258,d));
-  const r=th*Math.PI/180; return [H[0]+Math.sin(r)*d, H[1]-Math.cos(r)*d];
+  let {th,d}=angDist(xy); th=Math.max(-43,Math.min(43,th));
+  const [lo,hi]={auto:[28,258],flyout:[190,250],pop:[115,205],bunt:[22,52]}[hit.kind];
+  return polar(th,Math.max(lo,Math.min(hi,d)));
 }
+const ofZone = th => th<-15?'LF':th<15?'CF':'RF';
 /* uit de plek van de bal: soort slag en wie hem pakt */
 function classify(xy){
   const {th,d}=angDist(xy);
+  if(hit.kind==='flyout') return {type:'tag',ball:ofZone(th)};
+  if(hit.kind==='pop') return {type:'pop',ball:ofZone(th)};
+  if(hit.kind==='bunt') return {type:'bunt'};
   if(d<175) return {type:'ground',ball: d<80&&Math.abs(th)<28 ? 'P' : th<-24?'3B':th<0?'SS':th<24?'2B':'1B'};
-  if(d<235) return {type:'fly',ball: th<-15?'LF':th<15?'CF':'RF'};
+  if(d<235) return {type:'fly',ball:ofZone(th)};
   const where = th<-28?'LFline':th<0?'LCgap':th<28?'RCgap':'RFline';
   return {type:'xbh',where,ball:{LFline:'LF',LCgap:'CF',RCgap:'CF',RFline:'RF'}[where]};
 }
-const previewLabel = c => c.type==='ground'?L(`Grondbal → ${c.ball}`,`Ground ball → ${c.ball}`):c.type==='fly'?L(`Honkslag → ${c.ball}`,`Single → ${c.ball}`):'Extra-base hit';
-/* de bestaande situatie die bij deze slag en deze lopers hoort */
+const previewLabel = c => ({ground:L(`Grondbal → ${c.ball}`,`Ground ball → ${c.ball}`),fly:L(`Honkslag → ${c.ball}`,`Single → ${c.ball}`),xbh:'Extra-base hit',
+  tag:L(`Vangbal → ${c.ball}`,`Fly out → ${c.ball}`),pop:L(`Pop-up → ${c.ball}`,`Pop-up → ${c.ball}`),bunt:L('Stootslag','Bunt')})[c.type];
+/* toegestane aantallen uit per soort slag */
+const hitOuts = () => ['flyout','pop','bunt'].includes(hit.kind) ? [0,1] : [0,1,2];
+/* de bestaande situatie die bij deze slag en deze lopers hoort, met een korte toelichting als het een benadering is */
 function pickTemplate(c,k){
+  const has=n=>k.includes(String(n)), find=(t,b,kk,w)=>SIT.find(S=>S.type===t&&(b==null||S.ball===b)&&(!w||S.where===w)&&runKey(S)===kk);
+  const N=(nl,en)=>[nl,en];
   let want=k, note=null;
-  if(c.type==='fly' && k==='12'){ want='2'; note=['Met lopers op 1 en 2 speel je dit als een loper op 2: de voorste loper probeert te scoren, dus de worp gaat naar huis.','With runners on 1st and 2nd this plays like a runner on 2nd: the lead runner tries to score, so the throw goes home.']; }
-  if(c.type==='xbh'){
-    want=(k==='1'||k==='12')?'1':'0';
-    if(k==='2') note=['Met alleen een loper op 2 scoort die loper makkelijk. De verdediging speelt dit als zonder lopers en lijnt op naar het derde honk voor de slagman.','With only a runner on 2nd he scores easily. The defense plays it as with no runners and lines up to third for the batter.'];
-    if(k==='12') note=['Met lopers op 1 en 2 lijn je op naar de thuisplaat, net als met alleen een loper op 1.','With runners on 1st and 2nd you line up to home, just as with only a runner on 1st.'];
+  if(c.type==='ground'){
+    if(k==='3'||k==='23'){ want='2'; note=N('De loper op het derde honk is niet gedwongen. Kijk hem terug zodat hij niet naar huis gaat, en maak dan de zekere uit op het eerste honk. Breekt hij toch, gooi dan naar de thuisplaat.','The runner on third is not forced. Look him back so he doesn\'t go home, then take the sure out at first. If he breaks anyway, throw home.'); }
+    if(k==='13'){ want='1'; note=N('De loper op het derde honk is niet gedwongen; die op het eerste wel. Meestal ga je voor het dubbelspel (met 1 uit eindigt dat de inning voordat het punt telt). Kijk de loper op het derde wel even terug.','The runner on third is not forced; the one on first is. Usually you go for the double play (with 1 out it ends the inning before the run counts). Do look the runner on third back.'); }
+    return {T:find('ground',c.ball,want),note};
   }
-  return {T:SIT.find(S=>S.type===c.type && S.ball===c.ball && (!c.where||S.where===c.where) && runKey(S)===want), note};
+  if(c.type==='fly'||c.type==='xbh'){
+    let kk=k.replace('3','')||'0';
+    if(has(3)) note=N('De loper op het derde honk scoort makkelijk; het spel draait om de volgende loper.','The runner on third scores easily; the play is about the next runner.');
+    if(c.type==='fly'){ if(kk==='12'){ kk='2'; note=N('Met lopers op 1 en 2 speel je dit als een loper op 2: de voorste loper probeert te scoren, dus de worp gaat naar huis.','With runners on 1st and 2nd this plays like a runner on 2nd: the lead runner tries to score, so the throw goes home.'); } }
+    else {
+      const k2=(kk==='1'||kk==='12')?'1':'0';
+      if(kk==='2') note=N('Met alleen een loper op 2 scoort die loper makkelijk. De verdediging speelt dit als zonder lopers en lijnt op naar het derde honk voor de slagman.','With only a runner on 2nd he scores easily. The defense plays it as with no runners and lines up to third for the batter.');
+      if(kk==='12') note=N('Met lopers op 1 en 2 lijn je op naar de thuisplaat, net als met alleen een loper op 1.','With runners on 1st and 2nd you line up to home, just as with only a runner on 1st.');
+      kk=k2;
+    }
+    return {T:find(c.type,c.ball,kk,c.where),note};
+  }
+  if(c.type==='tag'){
+    if(has(3)){ if(k!=='13') note=N('Opofferingsvlucht: de loper op het derde honk tikt op na de vangst en probeert te scoren. De worp gaat naar huis via de cut-off.','Sacrifice fly: the runner on third tags up after the catch and tries to score. The throw goes home through the cut-off.');
+      return {T:find('tag',c.ball,'13'),note}; }
+    if(has(2)){ if(k!=='2') note=N('De loper op het tweede honk kan optikken naar het derde; de loper op het eerste moet terug.','The runner on second can tag up to third; the runner on first has to go back.');
+      return {T:find('tag',c.ball,'2'),note}; }
+    if(k==='0') note=N('Zonder lopers is de slagman gewoon uit; gooi de bal snel binnen.','With no runners the batter is simply out; get the ball in quickly.');
+    return {T:find('tag',c.ball,'1'),note};
+  }
+  if(c.type==='pop'){
+    if(k!=='1') note=N('Bij een pop-up blijft de dekking met andere lopers hetzelfde: wie voorrang heeft roept en vangt, de rest dekt de honken en let op lopers die te ver van hun honk staan.','On a pop-up the coverage stays the same with other runners: whoever has priority calls and catches it, the rest cover the bases and watch runners who stray too far.');
+    return {T:find('pop',c.ball,'1'),note};
+  }
+  // stootslag
+  let kk='1';
+  if(has(3)){ kk='3'; if(k!=='3') note=N(k==='123'?'Met de honken vol is het een squeeze met een force out op de thuisplaat: de catcher hoeft niet te taggen.':'Met een loper op het derde honk speel je dit als squeeze: die loper sprint naar huis.',
+                                         k==='123'?'With the bases loaded it is a squeeze with a force out at home: the catcher doesn\'t need to tag.':'With a runner on third this plays as a squeeze: that runner breaks for home.'); }
+  else if(has(2)){ kk='12'; if(k==='2') note=N('Met een loper op 2 is de dekking dezelfde als met lopers op 1 en 2: de werper neemt de derde-honklijn.','With a runner on 2nd the coverage is the same as with runners on 1st and 2nd: the pitcher takes the third-base line.'); }
+  else if(k==='0') note=N('Zonder lopers is dit een bunt voor een honkslag; de dekking is dezelfde als bij een opofferingsstootslag.','With no runners this is a bunt for a hit; the coverage is the same as on a sacrifice bunt.');
+  return {T:find('bunt',null,kk),note};
 }
 function buildHit(){
+  if(!hitOuts().includes(hit.outs)) hit.outs=Math.max(...hitOuts());
   const c=classify(hit.xy), runs=[...hit.run].sort(), k=runs.join('')||'0';
   const {T,note}=pickTemplate(c,k); if(!T) return null;
   const S=T.ov ? withOuts(T,hit.outs) : Object.assign({},T,{base:T,outN:hit.outs});
@@ -1686,8 +1808,10 @@ function doHit(xy){
 }
 function renderHitPanel(){
   const S=hit.S;
-  document.querySelectorAll('#hRun .chip').forEach(c=>c.classList.toggle('on',hit.run.has(+c.dataset.v)));
-  document.querySelectorAll('#hOuts .chip').forEach(c=>c.classList.toggle('on',+c.dataset.v===hit.outs));
+  if(!hitOuts().includes(hit.outs)) hit.outs=Math.max(...hitOuts());
+  document.querySelectorAll('#hType .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===hit.kind));
+  document.querySelectorAll('#hRun .chip').forEach(c=>c.classList.toggle('on',c.dataset.v==='all'?hit.run.size===3:hit.run.has(+c.dataset.v)));
+  document.querySelectorAll('#hOuts .chip').forEach(c=>{c.classList.toggle('on',+c.dataset.v===hit.outs);c.disabled=!hitOuts().includes(+c.dataset.v);});
   $('#hEmpty').style.display=S?'none':''; $('#hBody').style.display=S?'':'none';
   if(!S) return;
   $('#hKind').textContent=kindTxt(S);
@@ -1723,7 +1847,11 @@ function renderHit(){
   svg.addEventListener('pointerup',e=>{ if(!aiming) return; aiming=false; doHit(toSvg(e)); });
   svg.addEventListener('pointercancel',()=>{ aiming=false; renderHit(); });
 })();
-document.querySelectorAll('#hRun .chip').forEach(c=>c.onclick=()=>{const v=+c.dataset.v;hit.run.has(v)?hit.run.delete(v):hit.run.add(v);hit.xy?doHit(hit.xy):renderHit();});
+document.querySelectorAll('#hRun .chip').forEach(c=>c.onclick=()=>{
+  if(c.dataset.v==='all') hit.run=hit.run.size===3?new Set():new Set([1,2,3]);
+  else { const v=+c.dataset.v; hit.run.has(v)?hit.run.delete(v):hit.run.add(v); }
+  hit.xy?doHit(hit.xy):renderHit();});
+document.querySelectorAll('#hType .chip').forEach(c=>c.onclick=()=>{hit.kind=c.dataset.v;hit.xy?doHit(hit.xy):renderHit();});
 document.querySelectorAll('#hOuts .chip').forEach(c=>c.onclick=()=>{hit.outs=+c.dataset.v;hit.xy?doHit(hit.xy):renderHit();});
 $('#hitReset').onclick=()=>{hit.S=null;hit.xy=null;hit.pos=null;renderHit();};
 $('#hitReplay').onclick=()=>{ if(hit.xy) doHit(hit.xy); };
