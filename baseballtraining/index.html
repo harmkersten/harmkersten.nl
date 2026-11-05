@@ -470,7 +470,7 @@ const sitTitle = S => {
     case 'ground': return L(`Grondbal naar ${de(S.ball)}`,`Ground ball to ${de(S.ball)}`);
     case 'xbh': return L(`Tweehonkslag ${WHERE[S.where][0]}`,`Extra-base hit ${WHERE[S.where][1]}`);
     case 'tag': return L(`Vangbal in ${AREA[S.ball][0]}`,`Fly out to ${AREA[S.ball][1]}`);
-    case 'pop': return L(`Korte pop-up ${POPW[S.ball][0]}`,`Shallow pop fly ${POPW[S.ball][1]}`);
+    case 'pop': return POPW[S.ball]&&!S.xy ? L(`Korte pop-up ${POPW[S.ball][0]}`,`Shallow pop fly ${POPW[S.ball][1]}`) : L(`Pop-up voor ${de(S.ball)}`,`Pop-up for ${de(S.ball)}`);
     case 'bunt': return S.to==='H'?L('Squeeze play','Squeeze play'):L('Opofferingsstootslag','Sacrifice bunt');
   }
 };
@@ -886,6 +886,8 @@ function ideaBase(S){
                                               'Fly out with no runner on second or third: the batter is out and a runner on first has to go back. Get the ball in quickly through the cut-off, so nobody advances.');
   if(S.type==='tag') return L('Vangbal met minder dan twee uit en lopers op 1 en 3: de loper op het derde honk tagt op (wacht tot de vangst) en probeert te scoren. De worp gaat laag naar huis via de cut-off. Laat ook de loper op het eerste honk niet zomaar doorlopen naar het tweede.',
                               'Fly out with less than two outs and runners on 1st and 3rd: the runner on third tags up (waits for the catch) and tries to score. The throw goes low to home through the cut-off. Don\'t let the runner on first walk into second either.');
+  if(S.type==='pop' && !['CF','LF','RF'].includes(S.ball)) return L('Een pop-up in het infield: de buitenvelders komen er niet op tijd bij, dus de binnenvelders nemen hem. Voorrang in het infield: korte stop, tweede, derde en eerste honkman, dan de catcher; de werper wijst alleen aan. Wie de bal neemt roept luid "I got it!", de anderen dekken de honken die leeg raken.',
+                                                                      'A pop-up in the infield: the outfielders can\'t get there in time, so the infielders take it. Infield priority: shortstop, second, third and first basemen, then the catcher; the pitcher only points. Whoever takes it yells "I got it!", the others cover the bases left empty.');
   if(S.type==='pop') return L('Een korte pop-up tussen infield en outfield: meerdere spelers kunnen erbij, dus roepen is alles. Volgorde van voorrang: midvelder, dan links- en rechtsvelder, dan korte stop, tweede, derde en eerste honkman, catcher en als laatste de werper. Wie de bal heeft roept luid "I got it!".',
                               'A shallow pop fly between infield and outfield: several players can get there, so calling is everything. Priority order: center fielder, then left and right fielders, then shortstop, second, third and first basemen, catcher and last the pitcher. Whoever takes it yells "I got it!".');
   if(S.type==='bunt'){
@@ -979,8 +981,18 @@ const A = {
     why:S=>L(`De loper op het derde honk tagt op en gaat voor de thuisplaat. Ga een paar stappen achter de plek waar de bal valt staan, zodat je vangt terwijl je naar voren komt. Dan gooi je hard en laag naar huis, door de cut-off (${de(cutPos(S))}) heen. Laat de loper van het eerste honk niet zomaar naar het tweede honk lopen.`,
              `The runner on third tags up and goes for home. Set up a few steps behind where the ball will come down, so you catch it moving forward. Then throw hard and low toward home, through the cut-off (${de(cutPos(S))}). Don't let the runner from first walk into second.`)},
   popup_priority:{l:()=>L('Op de bal afgaan en luid "I got it!" roepen: jij hebt voorrang','Go for the ball and yell "I got it!": you have priority'),g:['pop1'],
-    why:(S,pos)=>L(`${pos==='CF'?'De midvelder heeft voorrang op iedereen.':'Een buitenvelder heeft voorrang op alle binnenvelders.'} Jij komt naar de bal toe en ziet hem beter dan een binnenvelder die achteruit moet lopen. Roep luid en vaak "I got it!": iedereen geeft je dan de ruimte.`,
-             `${pos==='CF'?'The center fielder has priority over everyone.':'An outfielder has priority over all infielders.'} You are coming in on the ball and see it better than an infielder running back. Yell "I got it!" loud and often: everyone then gives way.`)},
+    why:(S,pos)=>{
+      if(['CF','LF','RF'].includes(pos)) return L(`${pos==='CF'?'De midvelder heeft voorrang op iedereen.':'Een buitenvelder heeft voorrang op alle binnenvelders.'} Jij komt naar de bal toe en ziet hem beter dan een binnenvelder die achteruit moet lopen. Roep luid en vaak "I got it!": iedereen geeft je dan de ruimte.`,
+             `${pos==='CF'?'The center fielder has priority over everyone.':'An outfielder has priority over all infielders.'} You are coming in on the ball and see it better than an infielder running back. Yell "I got it!" loud and often: everyone then gives way.`);
+      const others=POS.filter(p=>p!==pos&&S.d[p][0]==='popup_yield');
+      const rank={SS:['De korte stop heeft de hoogste voorrang in het infield.','The shortstop has the highest priority in the infield.'],'2B':['De tweede honkman komt in het infield direct na de korte stop.','The second baseman comes right after the shortstop in the infield.'],
+        '3B':['De derde honkman gaat in het infield vóór de eerste honkman, catcher en werper.','The third baseman ranks ahead of the first baseman, catcher and pitcher.'],'1B':['De eerste honkman gaat vóór de catcher en de werper.','The first baseman ranks ahead of the catcher and pitcher.'],
+        C:['De catcher neemt alle pop-ups vlak bij de plaat, tot iemand met voorrang hem afroept.','The catcher takes every pop-up near the plate until someone with priority calls him off.'],P:['Niemand anders kan erbij, dus deze is voor jou.','Nobody else can reach it, so this one is yours.']}[pos];
+      return L(`De bal blijft in het infield, dus de buitenvelders komen er niet op tijd bij. ${rank[0]}${others.length?` Jij gaat dus vóór ${listPos(others)}.`:''} Roep luid en vaak "I got it!".`,
+               `The ball stays in the infield, so the outfielders can't get there in time. ${rank[1]}${others.length?` So you go ahead of ${listPos(others)}.`:''} Yell "I got it!" loud and often.`);}},
+  pop_direct:{l:()=>L('De bal aanwijzen en roepen wie hem moet nemen','Point at the ball and call who should take it'),g:['pdir'],
+    why:S=>L('De werper staat onderaan de voorrangslijst en vangt alleen in noodgevallen. Wijs de bal aan en roep zo nodig de naam van de speler die er het best bij kan.',
+             'The pitcher is at the bottom of the priority list and only catches it in an emergency. Point at the ball and, if needed, call the name of the player with the best angle.')},
   popup_yield:{l:()=>L('Op de bal afgaan, maar wegblijven zodra iemand met voorrang hem roept','Go for the ball, but give way when someone with priority calls it'),g:['pop2'],
     why:(S,pos)=>{const ord=['CF','LF','RF','SS','2B','3B','1B','C','P'];const over=POS.filter(p=>p!==pos&&['popup_priority','popup_yield'].includes(S.d[p][0])&&ord.indexOf(p)<ord.indexOf(pos));
       return L(`Ga hard op de bal af, want misschien ben jij er als eerste. Maar ${listPos(over)} ${over.length>1?'hebben':'heeft'} voorrang op jou: roept die "I got it!", dan ga je opzij. Zeg zelf niets tot je echt onder de bal staat.`,
@@ -1044,6 +1056,7 @@ const A = {
   cover1B:{l:()=>L('Het eerste honk dekken','Cover first base'),g:['c1'],why:(S,pos)=>{
     if(S.type==='bunt' && pos==='2B') return L('Bij een stootslag stormen de eerste honkman en de werper naar binnen, dus het eerste honk is leeg. Jij als tweede honkman dekt het: daar gaat de worp voor de zekere uit meestal heen.',
       'On a bunt the first baseman and pitcher charge in, so first base is empty. As second baseman you cover it: that is where the throw for the sure out usually goes.');
+    if(pos==='2B' && S.type==='pop') return L('De eerste honkman gaat achter de pop-up aan, dus het eerste honk is leeg. Jij dekt het, en houdt de loper in de gaten.','The first baseman goes after the pop-up, so first base is empty. You cover it and keep an eye on the runner.');
     if(pos==='2B') return L('De eerste honkman is de cut-off naar de thuisplaat, dus het eerste honk is leeg. Jij dekt het, zodat de cut-off de slagman of loper daar nog kan uitmaken.',
       'The first baseman is the cut-off to home plate, so first base is empty. You cover it, so the cut-off can still throw out the batter or runner there.');
     if(pos==='P' && S.type==='pop') return L('De eerste honkman gaat achter de pop-up aan, dus het eerste honk is leeg. Jij als werper dekt het en houdt de loper op het eerste honk in de gaten.',
@@ -1080,6 +1093,7 @@ const A = {
           'Second base can\'t be left empty. That way there is a base to throw to if a runner goes too far, and no runner gets a free extra base.');},
     no:S=>L('Het tweede honk wordt in deze situatie al gedekt door een ander.','Someone else already covers second base in this situation.')},
   cover3B:{l:()=>L('Het derde honk dekken','Cover third base'),g:['c3'],why:(S,pos)=>{
+    if(pos==='SS' && S.type==='pop') return L('De derde honkman gaat achter de pop-up aan, dus het derde honk is leeg. Jij dekt het.','The third baseman goes after the pop-up, so third base is empty. You cover it.');
     if(pos==='SS' && S.type==='bunt') return L('Bij de squeeze stormt de derde honkman met de loper mee naar huis. Het derde honk is dus leeg: jij dekt het.',
       'On the squeeze the third baseman charges home with the runner. So third base is empty: you cover it.');
     if(pos==='SS') return L('De derde honkman is de cut-off voor de worp naar huis, dus het derde honk is leeg. Jij dekt het, zodat een loper die te ver doorloopt daar alsnog uitgemaakt kan worden.',
@@ -1100,7 +1114,8 @@ const A = {
     why:S=>L('De derde honkman gaat naar de bal en probeert zelf het honk te pakken. Jij gaat richting het derde honk: om het honk te dekken als hij er niet op tijd is, of om een misser op te vangen.',
              'The third baseman goes for the ball and tries to take the bag himself. You head toward third: to cover it if he can\'t get back in time, or to stop a miss.')},
   cover_home:{l:()=>L('De thuisplaat dekken','Cover home plate'),g:['home'],
-    why:S=>L('Zonder lopers rent de catcher mee naar het eerste honk als back-up. Daardoor is de thuisplaat leeg, en die dek jij als werper.',
+    why:S=>S.type==='pop'?L('De catcher gaat achter de pop-up aan, dus de thuisplaat is leeg. Jij als werper dekt hem.','The catcher goes after the pop-up, so home plate is empty. As the pitcher you cover it.')
+      :L('Zonder lopers rent de catcher mee naar het eerste honk als back-up. Daardoor is de thuisplaat leeg, en die dek jij als werper.',
              'With no runners the catcher runs to first as back-up. That leaves home plate empty, so you cover it as the pitcher.'),
     no:S=>S.run.length?L('De catcher blijft al bij de thuisplaat.','The catcher already stays at home plate.'):L('Er staan geen lopers die kunnen scoren.','There are no runners who can score.')},
   protect_home:{l:()=>L('Bij de thuisplaat blijven en die beschermen','Stay at home plate and protect it'),g:['home'],
@@ -1271,6 +1286,7 @@ function target(pos,S){
     case 'second_cut_home': return lerp(H,sp,.2);
     case 'popup_priority': return sp;
     case 'popup_yield': return lerp(st,sp,.65);
+    case 'pop_direct': return add2(st,unit(sub(sp,st)),14);
     case 'bunt_pitcher': return S.to==='H'?[200,362]:[204,348];
     case 'bunt_p_3Bline': return [172,350];
     case 'bunt_catcher': return [200,374];
@@ -1729,7 +1745,7 @@ const polar = (th,d) => { const r=th*Math.PI/180; return [H[0]+Math.sin(r)*d, H[
 /* bal altijd binnen de lijnen; per soort slag een passende afstand */
 function clampFair(xy){
   let {th,d}=angDist(xy); th=Math.max(-43,Math.min(43,th));
-  const [lo,hi]={auto:[28,258],flyout:[190,250],pop:[115,205],bunt:[22,52]}[hit.kind];
+  const [lo,hi]={auto:[28,258],flyout:[190,250],pop:[35,215],bunt:[22,52]}[hit.kind];
   return polar(th,Math.max(lo,Math.min(hi,d)));
 }
 const ofZone = th => th<-15?'LF':th<15?'CF':'RF';
@@ -1746,6 +1762,32 @@ function classify(xy){
 }
 const previewLabel = c => ({ground:L(`Grondbal → ${c.ball}`,`Ground ball → ${c.ball}`),fly:L(`Honkslag → ${c.ball}`,`Single → ${c.ball}`),xbh:'Extra-base hit',
   tag:L(`Vangbal → ${c.ball}`,`Fly out → ${c.ball}`),pop:L(`Pop-up → ${c.ball}`,`Pop-up → ${c.ball}`),bunt:L('Stootslag','Bunt')})[c.type];
+/* pop-up in Slaan: wie erbij kan en wie voorrang heeft, berekend vanaf de echte plek */
+const POP_ORDER=['CF','LF','RF','SS','2B','3B','1B','C','P'];
+function buildPop(xy,runs){
+  const {d}=angDist(xy), dist=p=>len(sub(START[p],xy));
+  const can=p=> p==='P'?false : p==='C'? d<75 : OF.includes(p)? (d>150 && dist(p)<125) : dist(p)<(['1B','3B'].includes(p)?70:95);
+  let goers=POS.filter(can);
+  if(!goers.length) goers=[POS.slice().sort((a,b)=>dist(a)-dist(b))[0]];
+  // alleen wie er ongeveer even snel bij is als de dichtstbijzijnde gaat ook echt op de bal af
+  const md=Math.min(...goers.map(dist)); goers=goers.filter(p=>dist(p)<=md+40).sort((a,b)=>dist(a)-dist(b)).slice(0,2);   // hooguit twee spelers op de bal
+  const pri=POP_ORDER.find(p=>goers.includes(p));
+  const dd={}, E=a=>[a,null,'EXP'], free=p=>!dd[p];
+  for(const p of goers) dd[p]=E(p===pri?'popup_priority':'popup_yield');
+  // elk honk gedekt door wie vrij is, in deze volgorde
+  if(free('C')) dd.C=E('protect_home'); else if(free('P')) dd.P=E('cover_home');
+  if(free('1B')) dd['1B']=E('cover1B'); else if(free('2B')) dd['2B']=E('cover1B'); else if(free('P')) dd.P=E('cover1B');
+  if(free('3B')) dd['3B']=E('cover3B'); else if(free('SS')) dd.SS=E('cover3B'); else if(free('P')) dd.P=E('cover3B');
+  if(free('SS')) dd.SS=E('cover2B'); else if(free('2B')) dd['2B']=E('cover2B'); else if(free('P')) dd.P=E('cover2B');
+  if(free('2B')) dd['2B']=E('backup_2B');
+  if(free('P')) dd.P=E('pop_direct');
+  // buitenvelders: naast een vangende buitenvelder backuppen, anders richting het infield
+  for(const p of OF) if(free(p)){
+    const nb=OF.includes(pri) && pri!==p && (pri==='CF'||p==='CF');
+    dd[p]=E(nb?'backup_'+pri:'rf_toward_infield');
+  }
+  return {type:'pop',ball:pri,run:runs,to:null,outs:true,src:'EXP',d:dd,id:-1};
+}
 /* toegestane aantallen uit per soort slag */
 const hitOuts = () => ['flyout','pop','bunt'].includes(hit.kind) ? [0,1] : [0,1,2];
 /* de bestaande situatie die bij deze slag en deze lopers hoort, met een korte toelichting als het een benadering is */
@@ -1778,10 +1820,7 @@ function pickTemplate(c,k){
     if(k==='0') note=N('Zonder lopers is de slagman gewoon uit; gooi de bal snel binnen.','With no runners the batter is simply out; get the ball in quickly.');
     return {T:find('tag',c.ball,'1'),note};
   }
-  if(c.type==='pop'){
-    if(k!=='1') note=N('Bij een pop-up blijft de dekking met andere lopers hetzelfde: wie voorrang heeft roept en vangt, de rest dekt de honken en let op lopers die te ver van hun honk staan.','On a pop-up the coverage stays the same with other runners: whoever has priority calls and catches it, the rest cover the bases and watch runners who stray too far.');
-    return {T:find('pop',c.ball,'1'),note};
-  }
+  if(c.type==='pop') return {T:buildPop(hit.xy,[...hit.run].sort()),note:null};
   // stootslag
   let kk='1';
   if(has(3)){ kk='3'; if(k!=='3') note=N(k==='123'?'Met de honken vol is het een squeeze met een force out op de thuisplaat: de catcher hoeft niet te taggen.':'Met een loper op het derde honk speel je dit als squeeze: die loper sprint naar huis.',
