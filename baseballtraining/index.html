@@ -38,6 +38,9 @@ nav{display:flex;height:100%;margin-left:12px}
 nav button{border:0;background:none;padding:0 14px;font:600 13px/1 var(--body);cursor:pointer;color:var(--muted);border-bottom:2px solid transparent}
 nav button:hover{color:var(--text)}
 nav button.on{color:var(--text);border-bottom-color:var(--acc)}
+#hitField{touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
+.aim{fill:none;stroke:#fff;stroke-width:1.6;stroke-dasharray:4 4;opacity:.8}
+.aimtxt{font:600 10px var(--body);fill:#fff;text-anchor:middle;paint-order:stroke;stroke:#0f1115;stroke-width:3px}
 .langtg{display:flex;margin-left:auto;border:1px solid var(--line2);border-radius:4px;overflow:hidden}
 .langtg button{border:0;background:none;padding:5px 9px;font:600 11.5px/1 var(--body);cursor:pointer;color:var(--muted)}
 .langtg button.on{background:var(--panel2);color:var(--text)}
@@ -200,6 +203,7 @@ summary:hover{color:var(--text)}
     <nav>
       <button data-go="setup" class="on" data-i18n="tabPlay"></button>
       <button data-go="study" data-i18n="tabStudy"></button>
+      <button data-go="hit" data-i18n="tabHit"></button>
     </nav>
     <div class="langtg" role="group" aria-label="Taal / Language">
       <button data-lang="nl">NL</button>
@@ -331,6 +335,48 @@ summary:hover{color:var(--text)}
       </div>
     </div>
   </section>
+
+  <!-- ZELF SLAAN -->
+  <section class="screen" id="hit">
+    <h1 data-i18n="hitTitle"></h1>
+    <p class="sub" data-i18n="hitSub"></p>
+    <div class="grid2">
+      <div class="stickyfield">
+        <div data-i18n-title="pnlField" class="card fieldbox">
+          <svg class="field" id="hitField" viewBox="0 105 400 320" role="img"></svg>
+          <div class="legend"><span><i style="background:var(--me)"></i><span data-i18n="lgChosen"></span></span><span><i style="background:#e4572e"></i><span data-i18n="lgRunner"></span></span><span><i class="a"></i><span data-i18n="lgMove"></span></span><span><i class="l"></i><span data-i18n="lgThrow"></span></span></div>
+          <div class="row" style="margin-top:10px"><button class="btn" id="hitReset" data-i18n="hitReset"></button><button class="btn" id="hitReplay" data-i18n="replay"></button></div>
+        </div>
+      </div>
+      <div>
+        <div data-i18n-title="pnlSetupHit" class="card" style="margin-bottom:14px">
+          <div class="lbl" style="margin-top:0" data-i18n="lblRun"></div>
+          <div class="chips" id="hRun">
+            <button class="chip" data-v="1" data-i18n="chipR1"></button>
+            <button class="chip" data-v="2" data-i18n="chipR2"></button>
+          </div>
+          <div class="lbl" data-i18n="lblOuts"></div>
+          <div class="chips" id="hOuts">
+            <button class="chip on" data-v="0">0</button>
+            <button class="chip" data-v="1">1</button>
+            <button class="chip" data-v="2">2</button>
+          </div>
+        </div>
+        <div data-i18n-title="pnlSit" class="card sit">
+          <div id="hEmpty" class="note" style="margin-top:0" data-i18n="hitEmpty"></div>
+          <div id="hBody" style="display:none">
+            <div class="kind" id="hKind"></div>
+            <h1 id="hTitle" style="font-size:22px"></h1>
+            <div class="run" id="hRunTxt"></div>
+            <p id="hMap" class="srcl" style="display:none"></p>
+            <p id="hIdea" style="margin:10px 0 0;font-size:15px"></p>
+            <ul class="who study" id="hWho"></ul>
+            <button class="big" id="hPractice" data-i18n="hitPractice"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -342,7 +388,14 @@ const L = (nl,en) => LANG==='en'?en:nl;
 const UI = {
   appName:['Honkbal Situaties','Baseball Situations'], appTag:['Defensief playbook','Defensive playbook'],
   pnlField:['Veld','Field'], pnlSetup:['Instellingen','Setup'], pnlSit:['Situatie','Situation'], pnlResult:['Resultaat','Result'], pnlList:['Alle situaties','All situations'], toStart:['Naar start','Back to start'],
-  tabPlay:['Spelen','Play'], tabStudy:['Studeren','Study'],
+  tabPlay:['Spelen','Play'], tabStudy:['Studeren','Study'], tabHit:['Slaan','Hit'],
+  hitTitle:['Sla zelf de bal','Hit the ball yourself'],
+  hitSub:['Kies de lopers en het aantal uit. Sleep dan met je vinger of muis over het veld naar de plek waar de bal heen moet, en laat los. Alle spelers nemen hun positie in.',
+          'Pick the runners and the number of outs. Then drag your finger or mouse across the field to where the ball should go, and let go. Every player moves into position.'],
+  hitEmpty:['Sleep over het veld om de bal te slaan. Kort in het infield is een grondbal, in het outfield een honkslag, diep bij het hek een extra-base hit.',
+            'Drag across the field to hit the ball. Short into the infield is a ground ball, into the outfield a single, deep by the fence an extra-base hit.'],
+  hitReset:['Opnieuw slaan','Hit again'], hitPractice:['Oefen deze situatie','Practise this situation'],
+  lblOuts:['Aantal uit','Outs'], pnlSetupHit:['Wedstrijdsituatie','Game situation'],
   setupTitle:['Welke positie speel jij?','Which position do you play?'],
   setupSub:['Je krijgt een spelsituatie te zien. Kies wat jij op jouw positie doet. Na elke keuze legt de gids uit waarom die goed of fout is.',
             'You get a game situation. Choose what you do at your position. After every answer the guide explains why it is right or wrong.'],
@@ -392,7 +445,7 @@ const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 const runKey = S => S.run.join('') || '0';
 const RUNTXT = {'0':['Geen lopers op de honken','No runners on base'],'1':['Loper op het eerste honk','Runner on first base'],'2':['Loper op het tweede honk','Runner on second base'],
   '12':['Lopers op het eerste en tweede honk','Runners on first and second base'],'3':['Loper op het derde honk','Runner on third base'],'13':['Lopers op het eerste en derde honk','Runners on first and third base']};
-const runTxt = S => RUNTXT[runKey(S)][LANG==='en'?1:0] + (S.outN!==undefined?' · '+OUTS(S.outN):S.outs?L(', minder dan 2 uit',', less than 2 outs'):'');
+const runTxt = S => RUNTXT[S.showRun?(S.showRun.join('')||'0'):runKey(S)][LANG==='en'?1:0] + (S.outN!==undefined?' · '+OUTS(S.outN):S.outs?L(', minder dan 2 uit',', less than 2 outs'):'');
 const WHERE = {LFline:['langs de linkerlijn','down the left-field line'],LCgap:['in het gat links-midden','to the left-center gap'],
   RCgap:['in het gat rechts-midden','to the right-center gap'],RFline:['langs de rechterlijn','down the right-field line']};
 const POPW = {LF:['langs de linkerlijn','down the left-field line'],CF:['achter het tweede honk','to shallow center field'],RF:['langs de rechterlijn','down the right-field line']};
@@ -584,6 +637,24 @@ const SIT = [
   SS:['trailer','Hang at second base until the ball clears the outfielders, then trail about 30 feet behind the second baseman and call the play.'], '3B':['cover3B','Cover third base.'],
   LF:['backup_3B','Move into a possible backup position behind third base.'],
   CF:['throw_relay','CF/RF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.'], RF:['backup_CF','CF/RF: One man will field ball and make a strong accurate throw to the relay man, the other will back up.']}},
+ {type:'xbh',where:'LCgap',ball:'CF',run:[1],to:'H',src:'PH',d:{
+  P:['backup_home','Move into backup position behind home plate. Be prepared to back up third base if the play changes direction.'], C:['protect_home','Cover home plate.'],
+  '1B':['second_cut_home','When the second baseman leaves to back up the shortstop, move into the second relay position to home plate.'],
+  '2B':['trailer','Hang at second base until the ball clears the outfielders, then trail about 30 feet behind shortstop and call the play.'],
+  SS:['relay_lead','Move into relay position in line with home plate, listen for call.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_CF','LF/CF: One man will field ball and make a strong and accurate throw to the relay man, the other will back up.'],
+  CF:['throw_relay','LF/CF: One man will field ball and make a strong and accurate throw to the relay man, the other will back up.'], RF:['cover2B','Cover second base.']},
+  w:{RF:['De korte stop en de tweede honkman staan allebei in de relay en de eerste honkman is de tweede cut-off naar huis. Het tweede honk is dus leeg: jij komt als rechtsvelder binnen om het te dekken.',
+         'The shortstop and second baseman are both out on the relay and the first baseman is the second cut-off to home. So second base is empty: as right fielder you come in to cover it.']}},
+ {type:'xbh',where:'RFline',ball:'RF',run:[1],to:'H',src:'PH',d:{
+  P:['p_backup_3B_home','Go halfway between home plate and third base and read the play and back up the appropriate base.'], C:['protect_home','Cover home plate.'],
+  '1B':['trailer','Hang at first base until the ball clears the right fielder, then trail about 30 feet behind the second baseman and call the play.'],
+  '2B':['relay_lead','Move into a relay position in line with home plate, listen for call.'],
+  SS:['cover2B','Move into a second relay position to third base and read the play, cover second base if necessary.'], '3B':['cover3B','Cover third base.'],
+  LF:['backup_3B','Move into a position to back up third base or second base.'], CF:['backup_RF','Cover second base or back up right fielder.'],
+  RF:['throw_relay','Field ball and make a strong and accurate throw to the relay man.']},
+  w:{SS:['De tweede honkman is de relay en de eerste honkman de trailer. Jij leest het spel: zolang de slagman naar het tweede honk kan, dek jij dat honk. Gaat de worp naar het derde honk, dan kun je een tweede relay-positie innemen.',
+         'The second baseman is the relay and the first baseman is the trailer. You read the play: as long as the batter can reach second, you cover that base. If the throw goes to third, you can take a second relay position.']}},
 
  /* ---- vangbal met tag-up, lopers op 1 en 3 (Perry Hill) ---- */
  {type:'tag',ball:'LF',run:[1,3],outs:true,to:'H',src:'PH',d:{
@@ -1057,7 +1128,7 @@ const SPOT_GR={'3B':[144,292],SS:[166,262],'2B':[234,262],'1B':[246,290],P:[207,
 const SPOT_XBH={LFline:[38,214],LCgap:[140,134],RCgap:[260,134],RFline:[362,214]};
 const SPOT_POP={LF:[106,238],CF:[200,196],RF:[294,238]};
 const AIR=['fly','xbh','tag','pop'];
-const spot = S => S.type==='xbh'?SPOT_XBH[S.where]:S.type==='pop'?SPOT_POP[S.ball]:S.type==='bunt'?[200,356]
+const spot = S => S.xy ? S.xy : S.type==='xbh'?SPOT_XBH[S.where]:S.type==='pop'?SPOT_POP[S.ball]:S.type==='bunt'?[200,356]
   :(S.type==='fly'||S.type==='tag')?SPOT_FLY[S.ball]:SPOT_GR[S.ball];
 const add2=(a,b,k=1)=>[a[0]+b[0]*k,a[1]+b[1]*k];
 const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
@@ -1190,13 +1261,13 @@ function player(svg,pos,xy,cls){
 function shorten(a,b,s1,s2){const u=unit(sub(b,a));return [add2(a,u,s1),add2(b,u,-s2)];}
 
 /* mode: 'pick' | 'pre' | 'post' */
-function drawField(svg,{S,me,mode,onPick,animate=true}){
+function drawField(svg,{S,me,mode,onPick,animate=true,runners}){
   const id=drawBase(svg);
   svg.setAttribute('aria-label',S?`${sitTitle(S)}. ${runTxt(S)}.`:u('pickNote'));
   svg.classList.toggle('show',false);
   const lay={mv:el('g',{},svg),hit:el('g',{},svg),thr:el('g',{},svg),run:el('g',{},svg),pl:el('g',{},svg)};
   if(S){
-    for(const r of S.run.map(r=>['','1B','2B','3B'][r])){const p=add2(B[r],{'1B':[-9,-11],'2B':[-12,6],'3B':[10,-10]}[r]);el('circle',{cx:p[0],cy:p[1],r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);}
+    for(const r of (S.showRun||S.run).map(r=>['','1B','2B','3B'][r])){const p=add2(B[r],{'1B':[-9,-11],'2B':[-12,6],'3B':[10,-10]}[r]);el('circle',{cx:p[0],cy:p[1],r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);}
     el('circle',{cx:220,cy:369,r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);
     const sp=spot(S);
     let d;
@@ -1212,6 +1283,10 @@ function drawField(svg,{S,me,mode,onPick,animate=true}){
       setTimeout(()=>{hp.style.strokeDashoffset='0';},20);
       setTimeout(()=>{hp.style.strokeDasharray='';hp.style.strokeDashoffset='';ball.style.transition='opacity .2s';ball.style.opacity=1;},760);
     }
+  }
+  if(!S && runners){
+    for(const r of runners.map(r=>['','1B','2B','3B'][r])){const p=add2(B[r],{'1B':[-9,-11],'2B':[-12,6],'3B':[10,-10]}[r]);el('circle',{cx:p[0],cy:p[1],r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);}
+    el('circle',{cx:220,cy:369,r:5.5,fill:'#e4572e',stroke:'#fff','stroke-width':1.3},lay.run);
   }
   const nodes={};
   for(const p of POS){
@@ -1566,15 +1641,104 @@ function renderStudy(animate=true){
 }
 $('#replay').onclick=()=>renderStudy(true);
 
+/* ---------- zelf slaan ---------- */
+const hit={run:new Set(),outs:0,xy:null,S:null,pos:null,note:null};
+const angDist = xy => { const v=sub(xy,H); return {th:Math.atan2(v[0],-v[1])*180/Math.PI, d:len(v)}; };
+/* bal altijd binnen de lijnen en binnen het hek */
+function clampFair(xy){
+  let {th,d}=angDist(xy); th=Math.max(-43,Math.min(43,th)); d=Math.max(28,Math.min(258,d));
+  const r=th*Math.PI/180; return [H[0]+Math.sin(r)*d, H[1]-Math.cos(r)*d];
+}
+/* uit de plek van de bal: soort slag en wie hem pakt */
+function classify(xy){
+  const {th,d}=angDist(xy);
+  if(d<175) return {type:'ground',ball: d<80&&Math.abs(th)<28 ? 'P' : th<-24?'3B':th<0?'SS':th<24?'2B':'1B'};
+  if(d<235) return {type:'fly',ball: th<-15?'LF':th<15?'CF':'RF'};
+  const where = th<-28?'LFline':th<0?'LCgap':th<28?'RCgap':'RFline';
+  return {type:'xbh',where,ball:{LFline:'LF',LCgap:'CF',RCgap:'CF',RFline:'RF'}[where]};
+}
+const previewLabel = c => c.type==='ground'?L(`Grondbal → ${c.ball}`,`Ground ball → ${c.ball}`):c.type==='fly'?L(`Honkslag → ${c.ball}`,`Single → ${c.ball}`):'Extra-base hit';
+/* de bestaande situatie die bij deze slag en deze lopers hoort */
+function pickTemplate(c,k){
+  let want=k, note=null;
+  if(c.type==='fly' && k==='12'){ want='2'; note=['Met lopers op 1 en 2 speel je dit als een loper op 2: de voorste loper probeert te scoren, dus de worp gaat naar huis.','With runners on 1st and 2nd this plays like a runner on 2nd: the lead runner tries to score, so the throw goes home.']; }
+  if(c.type==='xbh'){
+    want=(k==='1'||k==='12')?'1':'0';
+    if(k==='2') note=['Met alleen een loper op 2 scoort die loper makkelijk. De verdediging speelt dit als zonder lopers en lijnt op naar het derde honk voor de slagman.','With only a runner on 2nd he scores easily. The defense plays it as with no runners and lines up to third for the batter.'];
+    if(k==='12') note=['Met lopers op 1 en 2 lijn je op naar de thuisplaat, net als met alleen een loper op 1.','With runners on 1st and 2nd you line up to home, just as with only a runner on 1st.'];
+  }
+  return {T:SIT.find(S=>S.type===c.type && S.ball===c.ball && (!c.where||S.where===c.where) && runKey(S)===want), note};
+}
+function buildHit(){
+  const c=classify(hit.xy), runs=[...hit.run].sort(), k=runs.join('')||'0';
+  const {T,note}=pickTemplate(c,k); if(!T) return null;
+  const S=T.ov ? withOuts(T,hit.outs) : Object.assign({},T,{base:T,outN:hit.outs});
+  hit.note=note; hit.runs=runs;
+  return Object.assign({},S,{xy:hit.xy,showRun:runs});
+}
+function doHit(xy){
+  hit.xy=clampFair(xy); hit.pos=null;
+  const S=buildHit(); hit.S=S; if(!S) return renderHit(false);
+  renderHitPanel();
+  const svg=$('#hitField');
+  drawField(svg,{S,mode:'pre'});
+  setTimeout(()=>{ if(hit.S===S) drawField(svg,{S,me:hit.pos,mode:'post'}); },850);
+}
+function renderHitPanel(){
+  const S=hit.S;
+  document.querySelectorAll('#hRun .chip').forEach(c=>c.classList.toggle('on',hit.run.has(+c.dataset.v)));
+  document.querySelectorAll('#hOuts .chip').forEach(c=>c.classList.toggle('on',+c.dataset.v===hit.outs));
+  $('#hEmpty').style.display=S?'none':''; $('#hBody').style.display=S?'':'none';
+  if(!S) return;
+  $('#hKind').textContent=kindTxt(S);
+  $('#hTitle').textContent=sitTitle(S);
+  $('#hRunTxt').textContent=runTxt(S);
+  $('#hMap').style.display=hit.note?'':'none'; if(hit.note) $('#hMap').textContent=tx(hit.note);
+  $('#hIdea').innerHTML=`<b>${L('Het idee:','The idea:')}</b> ${esc(idea(S))}`;
+  $('#hWho').innerHTML=POS.map(p=>`<li data-pos="${p}" class="${p===hit.pos?'me':''}"><div class="h"><b>${p}</b><span>${esc(lbl(S.d[p][0]))}</span></div><div class="why">${esc(whyFor(S,p))}${S.d[p][1]?`<br><span class="quote">“${esc(S.d[p][1])}”</span>`:''}</div></li>`).join('');
+  $('#hWho').querySelectorAll('li').forEach(li=>li.onclick=()=>{hit.pos=hit.pos===li.dataset.pos?null:li.dataset.pos;renderHit(false);});
+}
+function renderHit(){
+  renderHitPanel();
+  const svg=$('#hitField');
+  if(hit.S) drawField(svg,{S:hit.S,me:hit.pos,mode:'post',animate:false});
+  else drawField(svg,{mode:'aim',runners:[...hit.run]});
+}
+(function(){
+  const svg=$('#hitField'); let aiming=false;
+  const toSvg=e=>{const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(svg.getScreenCTM().inverse());return [q.x,q.y];};
+  const preview=xy=>{
+    let g=svg.querySelector('#aimG'); if(!g) g=el('g',{id:'aimG'},svg); g.innerHTML='';
+    const p=clampFair(xy), c=classify(p);
+    el('path',{d:`M200,380 L${p[0]},${p[1]}`,class:'aim'},g);
+    el('circle',{cx:p[0],cy:p[1],r:5,fill:'#fff',stroke:'#4c8dff','stroke-width':2},g);
+    el('text',{x:p[0],y:p[1]-11,class:'aimtxt'},g).textContent=previewLabel(c);
+  };
+  svg.addEventListener('pointerdown',e=>{
+    aiming=true; try{svg.setPointerCapture(e.pointerId);}catch(_){}
+    if(hit.S){hit.S=null;hit.pos=null;renderHit();}
+    preview(toSvg(e)); e.preventDefault();
+  });
+  svg.addEventListener('pointermove',e=>{ if(aiming) preview(toSvg(e)); });
+  svg.addEventListener('pointerup',e=>{ if(!aiming) return; aiming=false; doHit(toSvg(e)); });
+  svg.addEventListener('pointercancel',()=>{ aiming=false; renderHit(); });
+})();
+document.querySelectorAll('#hRun .chip').forEach(c=>c.onclick=()=>{const v=+c.dataset.v;hit.run.has(v)?hit.run.delete(v):hit.run.add(v);hit.xy?doHit(hit.xy):renderHit();});
+document.querySelectorAll('#hOuts .chip').forEach(c=>c.onclick=()=>{hit.outs=+c.dataset.v;hit.xy?doHit(hit.xy):renderHit();});
+$('#hitReset').onclick=()=>{hit.S=null;hit.xy=null;hit.pos=null;renderHit();};
+$('#hitReplay').onclick=()=>{ if(hit.xy) doHit(hit.xy); };
+$('#hPractice').onclick=()=>{ if(!hit.S) return; state.mode='sit'; state.pos='ALL'; startRound(shuffle(POS.map(p=>({S:hit.S,pos:p})))); };
+
 /* ---------- navigatie & taal ---------- */
 let current='setup';
 function show(id){
   current=id;
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
-  const tab=id==='study'?'study':'setup';
+  const tab=id==='study'?'study':id==='hit'?'hit':'setup';
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===tab));
   if(id==='setup'){stats=store.get();renderSetup();}
   if(id==='study') renderStudy();
+  if(id==='hit') renderHit();
   window.scrollTo(0,0);
 }
 function setLang(l){
@@ -1582,6 +1746,7 @@ function setLang(l){
   applyStatic();
   if(current==='setup') renderSetup();
   else if(current==='study') renderStudy(false);
+  else if(current==='hit') renderHit();
   else if(current==='result') renderResult();
   else if(current==='play'){
     const it=round.items[round.i];
