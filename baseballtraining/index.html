@@ -114,6 +114,8 @@ h2{font:600 16px/1.3 var(--body);margin:0 0 10px}
 .chip{border:1px solid var(--line2);background:none;padding:5px 10px;border-radius:3px;font:500 12.5px/1.2 var(--body);cursor:pointer;color:var(--muted)}
 .chip.on{background:var(--panel2);border-color:var(--acc);color:var(--text)}
 .chip:disabled{opacity:.35;cursor:not-allowed}
+.chip:focus{outline:none}
+.chip:focus-visible{outline:2px dashed var(--muted);outline-offset:2px}
 .big{display:block;width:100%;border:0;background:var(--acc);color:#fff;font:600 14px/1 var(--body);padding:13px;border-radius:4px;cursor:pointer;margin-top:18px}
 .big:hover:not(:disabled){background:var(--acc-dk)}
 .big:disabled{background:var(--panel2);color:var(--dim);cursor:not-allowed}
@@ -354,6 +356,7 @@ summary:hover{color:var(--text)}
           </div>
           <div class="lbl" data-i18n="lblRun"></div>
           <div class="chips" id="hRun">
+            <button class="chip" data-v="none" data-i18n="chipR0"></button>
             <button class="chip" data-v="1" data-i18n="chipR1"></button>
             <button class="chip" data-v="2" data-i18n="chipR2"></button>
             <button class="chip" data-v="3" data-i18n="chipR3"></button>
@@ -781,6 +784,8 @@ function withOuts(S,n){
   const eq=n===2||(n===0&&['12','123'].includes(runKey(S)));   // alle goede antwoorden even goed
   return Object.assign({},S,{base:S,outN:n,to:v.to,ok:v.ok,okEq:eq,d:Object.assign({},S.d,{[f]:same?S.d[f]:[v.ok[0],null,'EXP']})});
 }
+/* hoe ver een buitenvelder komt voordat de worp er is */
+const REACH_OF=175;
 /* realistisch aantal uit per soort situatie */
 const outsFor = S => S.type==='bunt' ? (S.to==='H'?[0,1]:[0]) : (S.type==='tag'||S.type==='pop') ? [0,1] : [0,1,2];
 function playAs(S){
@@ -1755,7 +1760,8 @@ function classify(xy){
   if(hit.kind==='flyout') return {type:'tag',ball:ofZone(th)};
   if(hit.kind==='pop') return {type:'pop',ball:ofZone(th)};
   if(hit.kind==='bunt') return {type:'bunt'};
-  if(d<175) return {type:'ground',ball: d<80&&Math.abs(th)<28 ? 'P' : th<-24?'3B':th<0?'SS':th<24?'2B':'1B'};
+  const a=Math.abs(th), depth = a<=16 ? 145 : a>=30 ? 121 : 145-(a-16)/14*24;   // waar de binnenvelders staan
+  if(d<depth+18) return {type:'ground',ball: d<80&&a<28 ? 'P' : th<-24?'3B':th<0?'SS':th<24?'2B':'1B'};
   if(d<235) return {type:'fly',ball:ofZone(th)};
   const where = th<-28?'LFline':th<0?'LCgap':th<28?'RCgap':'RFline';
   return {type:'xbh',where,ball:{LFline:'LF',LCgap:'CF',RCgap:'CF',RFline:'RF'}[where]};
@@ -1833,9 +1839,14 @@ function buildHit(){
   if(!hitOuts().includes(hit.outs)) hit.outs=Math.max(...hitOuts());
   const c=classify(hit.xy), runs=[...hit.run].sort(), k=runs.join('')||'0';
   const {T,note}=pickTemplate(c,k); if(!T) return null;
-  const S=T.ov ? withOuts(T,hit.outs) : Object.assign({},T,{base:T,outN:hit.outs});
+  const S0=T.ov ? withOuts(T,hit.outs) : Object.assign({},T,{base:T,outN:hit.outs});
   hit.note=note; hit.runs=runs;
-  return Object.assign({},S,{xy:hit.xy,showRun:runs});
+  const S=Object.assign({},S0,{xy:hit.xy,showRun:runs,d:Object.assign({},S0.d)});
+  for(const p of OF){
+    const a=S.d[p][0];
+    if(/^backup_(1B|2B|3B|SS|P)$/.test(a) && len(sub(target(p,S),START[p]))>REACH_OF) S.d[p]=['rf_toward_infield',null,'EXP'];
+  }
+  return S;
 }
 function doHit(xy){
   hit.xy=clampFair(xy); hit.pos=null;
@@ -1849,7 +1860,7 @@ function renderHitPanel(){
   const S=hit.S;
   if(!hitOuts().includes(hit.outs)) hit.outs=Math.max(...hitOuts());
   document.querySelectorAll('#hType .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===hit.kind));
-  document.querySelectorAll('#hRun .chip').forEach(c=>c.classList.toggle('on',c.dataset.v==='all'?hit.run.size===3:hit.run.has(+c.dataset.v)));
+  document.querySelectorAll('#hRun .chip').forEach(c=>c.classList.toggle('on',c.dataset.v==='all'?hit.run.size===3:c.dataset.v==='none'?hit.run.size===0:hit.run.has(+c.dataset.v)));
   document.querySelectorAll('#hOuts .chip').forEach(c=>{c.classList.toggle('on',+c.dataset.v===hit.outs);c.disabled=!hitOuts().includes(+c.dataset.v);});
   $('#hEmpty').style.display=S?'none':''; $('#hBody').style.display=S?'':'none';
   if(!S) return;
@@ -1887,7 +1898,8 @@ function renderHit(){
   svg.addEventListener('pointercancel',()=>{ aiming=false; renderHit(); });
 })();
 document.querySelectorAll('#hRun .chip').forEach(c=>c.onclick=()=>{
-  if(c.dataset.v==='all') hit.run=hit.run.size===3?new Set():new Set([1,2,3]);
+  if(c.dataset.v==='all') hit.run=new Set([1,2,3]);
+  else if(c.dataset.v==='none') hit.run=new Set();
   else { const v=+c.dataset.v; hit.run.has(v)?hit.run.delete(v):hit.run.add(v); }
   hit.xy?doHit(hit.xy):renderHit();});
 document.querySelectorAll('#hType .chip').forEach(c=>c.onclick=()=>{hit.kind=c.dataset.v;hit.xy?doHit(hit.xy):renderHit();});
