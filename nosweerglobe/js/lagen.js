@@ -65,6 +65,7 @@ export const STIJL = {
   ruimteVerloop: '#537d9a',
   water: '#1f5f9e',
   land: '#8f8b84',
+  nederland: '#c4c1bb',      // lichter, zodat Nederland eruit springt
   grens: '#5e5544',
   dieptes: {
     200: '#1e5a97', 1000: '#1a548b', 2000: '#195288', 3000: '#185084',

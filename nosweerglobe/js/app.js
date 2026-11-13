@@ -400,6 +400,13 @@ function tekenBasis(snel) {
     pad(land);
     ctx.fillStyle = STIJL.land;
     ctx.fill();
+    const nederland = snel ? geo.nederlandGrof : geo.nederland || geo.nederlandGrof;
+    if (nederland) {            // Nederland lichter dan de rest van het land
+      ctx.beginPath();
+      pad(nederland);
+      ctx.fillStyle = STIJL.nederland;
+      ctx.fill();
+    }
     if (relief && $('relief').checked) {
       tekenBeeldlaag(relief, RELIEF_TABEL, snel ? 480 : B, () => pad(land));
     }
@@ -1079,10 +1086,17 @@ async function laadKaart() {
   const grof = await json('geo/countries-110m.json');
   geo.landGrof = topojson.merge(grof, grof.objects.countries.geometries);
   geo.grenzenGrof = topojson.mesh(grof, grof.objects.countries, (a, b) => a !== b);
+  // 528 is de landcode (ISO 3166) van Nederland
+  const nederlandUit = (topo) => {
+    const g = topo.objects.countries.geometries.find((land) => land.id === '528');
+    return g ? topojson.feature(topo, g) : null;
+  };
+  geo.nederlandGrof = nederlandUit(grof);
   ververs();
   const fijn = await json('geo/countries-50m.json');
   geo.land = topojson.merge(fijn, fijn.objects.countries.geometries);
   geo.grenzen = topojson.mesh(fijn, fijn.objects.countries, (a, b) => a !== b);
+  geo.nederland = nederlandUit(fijn);
   ververs();
   const metVormen = (j) => Object.entries(j).filter(([, vorm]) => vorm.coordinates.length);
   geo.dieptesGrof = await json('geo/dieptes-grof.json').then(metVormen).catch(() => null);
