@@ -1,0 +1,830 @@
+{
+ "datum": "2026-11-13",
+ "bron": "Open-Meteo (beste model per plek)",
+ "steden": [
+  {
+   "naam": "Amsterdam",
+   "lat": 52.37,
+   "lon": 4.9,
+   "icoon": "wolk_regenweinig",
+   "min": 7,
+   "max": 10
+  },
+  {
+   "naam": "New York",
+   "lat": 40.71,
+   "lon": -74.01,
+   "icoon": "wolk_sneeuwweinig",
+   "min": 3,
+   "max": 9
+  },
+  {
+   "naam": "Tokio",
+   "lat": 35.68,
+   "lon": 139.69,
+   "icoon": "wolk",
+   "min": 11,
+   "max": 18
+  },
+  {
+   "naam": "Sydney",
+   "lat": -33.87,
+   "lon": 151.21,
+   "icoon": "zon_wolk_regenmedium",
+   "min": 20,
+   "max": 30
+  },
+  {
+   "naam": "Kaapstad",
+   "lat": -33.92,
+   "lon": 18.42,
+   "icoon": "wolk_regenweinig",
+   "min": 14,
+   "max": 23
+  },
+  {
+   "naam": "Rio de Janeiro",
+   "lat": -22.91,
+   "lon": -43.17,
+   "icoon": "wolk_regenweinig",
+   "min": 22,
+   "max": 29
+  },
+  {
+   "naam": "Moskou",
+   "lat": 55.75,
+   "lon": 37.62,
+   "icoon": "wolk_regenmedium",
+   "min": 1,
+   "max": 5
+  },
+  {
+   "naam": "Beijing",
+   "lat": 39.9,
+   "lon": 116.4,
+   "icoon": "wolk",
+   "min": 4,
+   "max": 13
+  },
+  {
+   "naam": "New Delhi",
+   "lat": 28.61,
+   "lon": 77.21,
+   "icoon": "wolk",
+   "min": 19,
+   "max": 29
+  },
+  {
+   "naam": "Los Angeles",
+   "lat": 34.05,
+   "lon": -118.24,
+   "icoon": "wolk_regenweinig",
+   "min": 15,
+   "max": 18
+  },
+  {
+   "naam": "Caïro",
+   "lat": 30.04,
+   "lon": 31.24,
+   "icoon": "zon_wolk_klein",
+   "min": 15,
+   "max": 28
+  },
+  {
+   "naam": "Madrid",
+   "lat": 40.42,
+   "lon": -3.7,
+   "icoon": "wolk_regen_bliksem",
+   "min": 12,
+   "max": 16
+  },
+  {
+   "naam": "Rome",
+   "lat": 41.9,
+   "lon": 12.5,
+   "icoon": "wolk_regen_bliksem",
+   "min": 16,
+   "max": 21
+  },
+  {
+   "naam": "Berlijn",
+   "lat": 52.52,
+   "lon": 13.4,
+   "icoon": "wolk",
+   "min": 3,
+   "max": 8
+  },
+  {
+   "naam": "Londen",
+   "lat": 51.51,
+   "lon": -0.13,
+   "icoon": "wolk",
+   "min": 2,
+   "max": 8
+  },
+  {
+   "naam": "Athene",
+   "lat": 37.98,
+   "lon": 23.73,
+   "icoon": "wolk",
+   "min": 19,
+   "max": 21
+  },
+  {
+   "naam": "Parijs",
+   "lat": 48.86,
+   "lon": 2.35,
+   "icoon": "wolk",
+   "min": 4,
+   "max": 11
+  },
+  {
+   "naam": "Kopenhagen",
+   "lat": 55.68,
+   "lon": 12.57,
+   "icoon": "wolk_regenweinig",
+   "min": 3,
+   "max": 7
+  },
+  {
+   "naam": "Lissabon",
+   "lat": 38.72,
+   "lon": -9.14,
+   "icoon": "zon_wolk_regenweinig",
+   "min": 16,
+   "max": 19
+  },
+  {
+   "naam": "München",
+   "lat": 48.14,
+   "lon": 11.58,
+   "icoon": "wolk_regenweinig",
+   "min": 0,
+   "max": 6
+  },
+  {
+   "naam": "Istanboel",
+   "lat": 41.01,
+   "lon": 28.98,
+   "icoon": "wolk",
+   "min": 19,
+   "max": 21
+  },
+  {
+   "naam": "Stockholm",
+   "lat": 59.33,
+   "lon": 18.07,
+   "icoon": "wolk_regenweinig",
+   "min": 1,
+   "max": 4
+  },
+  {
+   "naam": "Oslo",
+   "lat": 59.91,
+   "lon": 10.75,
+   "icoon": "wolk_regenweinig",
+   "min": 1,
+   "max": 5
+  },
+  {
+   "naam": "Helsinki",
+   "lat": 60.17,
+   "lon": 24.94,
+   "icoon": "wolk_regenmedium",
+   "min": 2,
+   "max": 6
+  },
+  {
+   "naam": "Warschau",
+   "lat": 52.23,
+   "lon": 21.01,
+   "icoon": "wolk_regenweinig",
+   "min": 3,
+   "max": 5
+  },
+  {
+   "naam": "Wenen",
+   "lat": 48.21,
+   "lon": 16.37,
+   "icoon": "wolk_regenweinig",
+   "min": 4,
+   "max": 8
+  },
+  {
+   "naam": "Dublin",
+   "lat": 53.35,
+   "lon": -6.26,
+   "icoon": "wolk",
+   "min": 1,
+   "max": 7
+  },
+  {
+   "naam": "Reykjavik",
+   "lat": 64.15,
+   "lon": -21.94,
+   "icoon": "wolk_sneeuwmedium",
+   "min": -3,
+   "max": 6
+  },
+  {
+   "naam": "Mexico-Stad",
+   "lat": 19.43,
+   "lon": -99.13,
+   "icoon": "wolk_regenweinig",
+   "min": 10,
+   "max": 19
+  },
+  {
+   "naam": "Buenos Aires",
+   "lat": -34.6,
+   "lon": -58.38,
+   "icoon": "wolk",
+   "min": 22,
+   "max": 27
+  },
+  {
+   "naam": "Chicago",
+   "lat": 41.88,
+   "lon": -87.63,
+   "icoon": "wolk_sneeuwveel",
+   "min": 1,
+   "max": 5
+  },
+  {
+   "naam": "Toronto",
+   "lat": 43.65,
+   "lon": -79.38,
+   "icoon": "wolk",
+   "min": 1,
+   "max": 4
+  },
+  {
+   "naam": "Miami",
+   "lat": 25.76,
+   "lon": -80.19,
+   "icoon": "wolk_regenveel",
+   "min": 17,
+   "max": 26
+  },
+  {
+   "naam": "Vancouver",
+   "lat": 49.28,
+   "lon": -123.12,
+   "icoon": "wolk_regenmedium",
+   "min": 10,
+   "max": 15
+  },
+  {
+   "naam": "Anchorage",
+   "lat": 61.22,
+   "lon": -149.9,
+   "icoon": "mist",
+   "min": -3,
+   "max": -1
+  },
+  {
+   "naam": "Honolulu",
+   "lat": 21.31,
+   "lon": -157.86,
+   "icoon": "wolk_regenweinig",
+   "min": 22,
+   "max": 26
+  },
+  {
+   "naam": "Lima",
+   "lat": -12.05,
+   "lon": -77.04,
+   "icoon": "wolk_regenweinig",
+   "min": 23,
+   "max": 27
+  },
+  {
+   "naam": "Bogotá",
+   "lat": 4.71,
+   "lon": -74.07,
+   "icoon": "wolk_regenweinig",
+   "min": 12,
+   "max": 19
+  },
+  {
+   "naam": "Santiago",
+   "lat": -33.45,
+   "lon": -70.67,
+   "icoon": "zon_wolk_klein",
+   "min": 19,
+   "max": 30
+  },
+  {
+   "naam": "São Paulo",
+   "lat": -23.55,
+   "lon": -46.63,
+   "icoon": "wolk_regen_bliksem",
+   "min": 17,
+   "max": 27
+  },
+  {
+   "naam": "Paramaribo",
+   "lat": 5.85,
+   "lon": -55.2,
+   "icoon": "wolk_regen_bliksem",
+   "min": 25,
+   "max": 32
+  },
+  {
+   "naam": "Willemstad",
+   "lat": 12.11,
+   "lon": -68.93,
+   "icoon": "wolk",
+   "min": 28,
+   "max": 32
+  },
+  {
+   "naam": "Lagos",
+   "lat": 6.52,
+   "lon": 3.38,
+   "icoon": "wolk_regenweinig",
+   "min": 26,
+   "max": 30
+  },
+  {
+   "naam": "Nairobi",
+   "lat": -1.29,
+   "lon": 36.82,
+   "icoon": "zon_wolk_regenmedium",
+   "min": 15,
+   "max": 23
+  },
+  {
+   "naam": "Johannesburg",
+   "lat": -26.2,
+   "lon": 28.05,
+   "icoon": "zon_wolk",
+   "min": 17,
+   "max": 32
+  },
+  {
+   "naam": "Casablanca",
+   "lat": 33.57,
+   "lon": -7.59,
+   "icoon": "wolk",
+   "min": 17,
+   "max": 24
+  },
+  {
+   "naam": "Dakar",
+   "lat": 14.72,
+   "lon": -17.47,
+   "icoon": "zon",
+   "min": 27,
+   "max": 30
+  },
+  {
+   "naam": "Kinshasa",
+   "lat": -4.44,
+   "lon": 15.27,
+   "icoon": "wolk_regenweinig",
+   "min": 22,
+   "max": 31
+  },
+  {
+   "naam": "Addis Abeba",
+   "lat": 9.03,
+   "lon": 38.74,
+   "icoon": "wolk_regenweinig",
+   "min": 10,
+   "max": 20
+  },
+  {
+   "naam": "Dubai",
+   "lat": 25.2,
+   "lon": 55.27,
+   "icoon": "zon",
+   "min": 26,
+   "max": 28
+  },
+  {
+   "naam": "Riyad",
+   "lat": 24.71,
+   "lon": 46.68,
+   "icoon": "wolk",
+   "min": 14,
+   "max": 22
+  },
+  {
+   "naam": "Teheran",
+   "lat": 35.69,
+   "lon": 51.39,
+   "icoon": "zon",
+   "min": 3,
+   "max": 16
+  },
+  {
+   "naam": "Singapore",
+   "lat": 1.35,
+   "lon": 103.82,
+   "icoon": "wolk_regen_bliksem",
+   "min": 24,
+   "max": 31
+  },
+  {
+   "naam": "Bangkok",
+   "lat": 13.76,
+   "lon": 100.5,
+   "icoon": "wolk_regenweinig",
+   "min": 26,
+   "max": 34
+  },
+  {
+   "naam": "Jakarta",
+   "lat": -6.21,
+   "lon": 106.85,
+   "icoon": "zon_wolk_regenweinig",
+   "min": 27,
+   "max": 36
+  },
+  {
+   "naam": "Mumbai",
+   "lat": 19.08,
+   "lon": 72.88,
+   "icoon": "wolk",
+   "min": 24,
+   "max": 34
+  },
+  {
+   "naam": "Karachi",
+   "lat": 24.86,
+   "lon": 67.0,
+   "icoon": "wolk_regenweinig",
+   "min": 24,
+   "max": 30
+  },
+  {
+   "naam": "Shanghai",
+   "lat": 31.23,
+   "lon": 121.47,
+   "icoon": "zon_wolk_regenmedium",
+   "min": 16,
+   "max": 20
+  },
+  {
+   "naam": "Hongkong",
+   "lat": 22.32,
+   "lon": 114.17,
+   "icoon": "zon_wolk_regenmedium",
+   "min": 21,
+   "max": 27
+  },
+  {
+   "naam": "Seoul",
+   "lat": 37.57,
+   "lon": 126.98,
+   "icoon": "wolk_regenweinig",
+   "min": 9,
+   "max": 12
+  },
+  {
+   "naam": "Manilla",
+   "lat": 14.6,
+   "lon": 120.98,
+   "icoon": "wolk_regenweinig",
+   "min": 27,
+   "max": 34
+  },
+  {
+   "naam": "Melbourne",
+   "lat": -37.81,
+   "lon": 144.96,
+   "icoon": "zon_wolk_regenweinig",
+   "min": 14,
+   "max": 17
+  },
+  {
+   "naam": "Auckland",
+   "lat": -36.85,
+   "lon": 174.76,
+   "icoon": "zon_wolk_klein",
+   "min": 13,
+   "max": 21
+  },
+  {
+   "naam": "Novosibirsk",
+   "lat": 55.03,
+   "lon": 82.92,
+   "icoon": "wolk",
+   "min": -2,
+   "max": 1
+  },
+  {
+   "naam": "Jakoetsk",
+   "lat": 62.03,
+   "lon": 129.73,
+   "icoon": "wolk",
+   "min": -26,
+   "max": -22
+  },
+  {
+   "naam": "Vladivostok",
+   "lat": 43.12,
+   "lon": 131.89,
+   "icoon": "wolk",
+   "min": 1,
+   "max": 7
+  },
+  {
+   "naam": "Ulaanbaatar",
+   "lat": 47.89,
+   "lon": 106.91,
+   "icoon": "wolk_sneeuwmedium",
+   "min": -13,
+   "max": -2
+  },
+  {
+   "naam": "Tasjkent",
+   "lat": 41.3,
+   "lon": 69.24,
+   "icoon": "zon_wolk",
+   "min": 2,
+   "max": 13
+  },
+  {
+   "naam": "Kabul",
+   "lat": 34.53,
+   "lon": 69.17,
+   "icoon": "zon_wolk_klein",
+   "min": 0,
+   "max": 13
+  },
+  {
+   "naam": "Bagdad",
+   "lat": 33.31,
+   "lon": 44.37,
+   "icoon": "zon_wolk_klein",
+   "min": 9,
+   "max": 22
+  },
+  {
+   "naam": "Ankara",
+   "lat": 39.93,
+   "lon": 32.86,
+   "icoon": "wolk",
+   "min": 10,
+   "max": 18
+  },
+  {
+   "naam": "Kathmandu",
+   "lat": 27.72,
+   "lon": 85.32,
+   "icoon": "mist",
+   "min": 10,
+   "max": 21
+  },
+  {
+   "naam": "Dhaka",
+   "lat": 23.81,
+   "lon": 90.41,
+   "icoon": "zon",
+   "min": 21,
+   "max": 29
+  },
+  {
+   "naam": "Colombo",
+   "lat": 6.93,
+   "lon": 79.86,
+   "icoon": "wolk",
+   "min": 24,
+   "max": 29
+  },
+  {
+   "naam": "Hanoi",
+   "lat": 21.03,
+   "lon": 105.85,
+   "icoon": "mist",
+   "min": 18,
+   "max": 26
+  },
+  {
+   "naam": "Perth",
+   "lat": -31.95,
+   "lon": 115.86,
+   "icoon": "wolk_regenweinig",
+   "min": 17,
+   "max": 28
+  },
+  {
+   "naam": "Darwin",
+   "lat": -12.46,
+   "lon": 130.84,
+   "icoon": "wolk_regenweinig",
+   "min": 29,
+   "max": 32
+  },
+  {
+   "naam": "Port Moresby",
+   "lat": -9.44,
+   "lon": 147.18,
+   "icoon": "wolk_regenweinig",
+   "min": 26,
+   "max": 30
+  },
+  {
+   "naam": "Suva",
+   "lat": -18.14,
+   "lon": 178.44,
+   "icoon": "wolk_regenweinig",
+   "min": 19,
+   "max": 28
+  },
+  {
+   "naam": "Papeete",
+   "lat": -17.54,
+   "lon": -149.57,
+   "icoon": "wolk_regenweinig",
+   "min": 22,
+   "max": 27
+  },
+  {
+   "naam": "Nuuk",
+   "lat": 64.18,
+   "lon": -51.72,
+   "icoon": "mist",
+   "min": -1,
+   "max": 3
+  },
+  {
+   "naam": "Montreal",
+   "lat": 45.5,
+   "lon": -73.57,
+   "icoon": "wolk",
+   "min": -1,
+   "max": 4
+  },
+  {
+   "naam": "Winnipeg",
+   "lat": 49.9,
+   "lon": -97.14,
+   "icoon": "wolk",
+   "min": -8,
+   "max": 2
+  },
+  {
+   "naam": "Denver",
+   "lat": 39.74,
+   "lon": -104.99,
+   "icoon": "wolk",
+   "min": 1,
+   "max": 18
+  },
+  {
+   "naam": "Dallas",
+   "lat": 32.78,
+   "lon": -96.8,
+   "icoon": "wolk",
+   "min": 10,
+   "max": 20
+  },
+  {
+   "naam": "Havana",
+   "lat": 23.11,
+   "lon": -82.37,
+   "icoon": "wolk_regenweinig",
+   "min": 22,
+   "max": 28
+  },
+  {
+   "naam": "Caracas",
+   "lat": 10.48,
+   "lon": -66.9,
+   "icoon": "wolk_regenweinig",
+   "min": 19,
+   "max": 29
+  },
+  {
+   "naam": "Manaus",
+   "lat": -3.12,
+   "lon": -60.02,
+   "icoon": "wolk_regenmedium",
+   "min": 28,
+   "max": 33
+  },
+  {
+   "naam": "La Paz",
+   "lat": -16.5,
+   "lon": -68.15,
+   "icoon": "zon_wolk_regenweinig",
+   "min": 5,
+   "max": 13
+  },
+  {
+   "naam": "Punta Arenas",
+   "lat": -53.16,
+   "lon": -70.91,
+   "icoon": "wolk_regenweinig",
+   "min": 8,
+   "max": 12
+  },
+  {
+   "naam": "Algiers",
+   "lat": 36.75,
+   "lon": 3.06,
+   "icoon": "zon_wolk",
+   "min": 20,
+   "max": 24
+  },
+  {
+   "naam": "Tripoli",
+   "lat": 32.89,
+   "lon": 13.19,
+   "icoon": "wolk",
+   "min": 23,
+   "max": 31
+  },
+  {
+   "naam": "Khartoem",
+   "lat": 15.5,
+   "lon": 32.56,
+   "icoon": "wolk",
+   "min": 22,
+   "max": 36
+  },
+  {
+   "naam": "Accra",
+   "lat": 5.6,
+   "lon": -0.19,
+   "icoon": "wolk_regenweinig",
+   "min": 25,
+   "max": 32
+  },
+  {
+   "naam": "Luanda",
+   "lat": -8.84,
+   "lon": 13.23,
+   "icoon": "wolk_regenweinig",
+   "min": 25,
+   "max": 30
+  },
+  {
+   "naam": "Dar es Salaam",
+   "lat": -6.79,
+   "lon": 39.21,
+   "icoon": "zon_wolk_regenweinig",
+   "min": 24,
+   "max": 31
+  },
+  {
+   "naam": "Windhoek",
+   "lat": -22.56,
+   "lon": 17.08,
+   "icoon": "wolk_regenweinig",
+   "min": 18,
+   "max": 34
+  },
+  {
+   "naam": "Antananarivo",
+   "lat": -18.88,
+   "lon": 47.51,
+   "icoon": "wolk_regenweinig",
+   "min": 17,
+   "max": 27
+  },
+  {
+   "naam": "Barcelona",
+   "lat": 41.39,
+   "lon": 2.17,
+   "icoon": "wolk",
+   "min": 16,
+   "max": 21
+  },
+  {
+   "naam": "Kyiv",
+   "lat": 50.45,
+   "lon": 30.52,
+   "icoon": "wolk_regenweinig",
+   "min": 4,
+   "max": 11
+  },
+  {
+   "naam": "Boekarest",
+   "lat": 44.43,
+   "lon": 26.1,
+   "icoon": "wolk_regenweinig",
+   "min": 13,
+   "max": 26
+  },
+  {
+   "naam": "Tromsø",
+   "lat": 69.65,
+   "lon": 18.96,
+   "icoon": "wolk",
+   "min": -7,
+   "max": -5
+  },
+  {
+   "naam": "Longyearbyen",
+   "lat": 78.22,
+   "lon": 15.63,
+   "icoon": "mist",
+   "min": -19,
+   "max": -16
+  }
+ ]
+}

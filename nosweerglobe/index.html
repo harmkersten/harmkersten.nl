@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOS Weerglobe</title>
+<!-- Op de website werkt het adres ook zonder schuine streep aan het eind, maar dan
+     zoekt de browser js/, geo/ en data/ op de verkeerde plek. Daarom eerst doorsturen. -->
+<script>if (!/\/$|\.html$/.test(location.pathname)) location.replace(location.pathname + '/' + location.search + location.hash);</script>
+<link rel="stylesheet" href="nos-basis.css">
+<link rel="stylesheet" href="stijl.css">
+</head>
+<body>
+<div class="app">
+  <header class="kop">
+    <h1>NOS Weerglobe <span class="versie">proefversie</span></h1>
+    <p>Sleep om te draaien, scrol om in te zoomen, dubbelklik voor de beginstand.</p>
+  </header>
+
+  <div class="kolommen twee">
+    <div class="links">
+      <section class="panel">
+        <h2>Laag</h2>
+        <label class="veld">
+          <span>Kleurlaag</span>
+          <select id="laag"></select>
+        </label>
+        <label class="veld">
+          <span>Dekking <output id="dekking-waarde"></output></span>
+          <input type="range" id="dekking" min="0" max="100" value="80">
+        </label>
+        <label class="check"><input type="checkbox" id="satelliet"> Satellietkaart</label>
+        <label class="check"><input type="checkbox" id="relief" checked> Reliëf</label>
+        <label class="check"><input type="checkbox" id="grenzen" checked> Landsgrenzen</label>
+        <label class="check"><input type="checkbox" id="wolken"> Wolken (satelliet)</label>
+        <label class="check"><input type="checkbox" id="wind"> Wind als bewegende lijnen</label>
+        <label class="check"><input type="checkbox" id="isobaren"> Isobaren met H en L</label>
+        <label class="check"><input type="checkbox" id="steden" checked> Steden met weerbeeld</label>
+        <label class="check"><input type="checkbox" id="tijdlabel" checked> Label met dag en tijd</label>
+        <div id="legenda" class="legenda" hidden>
+          <canvas id="legenda-balk" width="600" height="24"></canvas>
+          <div id="legenda-streepjes" class="legenda-streepjes"></div>
+        </div>
+        <p id="bron" class="hint"></p>
+        <div id="meldingen" class="meldingen"></div>
+      </section>
+
+      <section class="panel" id="tijdpaneel" hidden>
+        <h2>Tijd</h2>
+        <div class="tijdrij">
+          <button class="secondary" id="speel">▶ Afspelen</button>
+          <output id="tijdstip"></output>
+        </div>
+        <input type="range" id="tijdschuif" min="0" max="1" step="0.01" value="0">
+        <p class="hint" id="tijduitleg"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Beeld</h2>
+        <div class="row">
+          <button class="primary" id="download">Download PNG</button>
+        </div>
+        <p class="hint">1920 × 1920 pixels, precies wat je nu ziet.</p>
+      </section>
+    </div>
+
+    <div class="midden">
+      <div class="stage" id="stage">
+        <canvas id="kaart" width="1920" height="1920"></canvas>
+        <canvas id="deeltjes" width="1920" height="1920"></canvas>
+        <canvas id="etiketten" width="1920" height="1920"></canvas>
+        <canvas id="plaatsen" width="1920" height="1920"></canvas>
+      </div>
+      <p class="stage-hint" id="aflezing">&nbsp;</p>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
