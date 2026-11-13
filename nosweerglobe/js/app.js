@@ -374,6 +374,17 @@ let basisKlopt = false;
 
 function tekenBasis(snel) {
   tekenAchtergrond();
+
+  // zachte gloed achter de bol: licht aan de rand, uitlopend naar niets
+  const R = zicht.R;
+  const gloed = ctx.createRadialGradient(MIDDEN, MIDDEN, R * 0.9, MIDDEN, MIDDEN, R * 1.28);
+  gloed.addColorStop(0, 'rgba(225, 242, 255, 0.55)');
+  gloed.addColorStop(0.35, 'rgba(225, 242, 255, 0.22)');
+  gloed.addColorStop(1, 'rgba(225, 242, 255, 0)');
+  ctx.fillStyle = gloed;
+  ctx.beginPath();
+  ctx.arc(MIDDEN, MIDDEN, R * 1.28, 0, 2 * Math.PI);
+  ctx.fill();
   if (satelliet && $('satelliet').checked) {    // de foto vervangt zee, land en reliëf
     tekenSatelliet(snel ? 480 : B);
     return;
