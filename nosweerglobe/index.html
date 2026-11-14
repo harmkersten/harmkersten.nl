@@ -14,7 +14,7 @@
 <div class="app">
   <header class="kop">
     <h1>NOS Weerglobe <span class="versie">proefversie</span></h1>
-    <p>Sleep om te draaien, scrol om in te zoomen, dubbelklik voor de beginstand.</p>
+    <p>Sleep om te draaien, Shift + slepen om te verschuiven, scrol om in te zoomen, dubbelklik voor de beginstand.</p>
   </header>
 
   <div class="kolommen twee">
@@ -45,6 +45,48 @@
         <div id="meldingen" class="meldingen"></div>
       </section>
 
+      <section class="panel" id="eigenpaneel">
+        <h2>Eigen data</h2>
+        <button class="secondary breed" id="kiesbestand">Bestand kiezen…</button>
+        <p class="hint">NetCDF, GeoJSON of shapefile (.shp met .dbf en .prj samen, of een .zip). Je kunt een bestand ook op de globe laten vallen.</p>
+        <div id="eigen-opties" hidden>
+          <p class="eigen-naam" id="eigen-naam"></p>
+          <label class="veld">
+            <span id="eigen-varlabel">Variabele</span>
+            <select id="eigen-var"></select>
+          </label>
+          <label class="veld" id="eigen-tijdveld" hidden>
+            <span>Tijdstap <output id="eigen-tijdtekst"></output></span>
+            <input type="range" id="eigen-tijd" min="0" max="0" value="0">
+          </label>
+          <label class="veld" id="egaalveld" hidden>
+            <span>Kleur</span>
+            <input type="color" id="egaal-kleur" value="#e61e14">
+          </label>
+          <div id="soortenlijst" class="soortenlijst" hidden></div>
+          <div id="schaalblok">
+            <span class="veldnaam">Kleurenschaal <span id="schaal-eenheid"></span></span>
+            <div class="velden-2">
+              <label class="veld"><span>Van</span><input type="number" id="schaal-min" step="any"></label>
+              <label class="veld"><span>Tot</span><input type="number" id="schaal-max" step="any"></label>
+            </div>
+            <div id="schaal-stops" class="schaal-stops"></div>
+            <div class="row">
+              <button class="mini" id="schaal-erbij">+ Kleur</button>
+              <button class="mini" id="schaal-om">Omkeren</button>
+              <button class="mini" id="schaal-data">Bereik uit data</button>
+            </div>
+            <label class="check" style="margin-top:10px"><input type="checkbox" id="schaal-onder"> Laagste waarde doorzichtig</label>
+            <label class="veld" style="margin-top:12px">
+              <span>Vast verloop</span>
+              <select id="schaal-keuze"></select>
+            </label>
+          </div>
+          <p class="hint">De dekking stel je in met de schuif onder "Kleurlaag".</p>
+          <button class="mini" id="eigen-weg">Eigen data verwijderen</button>
+        </div>
+      </section>
+
       <section class="panel" id="tijdpaneel" hidden>
         <h2>Tijd</h2>
         <div class="tijdrij">
@@ -53,6 +95,20 @@
         </div>
         <input type="range" id="tijdschuif" min="0" max="1" step="0.01" value="0">
         <p class="hint" id="tijduitleg"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Plek van de bol</h2>
+        <label class="veld">
+          <span>Naar links of rechts <output id="schuif-x-waarde">0</output></span>
+          <input type="range" id="schuif-x" min="-1200" max="1200" step="10" value="0">
+        </label>
+        <label class="veld">
+          <span>Omhoog of omlaag <output id="schuif-y-waarde">0</output></span>
+          <input type="range" id="schuif-y" min="-1200" max="1200" step="10" value="0">
+        </label>
+        <button class="mini" id="schuif-midden">Terug naar het midden</button>
+        <p class="hint">Of houd Shift ingedrukt en sleep de bol.</p>
       </section>
 
       <section class="panel">
@@ -76,8 +132,12 @@
   </div>
 </div>
 
+<input type="file" id="bestandinvoer" multiple hidden
+  accept=".nc,.nc4,.nc3,.cdf,.h5,.hdf5,.netcdf,.geojson,.json,.shp,.dbf,.prj,.cpg,.shx,.zip">
+
 <script src="vendor/d3.min.js"></script>
 <script src="vendor/topojson-client.min.js"></script>
+<script src="js/nc3.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

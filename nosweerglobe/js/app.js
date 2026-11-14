@@ -9,6 +9,7 @@
 // Beide zijn intern 1920 × 1920; de browser schaalt ze naar het scherm.
 
 import { LAGEN, STIJL } from './lagen.js';
+import { leesBestanden } from './eigen.js';
 
 const B = 1920;                 // breedte en hoogte van het beeld
 const MIDDEN = B / 2;
@@ -24,9 +25,11 @@ const ctx = kaart.getContext('2d');
 const dctx = $('deeltjes').getContext('2d');
 const stage = $('stage');
 
-const zicht = { ...BEGIN };     // middelpunt van de bol (graden) en straal (pixels)
+const zicht = { ...BEGIN, dx: 0, dy: 0 };     // middelpunt van de bol (graden) en straal (pixels)
 let as = {};                    // de drie assen van het beeld, zie rekenAssen()
 const projectie = d3.geoOrthographic().translate([MIDDEN, MIDDEN]).clipAngle(90).precision(0.4);
+// middelpunt van de bol op het beeld: het midden plus de verschuiving (zicht.dx, zicht.dy)
+let midX = MIDDEN, midY = MIDDEN;
 const pad = d3.geoPath(projectie, ctx);
 
 const geo = { land: null, landGrof: null, grenzen: null, grenzenGrof: null, dieptes: null, dieptesGrof: null, meren: null };
@@ -45,12 +48,14 @@ function rekenAssen() {
   const l = zicht.lon * RAD, f = zicht.lat * RAD;
   const sl = Math.sin(l), cl = Math.cos(l), sf = Math.sin(f), cf = Math.cos(f);
   as = { ex: -sl, ey: cl, nx: -sf * cl, ny: -sf * sl, nz: cf, cx: cf * cl, cy: cf * sl, cz: sf };
-  projectie.rotate([-zicht.lon, -zicht.lat]).scale(zicht.R);
+  midX = MIDDEN + zicht.dx;
+  midY = MIDDEN + zicht.dy;
+  projectie.rotate([-zicht.lon, -zicht.lat]).scale(zicht.R).translate([midX, midY]);
 }
 
 // beeldpunt -> [lengte, breedte], of null buiten de bol
 function naarLonLat(x, y) {
-  const px = (x - MIDDEN) / zicht.R, py = (MIDDEN - y) / zicht.R;
+  const px = (x - midX) / zicht.R, py = (midY - y) / zicht.R;
   const d = px * px + py * py;
   if (d > 1) return null;
   const pz = Math.sqrt(1 - d);
@@ -66,8 +71,8 @@ function naarBeeld(lon, lat) {
   const l = lon * RAD, f = lat * RAD, cf = Math.cos(f);
   const X = cf * Math.cos(l), Y = cf * Math.sin(l), Z = Math.sin(f);
   if (X * as.cx + Y * as.cy + Z * as.cz <= 0) return false;
-  sx = MIDDEN + zicht.R * (X * as.ex + Y * as.ey);
-  sy = MIDDEN - zicht.R * (X * as.nx + Y * as.ny + Z * as.nz);
+  sx = midX + zicht.R * (X * as.ex + Y * as.ey);
+  sy = midY - zicht.R * (X * as.nx + Y * as.ny + Z * as.nz);
   return true;
 }
 
@@ -163,13 +168,21 @@ function tekenKleurlaag(maat) {
   const stap = B / maat;
   const factor = 1023 / (lut.max - lut.min);
   // alleen het vierkant rond de bol doorlopen
-  const van = Math.max(0, Math.floor((MIDDEN - zicht.R) / stap));
-  const tot = Math.min(maat, Math.ceil((MIDDEN + zicht.R) / stap));
-  for (let j = van; j < tot; j++) {
-    for (let i = van; i < tot; i++) {
-      const p = naarLonLat((i + 0.5) * stap, (j + 0.5) * stap);
-      if (!p) continue;
-      const w = monster(raster, d, p[0], p[1]);
+  const vanX = Math.max(0, Math.floor((midX - zicht.R) / stap)), totX = Math.min(maat, Math.ceil((midX + zicht.R) / stap));
+  const vanY = Math.max(0, Math.floor((midY - zicht.R) / stap)), totY = Math.min(maat, Math.ceil((midY + zicht.R) / stap));
+  const R = zicht.R;
+  for (let j = vanY; j < totY; j++) {
+    const py = (midY - (j + 0.5) * stap) / R;
+    for (let i = vanX; i < totX; i++) {
+      // zelfde rekensom als naarLonLat(), hier uitgeschreven omdat dit per pixel loopt
+      const pxx = ((i + 0.5) * stap - midX) / R;
+      const afstand = pxx * pxx + py * py;
+      if (afstand > 1) continue;
+      const pz = Math.sqrt(1 - afstand);
+      const X = pxx * as.ex + py * as.nx + pz * as.cx;
+      const Y = pxx * as.ey + py * as.ny + pz * as.cy;
+      const Z = py * as.nz + pz * as.cz;
+      const w = monster(raster, d, Math.atan2(Y, X) * DEG, Math.asin(Z) * DEG);
       if (w !== w) continue;                       // geen waarde (NaN)
       let n = (w - lut.min) * factor;
       n = n < 0 ? 0 : n > 1023 ? 1023 : n | 0;
@@ -179,7 +192,7 @@ function tekenKleurlaag(maat) {
   lctx.putImageData(beeld, 0, 0);
   ctx.save();
   ctx.beginPath();
-  ctx.arc(MIDDEN, MIDDEN, zicht.R, 0, 2 * Math.PI);
+  ctx.arc(midX, midY, zicht.R, 0, 2 * Math.PI);
   ctx.clip();
   ctx.globalAlpha = $('dekking').value / 100;
   ctx.imageSmoothingQuality = 'high';
@@ -233,12 +246,12 @@ function tekenBeeldlaag(beeld, tabel, maat, knip) {
   const px = new Uint32Array(uit.data.buffer);
   const { w, h, d } = beeld;
   const stap = B / maat, R = zicht.R;
-  const van = Math.max(0, Math.floor((MIDDEN - R) / stap));
-  const tot = Math.min(maat, Math.ceil((MIDDEN + R) / stap));
-  for (let j = van; j < tot; j++) {
-    const py = (MIDDEN - (j + 0.5) * stap) / R;
-    for (let i = van; i < tot; i++) {
-      const pxx = ((i + 0.5) * stap - MIDDEN) / R;
+  const vanX = Math.max(0, Math.floor((midX - R) / stap)), totX = Math.min(maat, Math.ceil((midX + R) / stap));
+  const vanY = Math.max(0, Math.floor((midY - R) / stap)), totY = Math.min(maat, Math.ceil((midY + R) / stap));
+  for (let j = vanY; j < totY; j++) {
+    const py = (midY - (j + 0.5) * stap) / R;
+    for (let i = vanX; i < totX; i++) {
+      const pxx = ((i + 0.5) * stap - midX) / R;
       const afstand = pxx * pxx + py * py;
       if (afstand > 1) continue;
       const pz = Math.sqrt(1 - afstand);
@@ -306,12 +319,12 @@ function tekenSatelliet(maat) {
   const px = new Uint32Array(uit.data.buffer);
   const { w, h, px: d } = satelliet;
   const stap = B / maat, R = zicht.R;
-  const van = Math.max(0, Math.floor((MIDDEN - R) / stap));
-  const tot = Math.min(maat, Math.ceil((MIDDEN + R) / stap));
-  for (let j = van; j < tot; j++) {
-    const py = (MIDDEN - (j + 0.5) * stap) / R;
-    for (let i = van; i < tot; i++) {
-      const pxx = ((i + 0.5) * stap - MIDDEN) / R;
+  const vanX = Math.max(0, Math.floor((midX - R) / stap)), totX = Math.min(maat, Math.ceil((midX + R) / stap));
+  const vanY = Math.max(0, Math.floor((midY - R) / stap)), totY = Math.min(maat, Math.ceil((midY + R) / stap));
+  for (let j = vanY; j < totY; j++) {
+    const py = (midY - (j + 0.5) * stap) / R;
+    for (let i = vanX; i < totX; i++) {
+      const pxx = ((i + 0.5) * stap - midX) / R;
       const afstand = pxx * pxx + py * py;
       if (afstand > 1) continue;
       const pz = Math.sqrt(1 - afstand);
@@ -342,10 +355,124 @@ function tekenSatelliet(maat) {
   lctx.putImageData(uit, 0, 0);
   ctx.save();
   ctx.beginPath();
-  ctx.arc(MIDDEN, MIDDEN, R, 0, 2 * Math.PI);
+  ctx.arc(midX, midY, R, 0, 2 * Math.PI);
   ctx.clip();
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(lapje, 0, 0, B, B);
+  ctx.restore();
+}
+
+// ---- vlakken, lijnen en punten uit een eigen bestand (GeoJSON, shapefile)
+
+const vectorlaag = document.createElement('canvas');
+vectorlaag.width = vectorlaag.height = B;
+let vectorKlopt = false;        // het scherpe resultaat bewaren we, net als de ondergrond
+
+function tekenVectorOp(c) {
+  pad.context(c);
+  pad.pointRadius(9);
+  c.lineJoin = c.lineCap = 'round';
+  laag.features.forEach((f, i) => {
+    const kleur = laag.kleuren[i];
+    if (!kleur) return;                          // geen waarde: niet tekenen
+    const soort = f.geom.type;
+    c.beginPath();
+    pad(f.geom);
+    if (/LineString/.test(soort)) {
+      c.strokeStyle = kleur;
+      c.lineWidth = 3;
+      c.stroke();
+    } else {
+      c.fillStyle = kleur;
+      c.fill();
+      // punten krijgen een witte rand; vlakken een randje in eigen kleur tegen kieren
+      c.strokeStyle = /Point/.test(soort) ? '#fff' : kleur;
+      c.lineWidth = /Point/.test(soort) ? 2.5 : 1;
+      c.stroke();
+    }
+  });
+  pad.context(ctx);
+}
+
+// Een groot bestand (tienduizenden hoekpunten) is te traag om bij elk beeldje van
+// het draaien opnieuw te tekenen. Daarom tekenen we het één keer plat uit op een
+// plaatje (lengte tegen breedte) en lezen tijdens het draaien alleen dat plaatje af.
+function vectorTextuur() {
+  if (laag.textuur) return laag.textuur;
+  let [w0, z0, o0, n0] = laag.omhullende;
+  w0 = Math.max(-180, w0); o0 = Math.min(180, o0); z0 = Math.max(-90, z0); n0 = Math.min(90, n0);
+  if (o0 - w0 > 300) { w0 = -180; o0 = 180; }
+  const rand = Math.max(0.01, (o0 - w0) * 0.005);
+  w0 = Math.max(-180, w0 - rand); o0 = Math.min(180, o0 + rand); z0 = Math.max(-90, z0 - rand); n0 = Math.min(90, n0 + rand);
+  const w = o0 - w0 > 300 ? 4096 : 2048;
+  const h = Math.max(2, Math.min(2048, Math.round(w * (n0 - z0) / (o0 - w0))));
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const cctx = c.getContext('2d', { willReadFrequently: true });
+  // plat: x loopt met de lengtegraad mee, y met de breedtegraad (verticaal opgerekt tot h)
+  const k = w / ((o0 - w0) * RAD);
+  const plat = d3.geoEquirectangular().scale(k).translate([-w0 * RAD * k, n0 * RAD * k]).precision(0);
+  cctx.setTransform(1, 0, 0, h / ((n0 - z0) * RAD * k), 0, 0);
+  const oud = pad.projection();
+  pad.projection(plat);
+  tekenVectorOp(cctx);
+  pad.projection(oud);
+  cctx.setTransform(1, 0, 0, 1, 0, 0);
+  laag.textuur = { w, h, w0, o0, z0, n0, px: new Uint32Array(cctx.getImageData(0, 0, w, h).data.buffer) };
+  return laag.textuur;
+}
+
+function tekenVectorSnel(maat) {
+  const t = vectorTextuur();
+  lapje.width = lapje.height = maat;
+  const lctx = lapje.getContext('2d');
+  const uit = lctx.createImageData(maat, maat);
+  const px = new Uint32Array(uit.data.buffer);
+  const stap = B / maat, R = zicht.R;
+  const perLon = t.w / (t.o0 - t.w0), perLat = t.h / (t.n0 - t.z0);
+  const vanX = Math.max(0, Math.floor((midX - R) / stap)), totX = Math.min(maat, Math.ceil((midX + R) / stap));
+  const vanY = Math.max(0, Math.floor((midY - R) / stap)), totY = Math.min(maat, Math.ceil((midY + R) / stap));
+  for (let j = vanY; j < totY; j++) {
+    const py = (midY - (j + 0.5) * stap) / R;
+    for (let i = vanX; i < totX; i++) {
+      const pxx = ((i + 0.5) * stap - midX) / R;
+      const afstand = pxx * pxx + py * py;
+      if (afstand > 1) continue;
+      const pz = Math.sqrt(1 - afstand);
+      const X = pxx * as.ex + py * as.nx + pz * as.cx;
+      const Y = pxx * as.ey + py * as.ny + pz * as.cy;
+      const Z = py * as.nz + pz * as.cz;
+      const u = (Math.atan2(Y, X) * DEG - t.w0) * perLon | 0;
+      const v = (t.n0 - Math.asin(Z) * DEG) * perLat | 0;
+      if (u < 0 || u >= t.w || v < 0 || v >= t.h) continue;
+      px[j * maat + i] = t.px[v * t.w + u];
+    }
+  }
+  lctx.putImageData(uit, 0, 0);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(lapje, 0, 0, B, B);
+}
+
+function tekenVector(snel) {
+  ctx.save();
+  ctx.globalAlpha = $('dekking').value / 100;
+  if (snel && laag.zwaar) {
+    ctx.beginPath();
+    ctx.arc(midX, midY, zicht.R, 0, 2 * Math.PI);
+    ctx.clip();
+    tekenVectorSnel(640);
+  } else if (snel) {
+    tekenVectorOp(ctx);
+  } else {
+    if (!vectorKlopt) {
+      const vctx = vectorlaag.getContext('2d');
+      vctx.clearRect(0, 0, B, B);
+      tekenVectorOp(vctx);
+      vectorKlopt = true;
+    }
+    ctx.drawImage(vectorlaag, 0, 0);
+  }
   ctx.restore();
 }
 
@@ -377,13 +504,13 @@ function tekenBasis(snel) {
 
   // zachte gloed achter de bol: licht aan de rand, uitlopend naar niets
   const R = zicht.R;
-  const gloed = ctx.createRadialGradient(MIDDEN, MIDDEN, R * 0.9, MIDDEN, MIDDEN, R * 1.28);
+  const gloed = ctx.createRadialGradient(midX, midY, R * 0.9, midX, midY, R * 1.28);
   gloed.addColorStop(0, 'rgba(225, 242, 255, 0.55)');
   gloed.addColorStop(0.35, 'rgba(225, 242, 255, 0.22)');
   gloed.addColorStop(1, 'rgba(225, 242, 255, 0)');
   ctx.fillStyle = gloed;
   ctx.beginPath();
-  ctx.arc(MIDDEN, MIDDEN, R * 1.28, 0, 2 * Math.PI);
+  ctx.arc(midX, midY, R * 1.28, 0, 2 * Math.PI);
   ctx.fill();
   if (satelliet && $('satelliet').checked) {    // de foto vervangt zee, land en reliëf
     tekenSatelliet(snel ? 480 : B);
@@ -391,7 +518,7 @@ function tekenBasis(snel) {
   }
 
   ctx.beginPath();
-  ctx.arc(MIDDEN, MIDDEN, zicht.R, 0, 2 * Math.PI);
+  ctx.arc(midX, midY, zicht.R, 0, 2 * Math.PI);
   ctx.fillStyle = STIJL.water;
   ctx.fill();
 
@@ -466,11 +593,12 @@ function tekenKaart(snel, film = false) {
   }
   const land = snel ? geo.landGrof : geo.land || geo.landGrof;
 
-  if (laag) tekenKleurlaag(snel ? 384 : film ? 480 : 960);
+  if (laag && laag.vector) tekenVector(snel);
+  else if (laag) tekenKleurlaag(snel ? 384 : film ? 480 : 960);
   // het satellietbeeld is één opname: alleen tonen bij het eerste tijdstip
   if (wolken && $('wolken').checked && tijd.pos < 0.01) {
     tekenBeeldlaag(wolken, WOLKEN_TABEL, snel ? 384 : 1280,
-      () => ctx.arc(MIDDEN, MIDDEN, zicht.R, 0, 2 * Math.PI));
+      () => ctx.arc(midX, midY, zicht.R, 0, 2 * Math.PI));
   }
 
   const grenzen = snel ? geo.grenzenGrof : geo.grenzen || geo.grenzenGrof;
@@ -507,6 +635,8 @@ let vast = null;   // { dag, uur, bDag, bUur, kader } of null als het label uit 
 
 function meetTijdlabel() {
   // een laag met één eigen tijdstip (radar, satelliet) bepaalt zelf wat het label toont
+  // eigen data kan van elk jaar zijn; 'vrijdag 14:00' zegt dan niets, dus geen label
+  if (laag && laag.meta.id === 'eigen') return null;
   const eigenTijd = laag && !(laag.meta.stappen && laag.meta.stappen.length > 1);
   const nu = eigenTijd ? new Date(laag.meta.tijd) : huidigeTijd();
   if (!nu || !$('tijdlabel').checked) return null;
@@ -652,7 +782,7 @@ function tekenIsobaren(snel, film) {
   if (vast) bezet.push(vast.kader);
   const past = (kader) => !bezet.some((b) => raakt(kader, b));
   const inBeeld = (rand) => sx > rand && sx < B - rand && sy > rand && sy < B - rand
-    && Math.hypot(sx - MIDDEN, sy - MIDDEN) < zicht.R * 0.94;
+    && Math.hypot(sx - midX, sy - midY) < zicht.R * 0.94;
   for (const k of druk.kernen) {
     if (!naarBeeld(k.lon, k.lat) || !inBeeld(70)) continue;
     const kader = [sx - 56, sy - 64, sx + 56, sy + 59];
@@ -661,27 +791,48 @@ function tekenIsobaren(snel, film) {
     label(sx, sy - 30, k.hoog ? 'H' : 'L', k.hoog ? '#e61e14' : '#2a6cb5', '#fff', 50, 50);
     label(sx, sy + 28, String(k.waarde), '#1c1c1c', '#fff', 44);
   }
-  // tijdens slepen en afspelen geen waarden op de lijnen: die verspringen dan steeds
-  if (snel || film) return;
+  // Waarden op de lijnen. Elk label onthoudt zijn plek op aarde (druk.ankers), zodat
+  // het bij draaien met de lijn meebeweegt in plaats van te verspringen. Een nieuwe
+  // plek wordt alleen gezocht als het beeld stilstaat.
+  if (film) return;
+  if (!druk.ankers) druk.ankers = new Map();
   const waarden = [];   // middelpunten van al geplaatste waardelabels, voor de spreiding
-  for (const l of druk.lijnen) {
-    for (const stuk of l.vorm.coordinates) {
+  const zetWaarde = (x, y, waarde) => {
+    waarden.push([x, y]);
+    bezet.push([x - 58, y - 32, x + 58, y + 32]);
+    label(x, y, String(waarde), '#1c1c1c', '#fff', 44);
+  };
+  for (let li = 0; li < druk.lijnen.length; li++) {
+    const l = druk.lijnen[li];
+    for (let si = 0; si < l.vorm.coordinates.length; si++) {
+      const stuk = l.vorm.coordinates[si];
       if (stuk.length < 60) continue;       // alleen lange lijnen krijgen een waarde
+      const sleutel = li + ':' + si;
+      const anker = druk.ankers.get(sleutel);
+      if (anker) {
+        if (naarBeeld(anker[0], anker[1]) && inBeeld(60) && past([sx - 58, sy - 32, sx + 58, sy + 32])
+            && !waarden.some(([wx, wy]) => Math.hypot(wx - sx, wy - sy) < 620)) {
+          zetWaarde(sx, sy, l.waarde);
+          continue;
+        }
+        if (snel) continue;                 // tijdens slepen niets nieuws zoeken
+        druk.ankers.delete(sleutel);        // plek is uit beeld of bezet: nieuwe zoeken
+      }
+      if (snel) continue;
       // het punt van de lijn dat het dichtst bij het midden van het beeld ligt
       let beste = null, kleinste = Infinity;
       for (let i = 0; i < stuk.length; i += 3) {
         if (!naarBeeld(stuk[i][0], stuk[i][1]) || !inBeeld(60)) continue;
-        const afstand = Math.hypot(sx - MIDDEN, sy - MIDDEN);
+        const afstand = Math.hypot(sx - midX, sy - midY);
         if (afstand >= kleinste) continue;
         if (!past([sx - 58, sy - 32, sx + 58, sy + 32])) continue;
         if (waarden.some(([wx, wy]) => Math.hypot(wx - sx, wy - sy) < 620)) continue;
         kleinste = afstand;
-        beste = [sx, sy];
+        beste = [sx, sy, stuk[i]];
       }
       if (beste) {
-        waarden.push(beste);
-        bezet.push([beste[0] - 58, beste[1] - 32, beste[0] + 58, beste[1] + 32]);
-        label(beste[0], beste[1], String(l.waarde), '#1c1c1c', '#fff', 44);
+        druk.ankers.set(sleutel, beste[2]);
+        zetWaarde(beste[0], beste[1], l.waarde);
       }
     }
   }
@@ -697,6 +848,7 @@ const pctx = $('plaatsen').getContext('2d');
 const ICOON = 138, VAK = 46, DONKER = '#1c1c1c';
 let steden = [];            // uit data/steden.json
 let stedenInBeeld = [];     // wat er bij deze stand getekend wordt, met plek en maten
+let vasteSteden = new Set(); // namen van de steden die nu in beeld staan
 const plaatjes = new Map(); // naam van het icoon -> Image
 let vorigBeeldje = -1;
 
@@ -718,9 +870,15 @@ function plaatsSteden() {
   if (!$('steden').checked) return;
   pctx.font = `600 ${Math.round(VAK * 0.68)}px "Effra CC", sans-serif`;
   const breed = (tekst) => Math.ceil(pctx.measureText(tekst).width + VAK * 0.5);
-  for (const stad of steden) {
+  // Volgorde: eerst de grootste steden (de eerste elf van de lijst), dan de rest.
+  // Binnen elke groep gaan steden die er al stonden voor: zo blijft een label staan
+  // tot het uit beeld draait, in plaats van te wisselen met een buurstad.
+  const rang = (i) => (i < 11 ? 0 : 2) + (vasteSteden.has(steden[i].naam) ? 0 : 1);
+  const volgorde = steden.map((_, i) => i).sort((a, b) => rang(a) - rang(b) || a - b);
+  for (const i of volgorde) {
+    const stad = steden[i];
     if (!naarBeeld(stad.lon, stad.lat)) continue;
-    if (Math.hypot(sx - MIDDEN, sy - MIDDEN) > zicht.R * 0.97) continue;
+    if (Math.hypot(sx - midX, sy - midY) > zicht.R * 0.97) continue;
     const s = {
       ...stad, x: Math.round(sx), y: Math.round(sy),
       bMin: breed(String(stad.min)), bMax: breed(String(stad.max)), bNaam: breed(stad.naam),
@@ -740,6 +898,7 @@ function plaatsSteden() {
     if (stedenInBeeld.some((ander) => s.kaders.some((k) => ander.kaders.some((a) => raakt(k, a))))) continue;
     stedenInBeeld.push(s);
   }
+  vasteSteden = new Set(stedenInBeeld.map((s) => s.naam));
 }
 
 function tekenSteden(nu) {
@@ -774,12 +933,20 @@ let tekenWacht = 0, scherpWacht = 0;
 function ververs() {
   basisKlopt = false;
   grenzenKloppen = null;
+  vectorKlopt = false;
   dctx.clearRect(0, 0, B, B);
   if (!tekenWacht) {
     tekenWacht = requestAnimationFrame(() => { tekenWacht = 0; tekenKaart(true); });
   }
   clearTimeout(scherpWacht);
   scherpWacht = setTimeout(() => { tekenKaart(false); herplaatsDeeltjes(); }, 180);
+}
+
+// Alleen de lagen boven de ondergrond opnieuw tekenen (andere kleur, andere dekking).
+let opnieuwWacht = 0;
+function tekenOpnieuw() {
+  vectorKlopt = false;
+  if (!opnieuwWacht) opnieuwWacht = requestAnimationFrame(() => { opnieuwWacht = 0; tekenKaart(false); });
 }
 
 // ---------------------------------------------------------------- tijdlijn
@@ -865,9 +1032,10 @@ function speel(aan) {
 const deeltjes = new Float32Array(AANTAL_DEELTJES * 3);   // lengte, breedte, leeftijd
 
 function nieuwDeeltje(i) {
-  const van = Math.max(0, MIDDEN - zicht.R), breed = Math.min(B, MIDDEN + zicht.R) - van;
+  const vanX = Math.max(0, midX - zicht.R), breed = Math.min(B, midX + zicht.R) - vanX;
+  const vanY = Math.max(0, midY - zicht.R), hoog = Math.min(B, midY + zicht.R) - vanY;
   for (let poging = 0; poging < 8; poging++) {
-    const p = naarLonLat(van + Math.random() * breed, van + Math.random() * breed);
+    const p = naarLonLat(vanX + Math.random() * breed, vanY + Math.random() * hoog);
     if (p) {
       deeltjes[i * 3] = p[0];
       deeltjes[i * 3 + 1] = p[1];
@@ -925,6 +1093,276 @@ function beweeg(nu) {
   dctx.stroke();
 }
 
+// ---------------------------------------------------------------- eigen data
+
+// Een eigen bestand (NetCDF, GeoJSON, shapefile) wordt een extra keuze onder
+// 'Kleurlaag'. Het lezen gebeurt in eigen.js; hier staan de keuzes en de kleurenschaal.
+//
+// eigen = { ds, keuze, tijd, stops, egaal, … }: ds is wat leesBestanden() teruggeeft,
+// keuze de gekozen variabele of kolom, stops de kleurenschaal: [{ w: waarde, kleur: '#rrggbb' }].
+let eigen = null;
+
+const RAMPEN = {
+  'Blauw → wit → rood': ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'],
+  'Temperatuur': LAGEN.temperatuur.schaal.map((st) => st[1]),
+  'Neerslag': ['#9fdcf5', '#6fe6ff', '#14d977', '#2f7bff', '#5b2bd9', '#4a0d73'],
+  'Geel → rood': ['#ffffb2', '#fecc5c', '#fd8d3c', '#e31a1c', '#800026'],
+  'Wit → blauw': ['#f7fbff', '#9ecae1', '#3182bd', '#08306b'],
+  'Groen → paars': ['#fde725', '#5ec962', '#21918c', '#3b528b', '#440154'],
+  'Wit → NOS-rood': ['#fff5f0', '#fcae91', '#e61e14'],
+  'Wit → zwart': ['#ffffff', '#000000'],
+};
+const SOORTKLEUREN = ['#e61e14', '#2a6cb5', '#f2a900', '#14a36f', '#8e44ad', '#e67e22', '#16a3b8', '#d6336c', '#6b7280', '#84b527'];
+const OPSLAG = 'weerglobe.schalen';
+
+const hexNaarRgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+const mengKleur = (a, b, f) => '#' + hexNaarRgb(a).map((x, k) => Math.round(x + (hexNaarRgb(b)[k] - x) * f).toString(16).padStart(2, '0')).join('');
+// een getal kort opschrijven voor in een invulveld (geen 0.30000000004)
+const kort = (w) => String(Number(w.toPrecision(6)));
+
+function eigenKeuze() {
+  return eigen.ds.soort === 'raster' ? eigen.ds.vars[eigen.keuze] : eigen.ds.kolommen[eigen.keuze];
+}
+
+// kleuren van een ramp gelijk verdeeld tussen min en max
+function stopsVan(kleuren, min, max) {
+  if (!(max > min)) max = min + 1;
+  return kleuren.map((kleur, i) => ({ w: min + (max - min) * i / (kleuren.length - 1), kleur }));
+}
+
+// bereik van de data, zonder de 2% uitschieters aan beide kanten
+function dataBereik() {
+  const geldig = Array.from(eigen.getallen).filter((w) => w === w).sort((a, b) => a - b);
+  if (!geldig.length) return [0, 1];
+  const laag_ = geldig[Math.floor(geldig.length * 0.02)], hoog = geldig[Math.min(geldig.length - 1, Math.floor(geldig.length * 0.98))];
+  return hoog > laag_ ? [laag_, hoog] : [geldig[0], geldig[geldig.length - 1] > geldig[0] ? geldig[geldig.length - 1] : geldig[0] + 1];
+}
+
+function bewaardeSchalen() {
+  try { return JSON.parse(localStorage.getItem(OPSLAG)) || {}; } catch { return {}; }
+}
+function bewaarSchaal() {
+  try {
+    const alle = bewaardeSchalen();
+    alle[eigenKeuze().naam] = eigen.stops;
+    localStorage.setItem(OPSLAG, JSON.stringify(alle));
+  } catch { /* opslag vol of geblokkeerd: dan alleen voor deze keer */ }
+}
+
+// Leest de gekozen variabele of kolom en zet de kleurenschaal klaar.
+function kiesEigen(keuze) {
+  eigen.keuze = keuze;
+  const v = eigenKeuze();
+  eigen.eenheid = v.eenheid || '';
+  if (eigen.ds.soort === 'raster') {
+    const t = v.heeftTijd ? eigen.tijd : 0;
+    const { raster, waarden } = v.lees(t);
+    if (/^(k|kelvin)$/i.test(eigen.eenheid.trim())) {     // kelvin leest niemand: naar graden Celsius
+      for (let i = 0; i < waarden.length; i++) waarden[i] -= 273.15;
+      eigen.eenheid = '°C';
+    }
+    eigen.raster = raster;
+    eigen.getallen = eigen.waarden = waarden;
+    const datum = v.heeftTijd ? eigen.ds.tijden[t] : null;
+    eigen.tijdstip = datum ? datum.toISOString() : null;
+  } else {
+    eigen.getallen = v.soort === 'num' ? eigen.ds.features.map(v.waarde) : [];
+    eigen.tijdstip = null;
+  }
+  if (eigen.ds.soort === 'raster' || v.soort === 'num') {
+    const bewaard = bewaardeSchalen()[v.naam];
+    if (!eigen.vasteSchaal) {                       // bij een andere tijdstap blijft de schaal staan
+      // staat een groot deel van de data op de laagste waarde (nul neerslag, geen ijs),
+      // dan die waarde standaard doorzichtig maken
+      const geldig = Array.from(eigen.getallen).filter((w) => w === w);
+      const laagste = geldig.reduce((m, w) => (w < m ? w : m), Infinity);
+      eigen.onderDoor = geldig.filter((w) => w === laagste).length > geldig.length * 0.3;
+      if (Array.isArray(bewaard) && bewaard.length > 1) eigen.stops = bewaard;
+      else {
+        const ramp = /°C|celsius|degc/i.test(eigen.eenheid) ? 'Temperatuur'
+          : /^(mm|kg m-2|kg\/m2|m of water)/i.test(eigen.eenheid.trim()) ? 'Neerslag' : 'Blauw → wit → rood';
+        eigen.stops = stopsVan(RAMPEN[ramp], ...dataBereik());
+      }
+    }
+  }
+  toonEigenPaneel();
+}
+
+function maakEigenLaag() {
+  const v = eigenKeuze();
+  const meta = { id: 'eigen', naam: v.label.replace(/ \((getal|\d+ soorten)\)$/, ''), eenheid: eigen.eenheid, bron: eigen.ds.naam, tijd: eigen.tijdstip };
+  const metSchaal = eigen.ds.soort === 'raster' || v.soort === 'num';
+  // 'laagste waarde doorzichtig': de eerste kleur loopt uit naar niets (handig bij
+  // neerslag of zee-ijs, waar nul 'niets te zien' betekent)
+  const lut = metSchaal ? maakLut(eigen.stops.map((st, i) => [st.w, st.kleur, i === 0 && eigen.onderDoor ? 0 : 1])) : null;
+  const streepjes = lut ? d3.ticks(lut.min, lut.max, 4) : [];
+  if (eigen.ds.soort === 'raster') {
+    return { meta, raster: eigen.raster, waarden: eigen.waarden, lut, streepjes, eigen: false, glad: 0 };
+  }
+  const kleuren = eigen.ds.features.map((f, i) => {
+    if (v.soort === 'kleur') return v.kleur(f);
+    if (v.soort === 'egaal') return eigen.egaal;
+    if (v.soort === 'tekst') { const n = v.waarde(f); return n < 0 ? '#999999' : SOORTKLEUREN[n % SOORTKLEUREN.length]; }
+    const w = eigen.getallen[i];
+    if (w !== w) return null;
+    const n = Math.max(0, Math.min(1023, Math.round((w - lut.min) / (lut.max - lut.min) * 1023)));
+    const k = lut.tabel[n];
+    return `rgba(${k & 255}, ${(k >> 8) & 255}, ${(k >> 16) & 255}, ${(k >>> 24) / 255})`;
+  });
+  return { meta, vector: true, features: eigen.ds.features, kleuren, lut, streepjes,
+    omhullende: eigen.ds.omhullende, zwaar: eigen.ds.punten > 20000 };
+}
+
+// Zet het paneel 'Eigen data' in de stand van 'eigen'.
+function toonEigenPaneel() {
+  $('eigen-opties').hidden = !eigen;
+  if (!eigen) return;
+  const v = eigenKeuze(), raster = eigen.ds.soort === 'raster';
+  $('eigen-naam').textContent = `${eigen.ds.naam} · ${eigen.ds.formaat}`;
+  $('eigen-varlabel').textContent = raster ? 'Variabele' : 'Kleuren op';
+  const tijden = eigen.ds.tijden || [];
+  $('eigen-tijdveld').hidden = !(raster && v.heeftTijd && tijden.length > 1);
+  if (!$('eigen-tijdveld').hidden) {
+    $('eigen-tijd').max = tijden.length - 1;
+    $('eigen-tijd').value = eigen.tijd;
+    const datum = tijden[eigen.tijd];
+    $('eigen-tijdtekst').textContent = datum ? datum.toLocaleString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC'
+      : `${eigen.tijd + 1} van ${tijden.length}`;
+  }
+  const metSchaal = raster || v.soort === 'num';
+  $('schaalblok').hidden = !metSchaal;
+  $('egaalveld').hidden = v.soort !== 'egaal';
+  $('egaal-kleur').value = eigen.egaal;
+  $('soortenlijst').hidden = v.soort !== 'tekst';
+  if (v.soort === 'tekst') {
+    $('soortenlijst').innerHTML = v.soorten.map((naam, i) =>
+      `<span><i style="background:${SOORTKLEUREN[i % SOORTKLEUREN.length]}"></i>${naam.replace(/[<&]/g, '')}</span>`).join('');
+  }
+  if (metSchaal) {
+    $('schaal-min').value = kort(eigen.stops[0].w);
+    $('schaal-max').value = kort(eigen.stops[eigen.stops.length - 1].w);
+    $('schaal-eenheid').textContent = eigen.eenheid ? `(${eigen.eenheid})` : '';
+    $('schaal-onder').checked = !!eigen.onderDoor;
+    $('schaal-stops').innerHTML = eigen.stops.map((st, i) => `<div class="stop">
+      <input type="color" value="${st.kleur}" data-i="${i}" data-wat="kleur" aria-label="Kleur ${i + 1}">
+      <input type="number" step="any" value="${kort(st.w)}" data-i="${i}" data-wat="w" aria-label="Waarde ${i + 1}">
+      <button class="mini" data-i="${i}" data-wat="weg" ${eigen.stops.length <= 2 ? 'disabled' : ''} aria-label="Kleur ${i + 1} weghalen">×</button>
+    </div>`).join('');
+  }
+}
+
+// Na een wijziging van de schaal: bewaren en de kaart bijwerken.
+function schaalGewijzigd(paneelOok = true) {
+  eigen.stops.sort((a, b) => a.w - b.w);
+  eigen.vasteSchaal = true;
+  bewaarSchaal();
+  if (paneelOok) toonEigenPaneel();
+  if ($('laag').value === 'eigen') { laag = maakEigenLaag(); tekenLegenda(); tekenOpnieuw(); }
+}
+
+function zetBereik(min, max) {
+  const oudMin = eigen.stops[0].w, oudMax = eigen.stops[eigen.stops.length - 1].w;
+  if (!(max > min) || !(oudMax > oudMin)) return;
+  for (const st of eigen.stops) st.w = min + (st.w - oudMin) / (oudMax - oudMin) * (max - min);
+  schaalGewijzigd();
+}
+
+async function laadEigen(files) {
+  melding('Bestand lezen…', 'melding wacht');
+  await new Promise((r) => setTimeout(r, 30));       // eerst de melding laten zien
+  try {
+    const ds = await leesBestanden(files);
+    eigen = { ds, keuze: 0, tijd: 0, stops: null, egaal: '#e61e14', vasteSchaal: false };
+    const lijst = ds.soort === 'raster' ? ds.vars : ds.kolommen;
+    $('eigen-var').innerHTML = '';
+    lijst.forEach((v, i) => $('eigen-var').add(new Option(v.label + (v.eenheid ? ` (${v.eenheid})` : ''), i)));
+    if (ds.soort === 'raster' && ds.tijden.length > 1) eigen.tijd = ds.tijden.length - 1;   // nieuwste tijdstap
+    kiesEigen(0);
+    const keuze = $('laag');
+    if (![...keuze.options].some((o) => o.value === '')) keuze.add(new Option('Geen', ''), 0);
+    [...keuze.options].filter((o) => o.value === 'eigen').forEach((o) => o.remove());
+    keuze.add(new Option('Eigen data: ' + ds.naam, 'eigen'), 1);
+    keuze.value = 'eigen';
+    await kiesLaag('eigen');
+    melding('');
+  } catch (fout) {
+    console.error(fout);
+    melding(fout.message || 'Het bestand kon niet worden gelezen.');
+  }
+}
+
+function koppelEigen() {
+  const invoer = $('bestandinvoer');
+  $('kiesbestand').addEventListener('click', () => invoer.click());
+  // eerst een kopie van de lijst maken: het leegmaken van het veld (zodat hetzelfde
+  // bestand nog eens gekozen kan worden) maakt de oorspronkelijke lijst ook leeg
+  invoer.addEventListener('change', () => { const gekozen = [...invoer.files]; invoer.value = ''; if (gekozen.length) laadEigen(gekozen); });
+  // een bestand op de globe laten vallen
+  stage.addEventListener('dragover', (ev) => { ev.preventDefault(); stage.classList.add('dragover'); });
+  stage.addEventListener('dragleave', () => stage.classList.remove('dragover'));
+  stage.addEventListener('drop', (ev) => {
+    ev.preventDefault();
+    stage.classList.remove('dragover');
+    const gekozen = [...ev.dataTransfer.files];
+    if (gekozen.length) laadEigen(gekozen);
+  });
+
+  const naKeuze = () => { if ($('laag').value === 'eigen') kiesLaag('eigen'); };
+  $('eigen-var').addEventListener('change', (ev) => { eigen.vasteSchaal = false; kiesEigen(Number(ev.target.value)); naKeuze(); });
+  $('eigen-tijd').addEventListener('input', (ev) => { eigen.tijd = Number(ev.target.value); kiesEigen(eigen.keuze); naKeuze(); });
+  $('egaal-kleur').addEventListener('input', (ev) => { eigen.egaal = ev.target.value; if ($('laag').value === 'eigen') { laag = maakEigenLaag(); tekenOpnieuw(); } });
+
+  $('schaal-keuze').innerHTML = '<option value="">Kies een verloop…</option>' + Object.keys(RAMPEN).map((n) => `<option>${n}</option>`).join('');
+  $('schaal-keuze').addEventListener('change', (ev) => {
+    if (!ev.target.value) return;
+    eigen.stops = stopsVan(RAMPEN[ev.target.value], eigen.stops[0].w, eigen.stops[eigen.stops.length - 1].w);
+    ev.target.value = '';
+    schaalGewijzigd();
+  });
+  const bereik = () => zetBereik(Number($('schaal-min').value), Number($('schaal-max').value));
+  $('schaal-min').addEventListener('change', bereik);
+  $('schaal-max').addEventListener('change', bereik);
+  $('schaal-data').addEventListener('click', () => zetBereik(...dataBereik()));
+  $('schaal-om').addEventListener('click', () => {
+    const kleuren = eigen.stops.map((st) => st.kleur).reverse();
+    eigen.stops.forEach((st, i) => { st.kleur = kleuren[i]; });
+    schaalGewijzigd();
+  });
+  $('schaal-erbij').addEventListener('click', () => {
+    // in het grootste gat tussen twee kleuren, met de mengkleur van de buren
+    let plek = 0;
+    for (let i = 1; i < eigen.stops.length - 1; i++) if (eigen.stops[i + 1].w - eigen.stops[i].w > eigen.stops[plek + 1].w - eigen.stops[plek].w) plek = i;
+    const a = eigen.stops[plek], b = eigen.stops[plek + 1];
+    eigen.stops.splice(plek + 1, 0, { w: (a.w + b.w) / 2, kleur: mengKleur(a.kleur, b.kleur, 0.5) });
+    schaalGewijzigd();
+  });
+  $('schaal-onder').addEventListener('change', (ev) => { eigen.onderDoor = ev.target.checked; schaalGewijzigd(false); });
+  const lijst = $('schaal-stops');
+  lijst.addEventListener('input', (ev) => {         // kleur: meteen meekijken, zonder de rijen te herbouwen
+    if (ev.target.dataset.wat !== 'kleur') return;
+    eigen.stops[Number(ev.target.dataset.i)].kleur = ev.target.value;
+    schaalGewijzigd(false);
+  });
+  lijst.addEventListener('change', (ev) => {
+    if (ev.target.dataset.wat !== 'w') return;
+    const w = Number(ev.target.value);
+    if (Number.isFinite(w)) eigen.stops[Number(ev.target.dataset.i)].w = w;
+    schaalGewijzigd();
+  });
+  lijst.addEventListener('click', (ev) => {
+    if (ev.target.dataset.wat !== 'weg' || eigen.stops.length <= 2) return;
+    eigen.stops.splice(Number(ev.target.dataset.i), 1);
+    schaalGewijzigd();
+  });
+
+  $('eigen-weg').addEventListener('click', () => {
+    eigen = null;
+    [...$('laag').options].filter((o) => o.value === 'eigen').forEach((o) => o.remove());
+    toonEigenPaneel();
+    if (laag && laag.meta.id === 'eigen') { $('laag').value = ''; kiesLaag(''); }
+  });
+}
+
 // ---------------------------------------------------------------- bediening
 
 const getal = (w, decimalen = 1) =>
@@ -940,8 +1378,8 @@ function melding(tekst, soort = 'waarschuwing') {
 }
 
 function tekenLegenda() {
-  $('legenda').hidden = !laag;
-  if (!laag) return;
+  $('legenda').hidden = !laag || !laag.lut;
+  if (!laag || !laag.lut) return;
   const balk = $('legenda-balk'), bctx = balk.getContext('2d');
   const beeld = bctx.createImageData(balk.width, 1);
   const px = new Uint32Array(beeld.data.buffer);
@@ -949,15 +1387,17 @@ function tekenLegenda() {
   bctx.clearRect(0, 0, balk.width, balk.height);
   for (let y = 0; y < balk.height; y++) bctx.putImageData(beeld, 0, y);
   const { min, max } = laag.lut;
+  const decimalen = max - min < 0.5 ? 2 : max - min < 5 ? 1 : 0;
   $('legenda-streepjes').innerHTML = laag.streepjes.map((w, i, alle) =>
-    `<span style="left:${(w - min) / (max - min) * 100}%">${getal(w, 0)}${i === alle.length - 1 ? ' ' + laag.meta.eenheid : ''}</span>`).join('');
+    `<span style="left:${(w - min) / (max - min) * 100}%">${getal(w, decimalen)}${i === alle.length - 1 ? ' ' + laag.meta.eenheid : ''}</span>`).join('');
 }
 
 function toonBron() {
   const meta = laag ? laag.meta : wind && wind.meta;
   const regels = [];
   const reeks = meta && meta.stappen && meta.stappen.length > 1;
-  if (meta) regels.push(`${meta.bron} · geldig ${tijdTekst(reeks ? huidigeTijd() : meta.tijd)}`);
+  if (meta && meta.id === 'eigen') regels.push(meta.bron + (meta.tijd ? ` · ${tijdTekst(meta.tijd)}` : ''));
+  else if (meta) regels.push(`${meta.bron} · geldig ${tijdTekst(reeks ? huidigeTijd() : meta.tijd)}`);
   if (wolken && $('wolken').checked) regels.push(`Wolken: ${wolken.bron} · ${tijdTekst(wolken.tijd)}`);
   $('bron').innerHTML = regels.join('<br>');
 }
@@ -966,6 +1406,8 @@ async function kiesLaag(id) {
   melding('');
   if (!id) {
     laag = null;
+  } else if (id === 'eigen') {
+    laag = eigen ? maakEigenLaag() : null;
   } else {
     const meta = id === 'windsnelheid'
       ? { ...wind.meta, id, naam: 'Windsnelheid' }
@@ -992,7 +1434,7 @@ function toonAflezing(ev) {
   const delen = [
     `${getal(Math.abs(p[1]))}° ${p[1] >= 0 ? 'N' : 'Z'}, ${getal(Math.abs(p[0]))}° ${p[0] >= 0 ? 'O' : 'W'}`,
   ];
-  if (laag && laag.meta.id !== 'windsnelheid') {
+  if (laag && !laag.vector && laag.meta.id !== 'windsnelheid') {
     const w = monster(laag.raster, laag.waarden, p[0], p[1]);
     if (w === w) delen.push(`${laag.meta.naam} ${getal(w)} ${laag.meta.eenheid}`);
   }
@@ -1001,6 +1443,18 @@ function toonAflezing(ev) {
     if (s === s) delen.push(`wind ${getal(s)} m/s (${getal(s * 3.6, 0)} km/u)`);
   }
   $('aflezing').textContent = delen.join(' · ');
+}
+
+// De bol verschuiven op het beeld (in pixels van het beeld van 1920), bijvoorbeeld
+// naar beneden zodat er boven ruimte is voor een titel.
+function zetVerschuiving(dx, dy) {
+  zicht.dx = Math.max(-1200, Math.min(1200, Math.round(dx)));
+  zicht.dy = Math.max(-1200, Math.min(1200, Math.round(dy)));
+  $('schuif-x').value = zicht.dx;
+  $('schuif-y').value = zicht.dy;
+  $('schuif-x-waarde').textContent = zicht.dx;
+  $('schuif-y-waarde').textContent = zicht.dy;
+  ververs();
 }
 
 function koppelBediening() {
@@ -1016,6 +1470,10 @@ function koppelBediening() {
     const maat = B / kaart.clientWidth;
     const dx = (ev.clientX - vorige[0]) * maat, dy = (ev.clientY - vorige[1]) * maat;
     vorige = [ev.clientX, ev.clientY];
+    if (ev.shiftKey) {            // Shift ingedrukt: de bol verschuiven in plaats van draaien
+      zetVerschuiving(zicht.dx + dx, zicht.dy + dy);
+      return;
+    }
     zicht.lon -= dx / zicht.R * DEG;
     zicht.lat = Math.max(-90, Math.min(90, zicht.lat + dy / zicht.R * DEG));
     ververs();
@@ -1031,10 +1489,14 @@ function koppelBediening() {
   }, { passive: false });
   stage.addEventListener('dblclick', () => { Object.assign(zicht, BEGIN); ververs(); });
 
+  $('schuif-x').addEventListener('input', (ev) => zetVerschuiving(Number(ev.target.value), zicht.dy));
+  $('schuif-y').addEventListener('input', (ev) => zetVerschuiving(zicht.dx, Number(ev.target.value)));
+  $('schuif-midden').addEventListener('click', () => zetVerschuiving(0, 0));
+
   $('laag').addEventListener('change', (ev) => kiesLaag(ev.target.value));
   $('dekking').addEventListener('input', () => {
     $('dekking-waarde').textContent = $('dekking').value + '%';
-    ververs();
+    tekenOpnieuw();
   });
   $('dekking-waarde').textContent = $('dekking').value + '%';
   $('wind').addEventListener('change', () => dctx.clearRect(0, 0, B, B));
@@ -1159,6 +1621,7 @@ async function laadData() {
 
 rekenAssen();
 koppelBediening();
+koppelEigen();
 tekenKaart(true);
 laadKaart();
 laadData();

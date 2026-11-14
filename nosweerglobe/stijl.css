@@ -37,3 +37,17 @@
 .tijdrij output { font-weight: 700; font-variant-numeric: tabular-nums; }
 #tijdschuif { width: 100%; }
 #speel { min-width: 128px; }
+
+/* ---------- eigen data ---------- */
+.eigen-naam { margin: 14px 0 12px; font-size: 13px; font-weight: 700; word-break: break-all; }
+.stage.dragover::after { content: "Laat het bestand hier los"; }
+.schaal-stops { display: grid; gap: 6px; margin-bottom: 10px; }
+.stop { display: grid; grid-template-columns: 38px 1fr 32px; gap: 8px; align-items: center; }
+.stop input[type=number] { padding: 7px 8px; font-size: 14px; }
+.stop button { padding: 6px 0; }
+#schaalblok .row { margin-bottom: 4px; }
+#eigen-weg { margin-top: 12px; }
+.soortenlijst { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 12px; font-size: 13px; }
+.soortenlijst i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 5px; }
+
+#schuif-x, #schuif-y { width: 100%; }
