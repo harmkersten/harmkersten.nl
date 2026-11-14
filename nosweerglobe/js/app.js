@@ -25,7 +25,8 @@ const ctx = kaart.getContext('2d');
 const dctx = $('deeltjes').getContext('2d');
 const stage = $('stage');
 
-const zicht = { ...BEGIN, dx: 0, dy: 0 };     // middelpunt van de bol (graden) en straal (pixels)
+const VERSCHUIVING = { dx: 0, dy: 250 };       // vaste plek van de bol: 250 pixels onder het midden
+const zicht = { ...BEGIN, ...VERSCHUIVING };     // middelpunt van de bol (graden) en straal (pixels)
 let as = {};                    // de drie assen van het beeld, zie rekenAssen()
 const projectie = d3.geoOrthographic().translate([MIDDEN, MIDDEN]).clipAngle(90).precision(0.4);
 // middelpunt van de bol op het beeld: het midden plus de verschuiving (zicht.dx, zicht.dy)
@@ -1491,7 +1492,7 @@ function koppelBediening() {
 
   $('schuif-x').addEventListener('input', (ev) => zetVerschuiving(Number(ev.target.value), zicht.dy));
   $('schuif-y').addEventListener('input', (ev) => zetVerschuiving(zicht.dx, Number(ev.target.value)));
-  $('schuif-midden').addEventListener('click', () => zetVerschuiving(0, 0));
+  $('schuif-midden').addEventListener('click', () => zetVerschuiving(VERSCHUIVING.dx, VERSCHUIVING.dy));
 
   $('laag').addEventListener('change', (ev) => kiesLaag(ev.target.value));
   $('dekking').addEventListener('input', () => {
