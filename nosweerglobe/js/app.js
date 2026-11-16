@@ -865,10 +865,35 @@ function plaatje(naam) {
 
 // Bepaalt na elke verandering van het beeld welke steden passen. Steden die
 // eerder in de lijst staan gaan voor; wie een ander zou overlappen valt af.
+// Vervagen: elke stad die getekend wordt heeft een dekking (a) die naar zijn doel
+// loopt: 1 als hij in beeld hoort, 0 als hij weg moet. Zo verschijnt en verdwijnt
+// een label zacht in plaats van ineens.
+const stadFade = new Map();     // naam -> { a, doel, s: plek en maten }
+const FADE_MS = 220;
+let vorigeStadTijd = 0;
+
+function werkFadeBij() {
+  const namen = new Set();
+  for (const s of stedenInBeeld) {
+    namen.add(s.naam);
+    const f = stadFade.get(s.naam) || { a: 0 };
+    f.s = s;
+    f.doel = 1;
+    stadFade.set(s.naam, f);
+  }
+  for (const [naam, f] of stadFade) {
+    if (namen.has(naam)) continue;
+    f.doel = 0;
+    // een verdwijnend label draait nog mee met de bol zolang het zichtbaar is
+    if (naarBeeld(f.s.lon, f.s.lat)) f.s = { ...f.s, x: Math.round(sx), y: Math.round(sy) };
+    else f.a = 0;               // achter de bol verdwenen: meteen weg
+  }
+}
+
 function plaatsSteden() {
   stedenInBeeld = [];
   vorigBeeldje = -1;
-  if (!$('steden').checked) return;
+  if (!$('steden').checked) { werkFadeBij(); return; }
   pctx.font = `600 ${Math.round(VAK * 0.68)}px "Effra CC", sans-serif`;
   const breed = (tekst) => Math.ceil(pctx.measureText(tekst).width + VAK * 0.5);
   // Volgorde: eerst de grootste steden (de eerste elf van de lijst), dan de rest.
@@ -900,11 +925,23 @@ function plaatsSteden() {
     stedenInBeeld.push(s);
   }
   vasteSteden = new Set(stedenInBeeld.map((s) => s.naam));
+  werkFadeBij();
 }
 
 function tekenSteden(nu) {
+  // dekking van elke stad een stapje naar zijn doel
+  const dt = Math.min(100, nu - vorigeStadTijd) / FADE_MS;
+  vorigeStadTijd = nu;
+  let vervaagt = false;
+  for (const [naam, f] of stadFade) {
+    if (f.a !== f.doel) {
+      vervaagt = true;
+      f.a = f.doel > f.a ? Math.min(1, f.a + dt) : Math.max(0, f.a - dt);
+    }
+    if (f.a === 0 && f.doel === 0) stadFade.delete(naam);
+  }
   const beeldje = Math.floor(nu / 40) % 100;      // 25 beeldjes per seconde
-  if (beeldje === vorigBeeldje) return;
+  if (beeldje === vorigBeeldje && !vervaagt) return;
   vorigBeeldje = beeldje;
   pctx.clearRect(0, 0, B, B);
   pctx.font = `600 ${Math.round(VAK * 0.68)}px "Effra CC", sans-serif`;
@@ -916,7 +953,8 @@ function tekenSteden(nu) {
     pctx.fillStyle = kleur;
     pctx.fillText(tekst, x + b / 2, y + VAK * 0.04);
   };
-  for (const s of stedenInBeeld) {
+  for (const { s, a } of stadFade.values()) {
+    pctx.globalAlpha = a;
     const img = plaatje(s.icoon);
     if (img.complete && img.naturalWidth) {
       pctx.drawImage(img, (beeldje % 10) * 180, Math.floor(beeldje / 10) * 180, 180, 180,
@@ -927,6 +965,7 @@ function tekenSteden(nu) {
     vak(x + s.bMin, s.y, s.bMax, String(s.max), '#fff', DONKER);
     vak(x, s.y + VAK + 8, s.bNaam, s.naam, '#fff', DONKER);
   }
+  pctx.globalAlpha = 1;
 }
 
 let tekenWacht = 0, scherpWacht = 0;
