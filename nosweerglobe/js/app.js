@@ -33,7 +33,7 @@ const projectie = d3.geoOrthographic().translate([MIDDEN, MIDDEN]).clipAngle(90)
 let midX = MIDDEN, midY = MIDDEN;
 const pad = d3.geoPath(projectie, ctx);
 
-const geo = { land: null, landGrof: null, grenzen: null, grenzenGrof: null, dieptes: null, dieptesGrof: null, meren: null };
+const geo = { land: null, landGrof: null, grenzen: null, grenzenGrof: null, dieptes: null, dieptesGrof: null, meren: null, regio: null };
 let index = null;               // inhoud van data/index.json
 const rasters = new Map();      // bestandsnaam -> geladen raster
 let laag = null;                // { meta, raster, lut } van de gekozen kleurlaag
@@ -533,29 +533,62 @@ function tekenBasis(snel) {
     }
   }
 
-  const land = snel ? geo.landGrof : geo.land || geo.landGrof;
+  const land = landVoor(snel);
   if (land) {
-    ctx.beginPath();
-    pad(land);
-    ctx.fillStyle = STIJL.land;
-    ctx.fill();
+    const fijn = detailAan();
+    const vul = (vorm, kleur) => { if (!vorm) return; ctx.beginPath(); pad(vorm); ctx.fillStyle = kleur; ctx.fill(); };
+    // De wereldkaart overal behalve in het gebied van de fijne kaart, en de fijne
+    // kaart alleen daarbinnen: zo liggen er nooit twee kustlijnen over elkaar.
+    const buiten = (teken) => {
+      if (!fijn) { teken(); return; }
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, B, B);
+      pad(geo.regio.vlak);
+      ctx.clip('evenodd');
+      teken();
+      ctx.restore();
+    };
+    const binnen = (teken) => {
+      if (!fijn) return;
+      ctx.save();
+      ctx.beginPath();
+      pad(geo.regio.vlak);
+      ctx.clip();
+      teken();
+      ctx.restore();
+    };
     const nederland = snel ? geo.nederlandGrof : geo.nederland || geo.nederlandGrof;
-    if (nederland) {            // Nederland lichter dan de rest van het land
-      ctx.beginPath();
-      pad(nederland);
-      ctx.fillStyle = STIJL.nederland;
-      ctx.fill();
-    }
+    buiten(() => { vul(land, STIJL.land); vul(nederland, STIJL.nederland); });   // Nederland lichter dan de rest
+    binnen(() => { vul(geo.regio.land, STIJL.land); vul(geo.regio.nederland, STIJL.nederland); });
     if (relief && $('relief').checked) {
-      tekenBeeldlaag(relief, RELIEF_TABEL, snel ? 480 : B, () => pad(land));
+      // tijdens slepen grover en zonder de fijne kustlijn als rand: dat scheelt de helft van de tijd
+      tekenBeeldlaag(relief, RELIEF_TABEL, snel ? 320 : B, () => { pad(land); if (fijn && !snel) pad(geo.regio.land); });
     }
-    if (geo.meren) {            // onder meer het IJsselmeer
-      ctx.beginPath();
-      pad(geo.meren);
-      ctx.fillStyle = STIJL.water;
-      ctx.fill();
-    }
+    buiten(() => vul(geo.meren, STIJL.water));            // onder meer het IJsselmeer
+    binnen(() => vul(geo.regio.meren, STIJL.water));
   }
+}
+
+// ---- fijne kaart van Noordwest-Europa (geo/regio.json, Natural Earth 1:10 miljoen)
+
+const DETAIL_R = 1300;          // vanaf deze straal van de bol (ruim 2 x inzoomen) telt het detail
+const detailAan = () => !!geo.regio && zicht.R >= DETAIL_R;
+// tijdens slepen een grovere wereldkaart; binnen het gebied van de fijne kaart
+// blijft het detail ook dan staan (dat is een klein bestand en dus snel genoeg)
+const landVoor = (snel) => (snel ? geo.landGrof : geo.land || geo.landGrof);
+
+// Rechthoek op de bol als vlak, met de klok mee (zoals d3 wil) en met een punt per
+// graad, zodat de randen de breedtegraad volgen in plaats van een rechte lijn.
+function rechthoek([w, z, o, n], krimp = 0) {
+  w += krimp; z += krimp; o -= krimp; n -= krimp;
+  const ring = [];
+  for (let y = z; y < n; y++) ring.push([w, y]);
+  for (let x = w; x < o; x++) ring.push([x, n]);
+  for (let y = n; y > z; y--) ring.push([o, y]);
+  for (let x = o; x > w; x--) ring.push([x, z]);
+  ring.push([w, z]);
+  return { type: 'Polygon', coordinates: [ring] };
 }
 
 const grenslaag = document.createElement('canvas');
@@ -566,23 +599,46 @@ function tekenGrenzen(c, land, grenzen) {
   // op de donkere satellietfoto zijn donkere grenzen niet te zien: daar licht
   c.strokeStyle = satelliet && $('satelliet').checked ? 'rgba(255, 255, 255, 0.6)' : STIJL.grens;
   c.lineJoin = 'round';
-  if (laag) {                   // onder een kleurlaag is de kust anders niet te zien
+  const lijnen = (kust, grens) => {
+    if (laag) {                 // onder een kleurlaag is de kust anders niet te zien
+      c.beginPath();
+      pad(kust);
+      c.lineWidth = 1.2;
+      c.stroke();
+    }
+    if (!$('grenzen').checked) return;
     c.beginPath();
-    pad(land);
-    c.lineWidth = 1.2;
+    pad(grens);
+    c.lineWidth = 1.4;
     c.stroke();
-  }
-  if (!$('grenzen').checked) return;
+  };
+  // geen fijne kaart onder de satellietfoto: die heeft zijn eigen kustlijn
+  if (!detailAan() || (satelliet && $('satelliet').checked)) { lijnen(land, grenzen); return; }
+  // net als bij het land: de wereldkaart buiten het gebied, de fijne kaart erbinnen.
+  // Het vlak is hier iets kleiner, zodat de afgesneden rand van de fijne kaart
+  // (een rechte lijn langs het gebied) buiten beeld valt.
+  c.save();
   c.beginPath();
-  pad(grenzen);
-  c.lineWidth = 1.4;
-  c.stroke();
+  c.rect(0, 0, B, B);
+  pad(geo.regio.vlakBinnen);
+  c.clip('evenodd');
+  lijnen(land, grenzen);
+  c.restore();
+  c.save();
+  c.beginPath();
+  pad(geo.regio.vlakBinnen);
+  c.clip();
+  lijnen(geo.regio.land, geo.regio.grenzen);
+  c.restore();
 }
 
 // snel = tijdens slepen: grove kaart en dieptes, kleurlaag op lage resolutie
 // film = tijdens afspelen: scherpe ondergrond uit de tussenopslag, kleurlaag grover
 function tekenKaart(snel, film = false) {
   rekenAssen();
+  // d3 legt extra punten op lange lijnen zodat ze mooi krom lopen; tijdens het
+  // slepen mag dat grover, dat scheelt ingezoomd veel rekenwerk
+  projectie.precision(snel ? 4 : 0.4);
   if (!snel && basisKlopt) {
     ctx.drawImage(basis, 0, 0);
   } else {
@@ -592,7 +648,7 @@ function tekenKaart(snel, film = false) {
       basisKlopt = true;
     }
   }
-  const land = snel ? geo.landGrof : geo.land || geo.landGrof;
+  const land = landVoor(snel);
 
   if (laag && laag.vector) tekenVector(snel);
   else if (laag) tekenKleurlaag(snel ? 384 : film ? 480 : 960);
@@ -1616,6 +1672,10 @@ async function laadKaart() {
   ververs();
   geo.dieptes = metVormen(await json('geo/dieptes.json'));
   geo.meren = await json('geo/meren.json').catch(() => null);
+  ververs();
+  geo.regio = await json('geo/regio.json').then((r) => ({
+    ...r, vlak: rechthoek(r.gebied), vlakBinnen: rechthoek(r.gebied, 0.03),
+  })).catch(() => null);
   ververs();
 }
 
