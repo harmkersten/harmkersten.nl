@@ -595,8 +595,25 @@ function tekenKaart(snel, film = false) {
   }
   const land = snel ? geo.landGrof : geo.land || geo.landGrof;
 
-  if (laag && laag.vector) tekenVector(snel);
-  else if (laag) tekenKleurlaag(snel ? 384 : film ? 480 : 960);
+  if (laag) {
+    // optie: de kleurlaag alleen boven land, zonder de meren (zoals het IJsselmeer)
+    const alleenLand = $('alleenland').checked && land;
+    if (alleenLand) {
+      ctx.save();
+      ctx.beginPath();
+      pad(land);
+      ctx.clip();
+      if (geo.meren) {          // alles behalve de meren: rechthoek met de meren als gaten
+        ctx.beginPath();
+        ctx.rect(0, 0, B, B);
+        pad(geo.meren);
+        ctx.clip('evenodd');
+      }
+    }
+    if (laag.vector) tekenVector(snel);
+    else tekenKleurlaag(snel ? 384 : film ? 480 : 960);
+    if (alleenLand) ctx.restore();
+  }
   // het satellietbeeld is één opname: alleen tonen bij het eerste tijdstip
   if (wolken && $('wolken').checked && tijd.pos < 0.01) {
     tekenBeeldlaag(wolken, WOLKEN_TABEL, snel ? 384 : 1280,
@@ -1545,6 +1562,7 @@ function koppelBediening() {
   $('steden').addEventListener('change', ververs);
   $('relief').addEventListener('change', ververs);
   $('grenzen').addEventListener('change', ververs);
+  $('alleenland').addEventListener('change', ververs);
   $('tijdlabel').addEventListener('change', ververs);
   $('satelliet').addEventListener('change', async () => {
     if ($('satelliet').checked && !satelliet) {
