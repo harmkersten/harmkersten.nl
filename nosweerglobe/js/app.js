@@ -206,9 +206,10 @@ function tekenKleurlaag(maat) {
 let relief = null, wolken = null;   // { w, h, d: grijswaarde per pixel, … }
 
 // Reliëf: 206 is in het Natural Earth-beeld 'vlak'. Donkerder wordt een
-// zwarte schaduw, lichter een wit lichtje; vlak land blijft onaangeroerd.
+// koel blauwgrijze schaduw (#26323f; zwart maakt het land vaal), lichter een
+// wit lichtje; vlak land blijft onaangeroerd. Pixels zijn 0xAABBGGRR.
 const RELIEF_TABEL = new Uint32Array(256).map((_, v) => {
-  if (v < 206) return (Math.round(Math.min(1, (206 - v) / 90) * 105) << 24) >>> 0;
+  if (v < 206) return ((Math.round(Math.min(1, (206 - v) / 90) * 110) << 24) | 0x3f3226) >>> 0;
   return ((Math.round(Math.min(1, (v - 206) / 49) * 70) << 24) | 0xffffff) >>> 0;
 });
 
