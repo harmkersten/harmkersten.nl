@@ -670,6 +670,15 @@ function tekenGrenzen(c, land, grenzen) {
   c.stroke();
 }
 
+const NEERSLAG_IDS = new Set(['neerslag', 'radar', 'imerg']);
+
+// het satellietbeeld is één opname: alleen tonen bij het eerste tijdstip
+function tekenWolken(snel) {
+  if (!wolken || !$('wolken').checked || tijd.pos >= 0.01) return;
+  tekenBeeldlaag(wolken, WOLKEN_TABEL, snel ? 384 : 1280,
+    () => ctx.arc(midX, midY, zicht.R, 0, 2 * Math.PI));
+}
+
 // snel = tijdens slepen: grove kaart en dieptes, kleurlaag op lage resolutie
 // film = tijdens afspelen: scherpe ondergrond uit de tussenopslag, kleurlaag grover
 function tekenKaart(snel, film = false) {
@@ -684,6 +693,10 @@ function tekenKaart(snel, film = false) {
     }
   }
   const land = snel ? geo.landGrof : geo.land || geo.landGrof;
+
+  // neerslag ligt altijd bovenop de wolken; andere kleurlagen eronder
+  const neerslagLaag = laag && NEERSLAG_IDS.has(laag.meta.id);
+  if (neerslagLaag) tekenWolken(snel);
 
   if (laag) {
     // optie: de kleurlaag alleen boven land, zonder de meren (zoals het IJsselmeer)
@@ -704,11 +717,7 @@ function tekenKaart(snel, film = false) {
     else tekenKleurlaag(snel ? 384 : film ? 480 : 960);
     if (alleenLand) ctx.restore();
   }
-  // het satellietbeeld is één opname: alleen tonen bij het eerste tijdstip
-  if (wolken && $('wolken').checked && tijd.pos < 0.01) {
-    tekenBeeldlaag(wolken, WOLKEN_TABEL, snel ? 384 : 1280,
-      () => ctx.arc(midX, midY, zicht.R, 0, 2 * Math.PI));
-  }
+  if (!neerslagLaag) tekenWolken(snel);
 
   const grenzen = snel ? geo.grenzenGrof : geo.grenzen || geo.grenzenGrof;
   if (land && grenzen) {
