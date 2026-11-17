@@ -16,8 +16,8 @@ const MIDDEN = B / 2;
 const RAD = Math.PI / 180;
 const DEG = 180 / Math.PI;
 const BEGIN = { lon: 9, lat: 47.65, R: 525 };   // beginstand, zoals in de basis-SVG
-const AANTAL_DEELTJES = 3500;
-const MAX_LEEFTIJD = 110;       // beeldjes dat een windlijn leeft
+const AANTAL_DEELTJES = 1800;   // minder lijnen: rustiger beeld
+const MAX_LEEFTIJD = 150;       // beeldjes dat een windlijn leeft (langer, want ze gaan trager)
 
 const $ = (id) => document.getElementById(id);
 const kaart = $('kaart');
@@ -159,6 +159,45 @@ function maakLut(schaal) {
 
 const lapje = document.createElement('canvas');   // de kleurlaag op lagere resolutie
 
+// Welke pixels op de bol liggen en welk punt op aarde daar hoort. Bij afspelen staat
+// het beeld stil en verandert alleen de data: dan hoeft deze rekensom (wortel, atan2,
+// asin per pixel) niet elk beeldje opnieuw. rand = ook de pixels net buiten de bol,
+// doorgetrokken vanaf de rand (voor de nachtschaduw).
+const bolOpslag = new Map();
+function bolPunten(maat, rand) {
+  const sleutel = [maat, rand, zicht.lon, zicht.lat, zicht.R, midX, midY].join('|');
+  const oud = bolOpslag.get(sleutel);
+  if (oud) return oud;
+  const stap = B / maat, R = zicht.R, extra = rand ? 1 : 0;
+  const vanX = Math.max(0, Math.floor((midX - R) / stap) - extra), totX = Math.min(maat, Math.ceil((midX + R) / stap) + extra);
+  const vanY = Math.max(0, Math.floor((midY - R) / stap) - extra), totY = Math.min(maat, Math.ceil((midY + R) / stap) + extra);
+  const ruimte = Math.max(0, (totX - vanX) * (totY - vanY));
+  const idx = new Int32Array(ruimte), X = new Float32Array(ruimte), Y = new Float32Array(ruimte), Z = new Float32Array(ruimte);
+  let n = 0;
+  for (let j = vanY; j < totY; j++) {
+    const py0 = (midY - (j + 0.5) * stap) / R;
+    for (let i = vanX; i < totX; i++) {
+      let pxx = ((i + 0.5) * stap - midX) / R, py = py0;
+      let afstand = pxx * pxx + py * py;
+      if (afstand > 1) {
+        if (!rand) continue;
+        const k = 1 / Math.sqrt(afstand);
+        pxx *= k; py *= k; afstand = 1;
+      }
+      const pz = Math.sqrt(1 - afstand);
+      idx[n] = j * maat + i;
+      X[n] = pxx * as.ex + py * as.nx + pz * as.cx;
+      Y[n] = pxx * as.ey + py * as.ny + pz * as.cy;
+      Z[n] = py * as.nz + pz * as.cz;
+      n++;
+    }
+  }
+  const p = { n, idx, X, Y, Z, lon: null, lat: null };
+  if (bolOpslag.size > 4) bolOpslag.clear();
+  bolOpslag.set(sleutel, p);
+  return p;
+}
+
 function tekenKleurlaag(maat) {
   lapje.width = lapje.height = maat;
   const lctx = lapje.getContext('2d');
@@ -166,29 +205,19 @@ function tekenKleurlaag(maat) {
   const px = new Uint32Array(beeld.data.buffer);
   const { raster, lut } = laag;
   const d = laag.waarden;
-  const stap = B / maat;
   const factor = 1023 / (lut.max - lut.min);
-  // alleen het vierkant rond de bol doorlopen
-  const vanX = Math.max(0, Math.floor((midX - zicht.R) / stap)), totX = Math.min(maat, Math.ceil((midX + zicht.R) / stap));
-  const vanY = Math.max(0, Math.floor((midY - zicht.R) / stap)), totY = Math.min(maat, Math.ceil((midY + zicht.R) / stap));
-  const R = zicht.R;
-  for (let j = vanY; j < totY; j++) {
-    const py = (midY - (j + 0.5) * stap) / R;
-    for (let i = vanX; i < totX; i++) {
-      // zelfde rekensom als naarLonLat(), hier uitgeschreven omdat dit per pixel loopt
-      const pxx = ((i + 0.5) * stap - midX) / R;
-      const afstand = pxx * pxx + py * py;
-      if (afstand > 1) continue;
-      const pz = Math.sqrt(1 - afstand);
-      const X = pxx * as.ex + py * as.nx + pz * as.cx;
-      const Y = pxx * as.ey + py * as.ny + pz * as.cy;
-      const Z = py * as.nz + pz * as.cz;
-      const w = monster(raster, d, Math.atan2(Y, X) * DEG, Math.asin(Z) * DEG);
-      if (w !== w) continue;                       // geen waarde (NaN)
-      let n = (w - lut.min) * factor;
-      n = n < 0 ? 0 : n > 1023 ? 1023 : n | 0;
-      px[j * maat + i] = lut.tabel[n];
-    }
+  const p = bolPunten(maat, false);
+  if (!p.lon) {                 // lengte en breedte één keer per beeldstand
+    p.lon = new Float32Array(p.n); p.lat = new Float32Array(p.n);
+    for (let k = 0; k < p.n; k++) { p.lon[k] = Math.atan2(p.Y[k], p.X[k]) * DEG; p.lat[k] = Math.asin(p.Z[k]) * DEG; }
+  }
+  const { lon, lat, idx } = p;
+  for (let k = 0; k < p.n; k++) {
+    const w = monster(raster, d, lon[k], lat[k]);
+    if (w !== w) continue;                         // geen waarde (NaN)
+    let n = (w - lut.min) * factor;
+    n = n < 0 ? 0 : n > 1023 ? 1023 : n | 0;
+    px[idx[k]] = lut.tabel[n];
   }
   lctx.putImageData(beeld, 0, 0);
   ctx.save();
@@ -559,6 +588,67 @@ function tekenBasis(snel) {
   }
 }
 
+// ---- dag en nacht: de plek waar de zon loodrecht staat, en een schaduw daarvandaan
+
+// Benadering van NOAA/Meeus, nauwkeurig tot ongeveer een tiende graad: ruim genoeg
+// voor een schaduw. Geeft de eenheidsvector naar de zon in aardcoördinaten.
+function zonVector(moment) {
+  const d = moment.getTime() / 864e5 - 10957.5;          // dagen sinds 1 januari 2000, 12:00 UT
+  const g = (357.529 + 0.98560028 * d) * RAD;
+  const q = 280.459 + 0.98564736 * d;
+  const L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * RAD;
+  const e = (23.439 - 0.00000036 * d) * RAD;
+  const ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L));
+  const dec = Math.asin(Math.sin(e) * Math.sin(L));
+  const gmst = ((18.697374558 + 24.06570982441908 * d) % 24) * 15 * RAD;
+  const lon = ra - gmst;                                   // lengte waar de zon in het zenit staat
+  return [Math.cos(dec) * Math.cos(lon), Math.cos(dec) * Math.sin(lon), Math.sin(dec)];
+}
+
+// welk moment de globe nu laat zien (dezelfde keuze als het tijdlabel)
+function getoondMoment() {
+  if (laag && laag.meta.id !== 'eigen' && !(laag.meta.stappen && laag.meta.stappen.length > 1) && laag.meta.tijd) {
+    return new Date(laag.meta.tijd);
+  }
+  return huidigeTijd() || new Date();
+}
+
+// Schaduw: begint 2° vóór zonsondergang en is op zijn donkerst als de zon 12° onder
+// de horizon staat (einde nautische schemering); daartussen een zachte overgang.
+const NACHT = { kleur: [8, 18, 40], dekking: 0.55, licht: Math.sin(2 * RAD), donker: Math.sin(-12 * RAD) };
+const NACHT_TABEL = new Uint32Array(256).map((_, n) => {
+  const t = n / 255, zacht = t * t * (3 - 2 * t);
+  const [r, g, b] = NACHT.kleur;
+  return ((Math.round(zacht * NACHT.dekking * 255) << 24) | (b << 16) | (g << 8) | r) >>> 0;
+});
+
+function tekenNacht() {
+  const zon = zonVector(getoondMoment());
+  const maat = 320;             // de overgang is zacht: een grof raster volstaat
+  lapje.width = lapje.height = maat;
+  const lctx = lapje.getContext('2d');
+  const uit = lctx.createImageData(maat, maat);
+  const px = new Uint32Array(uit.data.buffer);
+  const schaal = 255 / (NACHT.licht - NACHT.donker);
+  // pixels net buiten de rand doen mee (doorgetrokken), zodat de rand niet vervaagt
+  const { n: aantal, idx, X, Y, Z } = bolPunten(maat, true);
+  const [zx, zy, zz] = zon;
+  for (let k = 0; k < aantal; k++) {
+    const hoogte = X[k] * zx + Y[k] * zy + Z[k] * zz;      // sinus van de zonshoogte
+    let n = (NACHT.licht - hoogte) * schaal;
+    n = n < 0 ? 0 : n > 255 ? 255 : n | 0;
+    px[idx[k]] = NACHT_TABEL[n];
+  }
+  lctx.putImageData(uit, 0, 0);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(midX, midY, zicht.R, 0, 2 * Math.PI);
+  ctx.clip();
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(lapje, 0, 0, B, B);
+  ctx.restore();
+}
+
 const grenslaag = document.createElement('canvas');
 grenslaag.width = grenslaag.height = B;
 let grenzenKloppen = null;      // null = opnieuw tekenen; anders: was er een kleurlaag?
@@ -638,6 +728,8 @@ function tekenKaart(snel, film = false) {
     }
   }
 
+  if ($('nacht').checked) tekenNacht();
+
   ectx.clearRect(0, 0, B, B);
   vast = meetTijdlabel();   // het vaste label gaat voor alles: andere labels wijken ervoor
   plaatsSteden();   // eerst de steden: die hebben voorrang op de labels van de isobaren
@@ -693,21 +785,113 @@ let druk = null;   // { lijnen: [{ waarde, vorm }], kernen: [{ lon, lat, waarde,
 // de kernen van hoge- en lagedrukgebieden.
 let hoogte = null;   // hoogte van het land in meters (geo/hoogte.json), zelfde raster van 1°
 
-function maakIsobaren(r, waarden = r.waarden) {
+// Isolijnen met 'marching squares': per hokje van vier rasterpunten kijken waar de
+// lijn doorheen gaat, en de stukjes daarna aan elkaar rijgen. Geeft lijnen in
+// rastercoördinaten (waarde i ligt op x = i). Open lijnen eindigen aan de rand.
+// werkgeheugen, hergebruikt tussen aanroepen; alleen de gebruikte randen worden na afloop teruggezet
+let isoGeheugen = null;
+function isolijnen(veld, w, h, drempel) {
+  if (!isoGeheugen || isoGeheugen.maat !== w * h * 2) {
+    const maat = w * h * 2;
+    isoGeheugen = { maat, buur1: new Int32Array(maat).fill(-1), buur2: new Int32Array(maat).fill(-1),
+      gezien: new Uint8Array(maat), gebruikt: new Int32Array(maat) };
+  }
+  const { buur1, buur2, gezien, gebruikt } = isoGeheugen;
+  let aantal = 0;
+  const koppel = (a, b) => {
+    if (buur1[a] < 0) { buur1[a] = b; gebruikt[aantal++] = a; } else buur2[a] = b;
+    if (buur1[b] < 0) { buur1[b] = a; gebruikt[aantal++] = b; } else buur2[b] = a;
+  };
+  for (let y = 0; y < h - 1; y++) {
+    for (let x = 0; x < w - 1; x++) {
+      const i = y * w + x;
+      const va = veld[i], vb = veld[i + 1], vc = veld[i + w + 1], vd = veld[i + w];
+      const geval = (va >= drempel ? 8 : 0) | (vb >= drempel ? 4 : 0) | (vc >= drempel ? 2 : 0) | (vd >= drempel ? 1 : 0);
+      if (geval === 0 || geval === 15) continue;
+      // randen van het hokje: boven, rechts, onder, links
+      const B = i * 2, R = (i + 1) * 2 + 1, O = (i + w) * 2, L = i * 2 + 1;
+      switch (geval) {
+        case 1: case 14: koppel(L, O); break;
+        case 2: case 13: koppel(O, R); break;
+        case 3: case 12: koppel(L, R); break;
+        case 4: case 11: koppel(B, R); break;
+        case 6: case 9: koppel(B, O); break;
+        case 7: case 8: koppel(L, B); break;
+        case 5: case 10: {        // zadelpunt: het gemiddelde in het midden beslist
+          const midden = (va + vb + vc + vd) / 4 >= drempel;
+          if ((geval === 5) === midden) { koppel(L, B); koppel(O, R); } else { koppel(L, O); koppel(B, R); }
+          break;
+        }
+      }
+    }
+  }
+  const punt = (k) => {          // waar op deze rand de lijn de drempel kruist
+    const i = k >> 1, x = i % w, y = (i - x) / w;
+    const v0 = veld[i], v1 = k & 1 ? veld[i + w] : veld[i + 1];
+    const t = (drempel - v0) / (v1 - v0);
+    return k & 1 ? [x, y + t] : [x + t, y];
+  };
+  const lijnen = [];
+  const volg = (start) => {
+    const lijn = [punt(start)];
+    gezien[start] = 1;
+    let vorige = -1, nu = start;
+    for (;;) {
+      const volgende = buur1[nu] !== vorige && buur1[nu] >= 0 ? buur1[nu] : buur2[nu] !== vorige ? buur2[nu] : -1;
+      if (volgende < 0) break;
+      if (volgende === start) { lijn.push(lijn[0]); break; }   // rondje gesloten
+      if (gezien[volgende]) break;
+      gezien[volgende] = 1;
+      lijn.push(punt(volgende));
+      vorige = nu; nu = volgende;
+    }
+    return lijn;
+  };
+  // eerst de open lijnen (beginnen bij een rand met maar één buur), dan de rondjes
+  for (let n = 0; n < aantal; n++) { const k = gebruikt[n]; if (buur2[k] < 0 && !gezien[k]) lijnen.push(volg(k)); }
+  for (let n = 0; n < aantal; n++) { const k = gebruikt[n]; if (!gezien[k]) lijnen.push(volg(k)); }
+  for (let n = 0; n < aantal; n++) { const k = gebruikt[n]; buur1[k] = buur2[k] = -1; gezien[k] = 0; }
+  return lijnen;
+}
+
+// Chaikin: elk hoekpunt wordt vervangen door twee punten op 1/4 en 3/4 van de
+// aangrenzende stukken. Twee keer toegepast worden de knikken van het 1°-raster
+// vloeiende bochten. Begin- en eindpunt blijven staan; een gesloten ring blijft gesloten.
+function rondAf(punten) {
+  const gesloten = punten.length > 3 && punten[0][0] === punten[punten.length - 1][0]
+    && punten[0][1] === punten[punten.length - 1][1];
+  let p = punten;
+  for (let keer = 0; keer < 2; keer++) {
+    const uit = gesloten ? [] : [p[0]];
+    for (let i = 0; i < p.length - 1; i++) {
+      const [x0, y0] = p[i], [x1, y1] = p[i + 1];
+      if (Math.abs(x1 - x0) > 180) { uit.push(p[i + 1]); continue; }   // niet over de datumgrens heen
+      uit.push([x0 * 0.75 + x1 * 0.25, y0 * 0.75 + y1 * 0.25], [x0 * 0.25 + x1 * 0.75, y0 * 0.25 + y1 * 0.75]);
+    }
+    if (gesloten) uit.push(uit[0]); else uit.push(p[p.length - 1]);
+    p = uit;
+  }
+  return p;
+}
+
+function maakIsobaren(r, waarden = r.waarden, metKernen = true) {
   const { nx, ny } = r;
   // eerst wat gladstrijken: boven bergen is de druk in het model erg grillig
+  // (3 × een 3×3-gemiddelde, uitgerekend als eerst horizontaal en dan verticaal: zelfde uitkomst, veel sneller)
   let d = Float32Array.from(waarden, (w) => (w === w ? w : 1013));
+  const tussen = new Float32Array(d.length);
   for (let keer = 0; keer < 3; keer++) {
+    for (let y = 0; y < ny; y++) {
+      const rij = y * nx;
+      for (let x = 0; x < nx; x++) {
+        const links = x === 0 ? nx - 1 : x - 1, rechts = x === nx - 1 ? 0 : x + 1;
+        tussen[rij + x] = d[rij + links] + d[rij + x] + d[rij + rechts];
+      }
+    }
     const uit = new Float32Array(d.length);
     for (let y = 0; y < ny; y++) {
-      for (let x = 0; x < nx; x++) {
-        let som = 0;
-        for (let b = -1; b <= 1; b++) {
-          const yy = Math.min(ny - 1, Math.max(0, y + b));
-          for (let a = -1; a <= 1; a++) som += d[yy * nx + (x + a + nx) % nx];
-        }
-        uit[y * nx + x] = som / 9;
-      }
+      const boven = (y === 0 ? 0 : y - 1) * nx, hier = y * nx, onder = (y === ny - 1 ? y : y + 1) * nx;
+      for (let x = 0; x < nx; x++) uit[hier + x] = (tussen[boven + x] + tussen[hier + x] + tussen[onder + x]) / 9;
     }
     d = uit;
   }
@@ -718,25 +902,21 @@ function maakIsobaren(r, waarden = r.waarden) {
   for (let y = 0; y < ny; y++) for (let x = 0; x < w; x++) veld[y * w + x] = d[y * nx + x % nx];
   let laagste = Infinity, hoogste = -Infinity;
   for (const w0 of d) { if (w0 < laagste) laagste = w0; if (w0 > hoogste) hoogste = w0; }
-  const lijnen = d3.contours().size([w, ny]).thresholds(d3.range(Math.ceil(laagste / 4) * 4, hoogste, 4))(veld).map((c) => {
-    const stukken = [];
-    for (const veelhoek of c.coordinates) {
-      for (const ring of veelhoek) {
-        let stuk = [];
-        for (const [x, y] of ring) {
-          // d3 sluit elke vorm langs de rand van het raster; die stukken horen er niet bij
-          if (x < 0.25 || x > w - 0.25 || y < 0.25 || y > ny - 0.25) {
-            if (stuk.length > 1) stukken.push(stuk);
-            stuk = [];
-          } else {
-            stuk.push([r.lon0 + (x - 0.5) * r.dx, r.lat0 + (y - 0.5) * r.dy]);
-          }
-        }
-        if (stuk.length > 1) stukken.push(stuk);
-      }
-    }
-    return { waarde: c.value, vorm: { type: 'MultiLineString', coordinates: stukken } };
-  }).filter((l) => l.vorm.coordinates.length);
+  const lijnen = [];
+  for (let drempel = Math.ceil(laagste / 4) * 4; drempel < hoogste; drempel += 4) {
+    const stukken = isolijnen(veld, w, ny, drempel)
+      .filter((l) => l.length > 1)
+      .map((l) => l.map(([x, y]) => [r.lon0 + x * r.dx, r.lat0 + y * r.dy]));
+    if (!stukken.length) continue;
+    // vorm: de punten op het raster (voor de plek van de waardelabels);
+    // glad: dezelfde lijn afgerond, om te tekenen
+    lijnen.push({ waarde: drempel, vorm: { type: 'MultiLineString', coordinates: stukken }, glad: stukken.map(rondAf) });
+  }
+
+  if (!metKernen && druk) {     // tijdens afspelen: de H en L van de vorige keer houden
+    druk = { lijnen, kernen: druk.kernen };
+    return;
+  }
 
   // kernen: de hoogste of laagste waarde in een ruime omgeving (± 10°)
   const kernen = [];
@@ -749,6 +929,16 @@ function maakIsobaren(r, waarden = r.waarden) {
       // Boven hoog terrein (Groenland, Tibet, Antarctica) is de 'druk op
       // zeeniveau' een rekensom door het land heen: zulke kernen bestaan niet echt.
       if (hoogte && hoogte.nx === nx && hoogte.waarden[y * nx + x] > 1000) continue;
+      // Snelle voortoets: een uiterste in ± 10° is zeker ook een uiterste tussen
+      // de 8 directe buren. Dat schrapt bijna alle punten vóór de dure zoektocht.
+      let buurtOk = true;
+      for (let b = -1; b <= 1 && buurtOk; b++) {
+        for (let a = -1; a <= 1; a++) {
+          const buur = d[(y + b) * nx + (x + a + nx) % nx];
+          if (hoog ? buur > w0 : buur < w0) { buurtOk = false; break; }
+        }
+      }
+      if (!buurtOk) continue;
       let uiterste = true;
       for (let b = -10; b <= 10 && uiterste; b++) {
         for (let a = -breed; a <= breed; a++) {
@@ -785,13 +975,24 @@ const raakt = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1]
 
 function tekenIsobaren(snel, film) {
   ctx.save();
+  // Zelf projecteren is veel sneller dan d3.geoPath: de punten liggen al dicht
+  // genoeg bij elkaar, dus bijrekenen en afknippen op de horizon is niet nodig.
+  // Achter de bol wordt de lijn onderbroken.
   ctx.beginPath();
-  for (const l of druk.lijnen) pad(l.vorm);
+  for (const l of druk.lijnen) {
+    for (const stuk of l.glad) {
+      let bezig = false;
+      for (const [lon, lat] of stuk) {
+        if (!naarBeeld(lon, lat)) { bezig = false; continue; }
+        if (bezig) ctx.lineTo(sx, sy); else { ctx.moveTo(sx, sy); bezig = true; }
+      }
+    }
+  }
   ctx.lineJoin = ctx.lineCap = 'round';
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-  ctx.shadowBlur = snel || film ? 0 : 5;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
-  ctx.lineWidth = 2.6;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+  ctx.shadowBlur = snel || film ? 0 : 4;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';   // subtiel: de lijnen staan achter de data
+  ctx.lineWidth = 1.8;
   ctx.stroke();
   ctx.restore();
 
@@ -1056,6 +1257,8 @@ function meng(reeks, veld, uit) {
 }
 
 // Zet alle lagen op tijd.pos en tekent opnieuw.
+const isoStand = { lijnen: -1, kernen: -1 };   // bij welke tijd.pos de isobaren zijn uitgerekend
+
 function toonTijd(film) {
   const w = reeksen.get('wind');
   if (w && wind) {
@@ -1068,8 +1271,16 @@ function toonTijd(film) {
     if (laag.glad) strijkGlad(laag.waarden, laag.raster.nx, laag.raster.ny, laag.glad);
   }
   if (drukRaster && reeksen.has('luchtdruk') && $('isobaren').checked) {
-    meng(reeksen.get('luchtdruk'), 'waarden', drukWaarden);
-    maakIsobaren(drukRaster, drukWaarden);
+    // Isobaren uitrekenen kost tientallen milliseconden. Tijdens afspelen schuiven
+    // ze maar langzaam, dus de lijnen om de 1/30 tijdstap (15 keer per seconde) en H en L om de 1/4 stap.
+    const lijnenOud = !film || Math.abs(tijd.pos - isoStand.lijnen) >= 1 / 30;
+    const kernenOud = !film || Math.abs(tijd.pos - isoStand.kernen) >= 1 / 4;
+    if (lijnenOud || kernenOud) {
+      meng(reeksen.get('luchtdruk'), 'waarden', drukWaarden);
+      maakIsobaren(drukRaster, drukWaarden, kernenOud);
+      isoStand.lijnen = tijd.pos;
+      if (kernenOud) isoStand.kernen = tijd.pos;
+    }
   }
   const nu = huidigeTijd();
   $('tijdstip').textContent = nu ? nu.toLocaleString('nl-NL',
@@ -1123,12 +1334,12 @@ function beweeg(nu) {
 
   // wat er stond een beetje laten vervagen: zo krijgt elke lijn een staart
   dctx.globalCompositeOperation = 'destination-out';
-  dctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+  dctx.fillStyle = 'rgba(0, 0, 0, 0.045)';   // trager vervagen: trage lijnen houden zo even lange staarten
   dctx.fillRect(0, 0, B, B);
   dctx.globalCompositeOperation = 'source-over';
 
-  // 10 m/s is ongeveer een halve pixel per beeldje, bij elke zoomstand
-  const tempo = 0.005 * BEGIN.R / zicht.R;
+  // 10 m/s is ongeveer een derde pixel per beeldje, bij elke zoomstand
+  const tempo = 0.0035 * BEGIN.R / zicht.R;
   dctx.beginPath();
   for (let i = 0; i < AANTAL_DEELTJES; i++) {
     const k = i * 3;
@@ -1145,7 +1356,7 @@ function beweeg(nu) {
     deeltjes[k] = lon1;
     deeltjes[k + 1] = lat1;
   }
-  dctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+  dctx.strokeStyle = 'rgba(255, 255, 255, 0.62)';
   dctx.lineWidth = 2;
   dctx.lineCap = 'round';
   dctx.stroke();
@@ -1563,6 +1774,7 @@ function koppelBediening() {
   $('relief').addEventListener('change', ververs);
   $('grenzen').addEventListener('change', ververs);
   $('alleenland').addEventListener('change', ververs);
+  $('nacht').addEventListener('change', ververs);
   $('tijdlabel').addEventListener('change', ververs);
   $('satelliet').addEventListener('change', async () => {
     if ($('satelliet').checked && !satelliet) {
