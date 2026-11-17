@@ -63,13 +63,15 @@ LAGEN.imerg = LAGEN.neerslag;
 export const STIJL = {
   ruimte: '#9ac3de',
   ruimteVerloop: '#537d9a',
-  water: '#1b5da8',          // schoner blauw, even helder als het oude: contrast met data blijft gelijk
-  land: '#8a8c87',           // koeler grijs (minder bruin), even helder als het oude
-  nederland: '#c4c6c1',      // lichter, zodat Nederland eruit springt
-  grens: '#585e66',          // koel grijs in plaats van bruin
+  // Allemaal dezelfde helderheid als de vorige, grauwere kleuren: alleen de tint
+  // is frisser, dus het contrast met de datalagen en de labels blijft gelijk.
+  water: '#126199',          // helder petrolblauw, weg van het blauw van neerslag
+  land: '#838e8c',           // koel grijs met een zweem groenblauw
+  nederland: '#bfc7c6',      // lichter, zodat Nederland eruit springt
+  grens: '#4f5b5e',          // koel donkergrijs
   dieptes: {
-    200: '#1a5fa2', 1000: '#19599a', 2000: '#185696', 3000: '#175391',
-    4000: '#16508c', 5000: '#154d87', 6000: '#144a82', 7000: '#13477d',
-    8000: '#124478', 9000: '#114173', 10000: '#103f6f',
+    200: '#0f5c93', 1000: '#0e578b', 2000: '#0e5587', 3000: '#0d5283',
+    4000: '#0d507f', 5000: '#0c4d7b', 6000: '#0c4a76', 7000: '#0b4873',
+    8000: '#0b456f', 9000: '#0b436b', 10000: '#0a4167',
   },
 };

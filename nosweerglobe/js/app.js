@@ -210,7 +210,7 @@ let relief = null, wolken = null;   // { w, h, d: grijswaarde per pixel, … }
 // wit lichtje; vlak land blijft onaangeroerd. Pixels zijn 0xAABBGGRR.
 const RELIEF_TABEL = new Uint32Array(256).map((_, v) => {
   if (v < 206) return ((Math.round(Math.min(1, (206 - v) / 90) * 110) << 24) | 0x3f3226) >>> 0;
-  return ((Math.round(Math.min(1, (v - 206) / 49) * 70) << 24) | 0xffffff) >>> 0;
+  return ((Math.round(Math.min(1, (v - 206) / 49) * 95) << 24) | 0xffffff) >>> 0;
 });
 
 // Wolken: infraroodbeeld, hoe kouder (= hoger wolkendek) hoe lichter. Onder een
