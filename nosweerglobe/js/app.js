@@ -247,7 +247,7 @@ const RELIEF_TABEL = new Uint32Array(256).map((_, v) => {
 const WOLKEN_TABEL = new Uint32Array(256).map((_, v) => {
   const t = Math.min(1, Math.max(0, (v - 100) / 110));
   // een zachte, koelwitte waas zoals in het weersysteem: de kaart blijft erdoor te zien
-  return ((Math.round(Math.pow(t, 1.15) * 185) << 24) | 0xf2eeea) >>> 0;
+  return ((Math.round(Math.pow(t, 1.15) * 160) << 24) | 0xf2eeea) >>> 0;
 });
 
 function laadBeeld(url) {
@@ -999,10 +999,13 @@ function tekenIsobaren(snel, film) {
     }
   }
   ctx.lineJoin = ctx.lineCap = 'round';
-  // wit en egaal zoals in het weersysteem, met een heel lichte schaduw voor het lichte land
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
-  ctx.shadowBlur = snel || film ? 0 : 3;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.88)';
+  // wit zoals in het weersysteem, met een smalle donkere rand eronder: zo blijft de
+  // lijn ook op licht land en wolken leesbaar (rand tegen wit 5 : 1). Twee keer
+  // trekken is goedkoper dan een schaduw en werkt ook tijdens het afspelen.
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+  ctx.lineWidth = 4.2;
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
@@ -1019,7 +1022,7 @@ function tekenIsobaren(snel, film) {
     const kader = [sx - 56, sy - 64, sx + 56, sy + 59];
     if (!past(kader)) continue;
     bezet.push(kader);
-    label(sx, sy - 30, k.hoog ? 'H' : 'L', k.hoog ? '#f53a13' : '#2577bd', '#fff', 50, 50);
+    label(sx, sy - 30, k.hoog ? 'H' : 'L', k.hoog ? '#e4321b' : '#2577bd', '#fff', 50, 50);
     label(sx, sy + 28, String(k.waarde), '#000', '#fff', 44);
   }
   // Waarden op de lijnen. Elk label onthoudt zijn plek op aarde (druk.ankers), zodat

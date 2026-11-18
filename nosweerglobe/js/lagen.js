@@ -56,17 +56,18 @@ export const LAGEN = {
 LAGEN.radar = LAGEN.neerslag;
 LAGEN.imerg = LAGEN.neerslag;
 
-// De vaste kaartstijl, naar het NOS-weersysteem: licht, egaal grijs land met
-// dunne grijze grenzen en een diepblauwe zee. Witte lijnen zijn op het lichte
-// land minder sterk dan op zee (net als in het weersysteem); labels staan in
-// eigen vlakken en blijven goed leesbaar.
+// De vaste kaartstijl, naar het NOS-weersysteem maar met een middenweg voor de
+// leesbaarheid: het land is lichtgrijs, maar zo donker dat een witte isobaar er
+// 2,6 : 1 op haalt (zuiver NOS-grijs #bdbdb9 gaf 1,8 : 1). Samen met de donkere
+// rand om de isobaren (5 : 1 tegen het wit) blijven de lijnen overal te volgen.
+// Grenzen 2,4 : 1 op land, 3,2 : 1 op Nederland; wit op zee 6 : 1.
 export const STIJL = {
   ruimte: '#9ac3de',
   ruimteVerloop: '#537d9a',
   water: '#126199',          // diep petrolblauw, zoals de zee in het weersysteem
-  land: '#bdbdb9',           // licht, warm grijs
-  nederland: '#d0d0cc',      // een tikje lichter, zodat Nederland eruit springt
-  grens: '#8d8f8f',          // dun middengrijs
+  land: '#9d9d99',           // lichtgrijs, net donker genoeg voor witte lijnen
+  nederland: '#b4b4b0',      // lichter, zodat Nederland eruit springt
+  grens: '#5a5e5e',          // donkergrijs, dun
   dieptes: {
     200: '#0f5c93', 1000: '#0e578b', 2000: '#0e5587', 3000: '#0d5283',
     4000: '#0d507f', 5000: '#0c4d7b', 6000: '#0c4a76', 7000: '#0b4873',
