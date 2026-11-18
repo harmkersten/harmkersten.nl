@@ -24,16 +24,16 @@ export const LAGEN = {
     ],
     streepjes: [960, 980, 1000, 1020, 1040],
   },
-  // Lichte neerslag is een dunne lichtblauwe waas die opgaat in de kaart. Daarna
-  // cyaan en groen (die steken af tegen de zee) en voor zware neerslag het
-  // NOS-verloop van helder blauw via indigo naar donkerpaars. De donkere kern
-  // ligt altijd binnen een lichtere rand, en blijft daardoor ook op zee leesbaar.
+  // Neerslag in de kleuren van het NOS-weersysteem: lichte neerslag cyaan, dan
+  // turquoise en groen, zware buien geel tot oranje. Lichte neerslag begint als
+  // een doorzichtige waas, zodat de randen zacht in de kaart overlopen.
   neerslag: {
     schaal: [
-      [0, '#9fdcf5', 0], [0.1, '#9fdcf5', 0.2], [0.6, '#6fe6ff', 0.75], [1.5, '#14d977'],
-      [4, '#2f7bff'], [8, '#5b2bd9'], [16, '#4a0d73'],
+      [0, '#4ab7f4', 0], [0.1, '#4ab7f4', 0.6], [0.5, '#50c8e8', 0.95], [2, '#37d3b1'],
+      [4, '#8bda5e'], [8, '#e7e03c'], [12, '#f7b627'], [16, '#f0642a'],
     ],
     streepjes: [0, 4, 8, 12, 16],
+    glad: 1,
   },
   vochtigheid: {
     schaal: [[0, '#c98a3d'], [40, '#f1e3b0'], [70, '#a8d8c8'], [100, '#1f5fa8']],
@@ -56,19 +56,17 @@ export const LAGEN = {
 LAGEN.radar = LAGEN.neerslag;
 LAGEN.imerg = LAGEN.neerslag;
 
-// De vaste kaartstijl. Uitgangspunt is bron/base globe.svg, maar land en water
-// zijn donkerder en voller van kleur, zodat witte lijnen en labels er goed op
-// te lezen zijn: wit op land is 3,4 : 1 en wit op water 6,6 : 1 (eis voor
-// grafische elementen: minstens 3 : 1).
+// De vaste kaartstijl, naar het NOS-weersysteem: licht, egaal grijs land met
+// dunne grijze grenzen en een diepblauwe zee. Witte lijnen zijn op het lichte
+// land minder sterk dan op zee (net als in het weersysteem); labels staan in
+// eigen vlakken en blijven goed leesbaar.
 export const STIJL = {
   ruimte: '#9ac3de',
   ruimteVerloop: '#537d9a',
-  // Allemaal dezelfde helderheid als de vorige, grauwere kleuren: alleen de tint
-  // is frisser, dus het contrast met de datalagen en de labels blijft gelijk.
-  water: '#126199',          // helder petrolblauw, weg van het blauw van neerslag
-  land: '#838e8c',           // koel grijs met een zweem groenblauw
-  nederland: '#bfc7c6',      // lichter, zodat Nederland eruit springt
-  grens: '#4f5b5e',          // koel donkergrijs
+  water: '#126199',          // diep petrolblauw, zoals de zee in het weersysteem
+  land: '#bdbdb9',           // licht, warm grijs
+  nederland: '#d0d0cc',      // een tikje lichter, zodat Nederland eruit springt
+  grens: '#8d8f8f',          // dun middengrijs
   dieptes: {
     200: '#0f5c93', 1000: '#0e578b', 2000: '#0e5587', 3000: '#0d5283',
     4000: '#0d507f', 5000: '#0c4d7b', 6000: '#0c4a76', 7000: '#0b4873',

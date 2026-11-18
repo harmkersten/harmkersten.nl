@@ -238,15 +238,16 @@ let relief = null, wolken = null;   // { w, h, d: grijswaarde per pixel, … }
 // koel blauwgrijze schaduw (#26323f; zwart maakt het land vaal), lichter een
 // wit lichtje; vlak land blijft onaangeroerd. Pixels zijn 0xAABBGGRR.
 const RELIEF_TABEL = new Uint32Array(256).map((_, v) => {
-  if (v < 206) return ((Math.round(Math.min(1, (206 - v) / 90) * 110) << 24) | 0x3f3226) >>> 0;
-  return ((Math.round(Math.min(1, (v - 206) / 49) * 95) << 24) | 0xffffff) >>> 0;
+  if (v < 206) return ((Math.round(Math.min(1, (206 - v) / 90) * 80) << 24) | 0x3f3226) >>> 0;
+  return ((Math.round(Math.min(1, (v - 206) / 49) * 70) << 24) | 0xffffff) >>> 0;
 });
 
 // Wolken: infraroodbeeld, hoe kouder (= hoger wolkendek) hoe lichter. Onder een
 // drempel is het aardoppervlak te zien en tekenen we niets; 0 = geen opname.
 const WOLKEN_TABEL = new Uint32Array(256).map((_, v) => {
   const t = Math.min(1, Math.max(0, (v - 100) / 110));
-  return ((Math.round(Math.pow(t, 1.15) * 240) << 24) | 0xffffff) >>> 0;
+  // een zachte, koelwitte waas zoals in het weersysteem: de kaart blijft erdoor te zien
+  return ((Math.round(Math.pow(t, 1.15) * 185) << 24) | 0xf2eeea) >>> 0;
 });
 
 function laadBeeld(url) {
@@ -998,10 +999,11 @@ function tekenIsobaren(snel, film) {
     }
   }
   ctx.lineJoin = ctx.lineCap = 'round';
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-  ctx.shadowBlur = snel || film ? 0 : 4;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';   // subtiel: de lijnen staan achter de data
-  ctx.lineWidth = 1.8;
+  // wit en egaal zoals in het weersysteem, met een heel lichte schaduw voor het lichte land
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+  ctx.shadowBlur = snel || film ? 0 : 3;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.88)';
+  ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
 
@@ -1017,8 +1019,8 @@ function tekenIsobaren(snel, film) {
     const kader = [sx - 56, sy - 64, sx + 56, sy + 59];
     if (!past(kader)) continue;
     bezet.push(kader);
-    label(sx, sy - 30, k.hoog ? 'H' : 'L', k.hoog ? '#e61e14' : '#2a6cb5', '#fff', 50, 50);
-    label(sx, sy + 28, String(k.waarde), '#1c1c1c', '#fff', 44);
+    label(sx, sy - 30, k.hoog ? 'H' : 'L', k.hoog ? '#f53a13' : '#2577bd', '#fff', 50, 50);
+    label(sx, sy + 28, String(k.waarde), '#000', '#fff', 44);
   }
   // Waarden op de lijnen. Elk label onthoudt zijn plek op aarde (druk.ankers), zodat
   // het bij draaien met de lijn meebeweegt in plaats van te verspringen. Een nieuwe
