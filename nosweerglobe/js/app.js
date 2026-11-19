@@ -135,24 +135,39 @@ async function laadRaster(meta, bestand = meta.bestand) {
 
 // ---------------------------------------------------------------- kleuren
 
-// Maakt van een kleurschaal een opzoektabel van 1024 kleuren tussen min en max.
-function maakLut(schaal) {
+// Maakt van een kleurschaal een opzoektabel van LUT_N kleuren tussen min en max.
+// Fijn genoeg voor schalen met kleine stappen onderin (radar: 0,07 tot 154 mm/u).
+const LUT_N = 8192, LUT_EIND = LUT_N - 1;
+function maakLut(schaal, gelijk = false) {
   const stops = schaal.map(([w, hex, a = 1]) => {
     const n = parseInt(hex.slice(1), 16);
     return [w, n >> 16, (n >> 8) & 255, n & 255, a * 255];
   });
   const min = stops[0][0], max = stops[stops.length - 1][0];
-  const tabel = new Uint32Array(1024);
+  const tabel = new Uint32Array(LUT_N);
   let s = 0;
-  for (let i = 0; i < 1024; i++) {
-    const w = min + (max - min) * i / 1023;
+  for (let i = 0; i < LUT_N; i++) {
+    const w = min + (max - min) * i / LUT_EIND;
     while (s < stops.length - 2 && w > stops[s + 1][0]) s++;
     const a = stops[s], b = stops[s + 1];
     const t = Math.min(1, Math.max(0, (w - a[0]) / (b[0] - a[0])));
     const k = (n) => Math.round(a[n] + (b[n] - a[n]) * t);
     tabel[i] = ((k(4) << 24) | (k(3) << 16) | (k(2) << 8) | k(1)) >>> 0;   // volgorde ABGR
   }
-  return { min, max, tabel };
+  // plek in de legenda (0–1): naar waarde, of bij 'gelijk' elke stap even breed
+  const waarden = stops.map((st) => st[0]);
+  const plek = !gelijk ? (w) => (w - min) / (max - min) : (w) => {
+    let i = 0;
+    while (i < waarden.length - 2 && w > waarden[i + 1]) i++;
+    const t = Math.min(1, Math.max(0, (w - waarden[i]) / (waarden[i + 1] - waarden[i])));
+    return (i + t) / (waarden.length - 1);
+  };
+  // omgekeerd: van plek in de legenda naar waarde
+  const waardeOp = !gelijk ? (f) => min + (max - min) * f : (f) => {
+    const x = f * (waarden.length - 1), i = Math.min(waarden.length - 2, Math.floor(x));
+    return waarden[i] + (waarden[i + 1] - waarden[i]) * (x - i);
+  };
+  return { min, max, tabel, plek, waardeOp, gelijk };
 }
 
 // ---------------------------------------------------------------- tekenen
@@ -205,7 +220,7 @@ function tekenKleurlaag(maat) {
   const px = new Uint32Array(beeld.data.buffer);
   const { raster, lut } = laag;
   const d = laag.waarden;
-  const factor = 1023 / (lut.max - lut.min);
+  const factor = LUT_EIND / (lut.max - lut.min);
   const p = bolPunten(maat, false);
   if (!p.lon) {                 // lengte en breedte één keer per beeldstand
     p.lon = new Float32Array(p.n); p.lat = new Float32Array(p.n);
@@ -216,7 +231,7 @@ function tekenKleurlaag(maat) {
     const w = monster(raster, d, lon[k], lat[k]);
     if (w !== w) continue;                         // geen waarde (NaN)
     let n = (w - lut.min) * factor;
-    n = n < 0 ? 0 : n > 1023 ? 1023 : n | 0;
+    n = n < 0 ? 0 : n > LUT_EIND ? LUT_EIND : n | 0;
     px[idx[k]] = lut.tabel[n];
   }
   lctx.putImageData(beeld, 0, 0);
@@ -242,12 +257,26 @@ const RELIEF_TABEL = new Uint32Array(256).map((_, v) => {
   return ((Math.round(Math.min(1, (v - 206) / 49) * 70) << 24) | 0xffffff) >>> 0;
 });
 
-// Wolken: infraroodbeeld, hoe kouder (= hoger wolkendek) hoe lichter. Onder een
-// drempel is het aardoppervlak te zien en tekenen we niets; 0 = geen opname.
+// Wolken volgens de wolkenschaal van Weatherscape (blad 'Regenkleurenschaal
+// Weatherscape', tab Wolkenschaal): bedekking in % → kleur en dekking (0–255).
+// Ons beeld is infrarood, geen bedekking: hoe kouder (= hoger wolkendek) hoe
+// lichter. Grijswaarde 100 en lager rekenen we als 0 %, 210 en hoger als 100 %.
+// Pixels zijn 0xAABBGGRR; 0 = geen opname.
+const WOLKEN_SCHAAL = [
+  [0, '#c2cedb', 0], [15, '#c2cedb', 0], [20, '#c2cedb', 15], [35, '#d3dce6', 30],
+  [50, '#e2e8ef', 50], [65, '#eef2f6', 70], [80, '#f6f8fb', 90], [95, '#fcfdfe', 105],
+  [100, '#ffffff', 115],
+];
 const WOLKEN_TABEL = new Uint32Array(256).map((_, v) => {
-  const t = Math.min(1, Math.max(0, (v - 100) / 110));
-  // een zachte, koelwitte waas zoals in het weersysteem: de kaart blijft erdoor te zien
-  return ((Math.round(Math.pow(t, 1.15) * 160) << 24) | 0xf2eeea) >>> 0;
+  const procent = Math.min(100, Math.max(0, (v - 100) / 110 * 100));
+  let i = 0;
+  while (i < WOLKEN_SCHAAL.length - 2 && procent > WOLKEN_SCHAAL[i + 1][0]) i++;
+  const [w0, k0, a0] = WOLKEN_SCHAAL[i], [w1, k1, a1] = WOLKEN_SCHAAL[i + 1];
+  const t = (procent - w0) / (w1 - w0);
+  const n0 = parseInt(k0.slice(1), 16), n1 = parseInt(k1.slice(1), 16);
+  const kanaal = (schuif) => Math.round(((n0 >> schuif) & 255) * (1 - t) + ((n1 >> schuif) & 255) * t);
+  const a = Math.round(a0 * (1 - t) + a1 * t);
+  return ((a << 24) | (kanaal(0) << 16) | (kanaal(8) << 8) | kanaal(16)) >>> 0;
 });
 
 function laadBeeld(url) {
@@ -1388,7 +1417,7 @@ let eigen = null;
 const RAMPEN = {
   'Blauw → wit → rood': ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'],
   'Temperatuur': LAGEN.temperatuur.schaal.map((st) => st[1]),
-  'Neerslag': ['#9fdcf5', '#6fe6ff', '#14d977', '#2f7bff', '#5b2bd9', '#4a0d73'],
+  'Neerslag': ['#8cc1e8', '#3f8ff0', '#4ad3ea', '#86e85a', '#e4e83a', '#ff8f2a', '#d42450', '#9a3cf0'],
   'Geel → rood': ['#ffffb2', '#fecc5c', '#fd8d3c', '#e31a1c', '#800026'],
   'Wit → blauw': ['#f7fbff', '#9ecae1', '#3182bd', '#08306b'],
   'Groen → paars': ['#fde725', '#5ec962', '#21918c', '#3b528b', '#440154'],
@@ -1488,7 +1517,7 @@ function maakEigenLaag() {
     if (v.soort === 'tekst') { const n = v.waarde(f); return n < 0 ? '#999999' : SOORTKLEUREN[n % SOORTKLEUREN.length]; }
     const w = eigen.getallen[i];
     if (w !== w) return null;
-    const n = Math.max(0, Math.min(1023, Math.round((w - lut.min) / (lut.max - lut.min) * 1023)));
+    const n = Math.max(0, Math.min(LUT_EIND, Math.round((w - lut.min) / (lut.max - lut.min) * LUT_EIND)));
     const k = lut.tabel[n];
     return `rgba(${k & 255}, ${(k >> 8) & 255}, ${(k >> 16) & 255}, ${(k >>> 24) / 255})`;
   });
@@ -1666,13 +1695,16 @@ function tekenLegenda() {
   const balk = $('legenda-balk'), bctx = balk.getContext('2d');
   const beeld = bctx.createImageData(balk.width, 1);
   const px = new Uint32Array(beeld.data.buffer);
-  for (let i = 0; i < balk.width; i++) px[i] = laag.lut.tabel[Math.round(i / (balk.width - 1) * 1023)];
+  const { min, max, plek, waardeOp } = laag.lut;
+  for (let i = 0; i < balk.width; i++) {
+    const w = waardeOp(i / (balk.width - 1));
+    px[i] = laag.lut.tabel[Math.round((w - min) / (max - min) * LUT_EIND)];
+  }
   bctx.clearRect(0, 0, balk.width, balk.height);
   for (let y = 0; y < balk.height; y++) bctx.putImageData(beeld, 0, y);
-  const { min, max } = laag.lut;
   const decimalen = max - min < 0.5 ? 2 : max - min < 5 ? 1 : 0;
   $('legenda-streepjes').innerHTML = laag.streepjes.map((w, i, alle) =>
-    `<span style="left:${(w - min) / (max - min) * 100}%">${getal(w, decimalen)}${i === alle.length - 1 ? ' ' + laag.meta.eenheid : ''}</span>`).join('');
+    `<span style="left:${plek(w) * 100}%">${getal(w, laag.lut.gelijk && !Number.isInteger(w) ? 1 : decimalen)}${i === alle.length - 1 ? ' ' + laag.meta.eenheid : ''}</span>`).join('');
 }
 
 function toonBron() {
@@ -1702,7 +1734,7 @@ async function kiesLaag(id) {
       // eigen = een eigen kopie van de waarden, die per tijdstap overschreven wordt
       eigen: id !== 'windsnelheid',
       waarden: id === 'windsnelheid' ? raster.snelheid : Float32Array.from(raster.waarden),
-      lut: maakLut(vorm.schaal), streepjes: vorm.streepjes, glad: vorm.glad || 0,
+      lut: maakLut(vorm.schaal, vorm.gelijk), streepjes: vorm.streepjes, glad: vorm.glad || 0,
     };
     if (laag.glad) strijkGlad(laag.waarden, raster.nx, raster.ny, laag.glad);
   }
