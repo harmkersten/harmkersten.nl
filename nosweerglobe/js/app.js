@@ -83,7 +83,7 @@ function naarBeeld(lon, lat) {
 function monster(r, d, lon, lat) {
   let gx = (lon - r.lon0) / r.dx;
   let gy = (lat - r.lat0) / r.dy;
-  if (r.regionaal) {                             // raster van een deel van de wereld (radar)
+  if (r.regionaal) {                             // raster van een deel van de wereld
     if (gx < 0) gx += 360 / r.dx;                // lengte -180…180 of 0…360: beide goed
     if (gx > r.nx - 1 || gy < 0 || gy > r.ny - 1) return NaN;   // erbuiten: geen waarde
   }
@@ -136,7 +136,7 @@ async function laadRaster(meta, bestand = meta.bestand) {
 // ---------------------------------------------------------------- kleuren
 
 // Maakt van een kleurschaal een opzoektabel van LUT_N kleuren tussen min en max.
-// Fijn genoeg voor schalen met kleine stappen onderin (radar: 0,07 tot 154 mm/u).
+// Fijn genoeg voor schalen met kleine stappen onderin (neerslag: 0,3 tot 30 mm/u).
 const LUT_N = 8192, LUT_EIND = LUT_N - 1;
 function maakLut(schaal, gelijk = false) {
   const stops = schaal.map(([w, hex, a = 1]) => {
@@ -700,7 +700,7 @@ function tekenGrenzen(c, land, grenzen) {
   c.stroke();
 }
 
-const NEERSLAG_IDS = new Set(['neerslag', 'radar', 'imerg']);
+const NEERSLAG_IDS = new Set(['neerslag', 'imerg']);
 
 // het satellietbeeld is één opname: alleen tonen bij het eerste tijdstip
 function tekenWolken(snel) {
@@ -784,7 +784,7 @@ const TIJDLABEL = { x: 110, y: Math.round(B / 3), hoogte: 76 };
 let vast = null;   // { dag, uur, bDag, bUur, kader } of null als het label uit staat
 
 function meetTijdlabel() {
-  // een laag met één eigen tijdstip (radar, satelliet) bepaalt zelf wat het label toont
+  // een laag met één eigen tijdstip (satelliet) bepaalt zelf wat het label toont
   // eigen data kan van elk jaar zijn; 'vrijdag 14:00' zegt dan niets, dus geen label
   if (laag && laag.meta.id === 'eigen') return null;
   const eigenTijd = laag && !(laag.meta.stappen && laag.meta.stappen.length > 1);

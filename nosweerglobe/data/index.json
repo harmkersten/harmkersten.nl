@@ -1,12 +1,12 @@
 {
- "bijgewerkt": "2026-11-13T21:22:47Z",
+ "bijgewerkt": "2026-11-23T14:15:40Z",
  "lagen": [
   {
    "id": "imerg",
    "naam": "Neerslag wereldwijd (satelliet)",
    "eenheid": "mm/u",
    "soort": "scalar",
-   "tijd": "2026-11-12T23:30:00Z",
+   "tijd": "2026-11-22T23:30:00Z",
    "bron": "NASA GPM IMERG (via GIBS)",
    "nx": 1280,
    "ny": 640,
@@ -16,7 +16,7 @@
    "lat0": 89.859375,
    "stappen": [
     {
-     "tijd": "2026-11-12T23:30:00Z",
+     "tijd": "2026-11-22T23:30:00Z",
      "bestand": "imerg.json"
     }
    ],
@@ -27,7 +27,7 @@
    "naam": "Luchtdruk",
    "eenheid": "hPa",
    "soort": "scalar",
-   "tijd": "2026-11-13T18:00:00Z",
+   "tijd": "2026-11-23T12:00:00Z",
    "bron": "NOAA GFS 0,5° (via PacIOOS ERDDAP)",
    "nx": 360,
    "ny": 181,
@@ -37,82 +37,82 @@
    "dy": -1,
    "stappen": [
     {
-     "tijd": "2026-11-13T18:00:00Z",
-     "bestand": "luchtdruk_2026111318.json"
+     "tijd": "2026-11-23T12:00:00Z",
+     "bestand": "luchtdruk_2026112312.json"
     },
     {
-     "tijd": "2026-11-13T21:00:00Z",
-     "bestand": "luchtdruk_2026111321.json"
+     "tijd": "2026-11-23T15:00:00Z",
+     "bestand": "luchtdruk_2026112315.json"
     },
     {
-     "tijd": "2026-11-14T00:00:00Z",
-     "bestand": "luchtdruk_2026111400.json"
+     "tijd": "2026-11-23T18:00:00Z",
+     "bestand": "luchtdruk_2026112318.json"
     },
     {
-     "tijd": "2026-11-14T03:00:00Z",
-     "bestand": "luchtdruk_2026111403.json"
+     "tijd": "2026-11-23T21:00:00Z",
+     "bestand": "luchtdruk_2026112321.json"
     },
     {
-     "tijd": "2026-11-14T06:00:00Z",
-     "bestand": "luchtdruk_2026111406.json"
+     "tijd": "2026-11-24T00:00:00Z",
+     "bestand": "luchtdruk_2026112400.json"
     },
     {
-     "tijd": "2026-11-14T09:00:00Z",
-     "bestand": "luchtdruk_2026111409.json"
+     "tijd": "2026-11-24T03:00:00Z",
+     "bestand": "luchtdruk_2026112403.json"
     },
     {
-     "tijd": "2026-11-14T12:00:00Z",
-     "bestand": "luchtdruk_2026111412.json"
+     "tijd": "2026-11-24T06:00:00Z",
+     "bestand": "luchtdruk_2026112406.json"
     },
     {
-     "tijd": "2026-11-14T15:00:00Z",
-     "bestand": "luchtdruk_2026111415.json"
+     "tijd": "2026-11-24T09:00:00Z",
+     "bestand": "luchtdruk_2026112409.json"
     },
     {
-     "tijd": "2026-11-14T18:00:00Z",
-     "bestand": "luchtdruk_2026111418.json"
+     "tijd": "2026-11-24T12:00:00Z",
+     "bestand": "luchtdruk_2026112412.json"
     },
     {
-     "tijd": "2026-11-14T21:00:00Z",
-     "bestand": "luchtdruk_2026111421.json"
+     "tijd": "2026-11-24T15:00:00Z",
+     "bestand": "luchtdruk_2026112415.json"
     },
     {
-     "tijd": "2026-11-15T00:00:00Z",
-     "bestand": "luchtdruk_2026111500.json"
+     "tijd": "2026-11-24T18:00:00Z",
+     "bestand": "luchtdruk_2026112418.json"
     },
     {
-     "tijd": "2026-11-15T03:00:00Z",
-     "bestand": "luchtdruk_2026111503.json"
+     "tijd": "2026-11-24T21:00:00Z",
+     "bestand": "luchtdruk_2026112421.json"
     },
     {
-     "tijd": "2026-11-15T06:00:00Z",
-     "bestand": "luchtdruk_2026111506.json"
+     "tijd": "2026-11-25T00:00:00Z",
+     "bestand": "luchtdruk_2026112500.json"
     },
     {
-     "tijd": "2026-11-15T09:00:00Z",
-     "bestand": "luchtdruk_2026111509.json"
+     "tijd": "2026-11-25T03:00:00Z",
+     "bestand": "luchtdruk_2026112503.json"
     },
     {
-     "tijd": "2026-11-15T12:00:00Z",
-     "bestand": "luchtdruk_2026111512.json"
+     "tijd": "2026-11-25T06:00:00Z",
+     "bestand": "luchtdruk_2026112506.json"
     },
     {
-     "tijd": "2026-11-15T15:00:00Z",
-     "bestand": "luchtdruk_2026111515.json"
+     "tijd": "2026-11-25T09:00:00Z",
+     "bestand": "luchtdruk_2026112509.json"
     },
     {
-     "tijd": "2026-11-15T18:00:00Z",
-     "bestand": "luchtdruk_2026111518.json"
+     "tijd": "2026-11-25T12:00:00Z",
+     "bestand": "luchtdruk_2026112512.json"
     }
    ],
-   "bestand": "luchtdruk_2026111318.json"
+   "bestand": "luchtdruk_2026112312.json"
   },
   {
    "id": "neerslag",
    "naam": "Neerslag",
    "eenheid": "mm/u",
    "soort": "scalar",
-   "tijd": "2026-11-13T18:00:00Z",
+   "tijd": "2026-11-23T12:00:00Z",
    "bron": "NOAA GFS 0,5° (via PacIOOS ERDDAP)",
    "nx": 360,
    "ny": 181,
@@ -122,75 +122,75 @@
    "dy": -1,
    "stappen": [
     {
-     "tijd": "2026-11-13T18:00:00Z",
-     "bestand": "neerslag_2026111318.json"
+     "tijd": "2026-11-23T12:00:00Z",
+     "bestand": "neerslag_2026112312.json"
     },
     {
-     "tijd": "2026-11-13T21:00:00Z",
-     "bestand": "neerslag_2026111321.json"
+     "tijd": "2026-11-23T15:00:00Z",
+     "bestand": "neerslag_2026112315.json"
     },
     {
-     "tijd": "2026-11-14T00:00:00Z",
-     "bestand": "neerslag_2026111400.json"
+     "tijd": "2026-11-23T18:00:00Z",
+     "bestand": "neerslag_2026112318.json"
     },
     {
-     "tijd": "2026-11-14T03:00:00Z",
-     "bestand": "neerslag_2026111403.json"
+     "tijd": "2026-11-23T21:00:00Z",
+     "bestand": "neerslag_2026112321.json"
     },
     {
-     "tijd": "2026-11-14T06:00:00Z",
-     "bestand": "neerslag_2026111406.json"
+     "tijd": "2026-11-24T00:00:00Z",
+     "bestand": "neerslag_2026112400.json"
     },
     {
-     "tijd": "2026-11-14T09:00:00Z",
-     "bestand": "neerslag_2026111409.json"
+     "tijd": "2026-11-24T03:00:00Z",
+     "bestand": "neerslag_2026112403.json"
     },
     {
-     "tijd": "2026-11-14T12:00:00Z",
-     "bestand": "neerslag_2026111412.json"
+     "tijd": "2026-11-24T06:00:00Z",
+     "bestand": "neerslag_2026112406.json"
     },
     {
-     "tijd": "2026-11-14T15:00:00Z",
-     "bestand": "neerslag_2026111415.json"
+     "tijd": "2026-11-24T09:00:00Z",
+     "bestand": "neerslag_2026112409.json"
     },
     {
-     "tijd": "2026-11-14T18:00:00Z",
-     "bestand": "neerslag_2026111418.json"
+     "tijd": "2026-11-24T12:00:00Z",
+     "bestand": "neerslag_2026112412.json"
     },
     {
-     "tijd": "2026-11-14T21:00:00Z",
-     "bestand": "neerslag_2026111421.json"
+     "tijd": "2026-11-24T15:00:00Z",
+     "bestand": "neerslag_2026112415.json"
     },
     {
-     "tijd": "2026-11-15T00:00:00Z",
-     "bestand": "neerslag_2026111500.json"
+     "tijd": "2026-11-24T18:00:00Z",
+     "bestand": "neerslag_2026112418.json"
     },
     {
-     "tijd": "2026-11-15T03:00:00Z",
-     "bestand": "neerslag_2026111503.json"
+     "tijd": "2026-11-24T21:00:00Z",
+     "bestand": "neerslag_2026112421.json"
     },
     {
-     "tijd": "2026-11-15T06:00:00Z",
-     "bestand": "neerslag_2026111506.json"
+     "tijd": "2026-11-25T00:00:00Z",
+     "bestand": "neerslag_2026112500.json"
     },
     {
-     "tijd": "2026-11-15T09:00:00Z",
-     "bestand": "neerslag_2026111509.json"
+     "tijd": "2026-11-25T03:00:00Z",
+     "bestand": "neerslag_2026112503.json"
     },
     {
-     "tijd": "2026-11-15T12:00:00Z",
-     "bestand": "neerslag_2026111512.json"
+     "tijd": "2026-11-25T06:00:00Z",
+     "bestand": "neerslag_2026112506.json"
     },
     {
-     "tijd": "2026-11-15T15:00:00Z",
-     "bestand": "neerslag_2026111515.json"
+     "tijd": "2026-11-25T09:00:00Z",
+     "bestand": "neerslag_2026112509.json"
     },
     {
-     "tijd": "2026-11-15T18:00:00Z",
-     "bestand": "neerslag_2026111518.json"
+     "tijd": "2026-11-25T12:00:00Z",
+     "bestand": "neerslag_2026112512.json"
     }
    ],
-   "bestand": "neerslag_2026111318.json"
+   "bestand": "neerslag_2026112312.json"
   },
   {
    "id": "pm25",
@@ -214,33 +214,11 @@
    "bestand": "pm25.json"
   },
   {
-   "id": "radar",
-   "naam": "Neerslagradar (KNMI)",
-   "eenheid": "mm/u",
-   "soort": "scalar",
-   "tijd": "2026-11-13T21:15:00Z",
-   "bron": "KNMI neerslagradar",
-   "regionaal": true,
-   "nx": 545,
-   "ny": 360,
-   "dx": 0.02,
-   "dy": -0.02,
-   "lon0": 0.01,
-   "lat0": 55.99,
-   "stappen": [
-    {
-     "tijd": "2026-11-13T21:15:00Z",
-     "bestand": "radar.json"
-    }
-   ],
-   "bestand": "radar.json"
-  },
-  {
    "id": "temperatuur",
    "naam": "Temperatuur",
    "eenheid": "°C",
    "soort": "scalar",
-   "tijd": "2026-11-13T18:00:00Z",
+   "tijd": "2026-11-23T12:00:00Z",
    "bron": "NOAA GFS 0,5° (via PacIOOS ERDDAP)",
    "nx": 360,
    "ny": 181,
@@ -250,82 +228,82 @@
    "dy": -1,
    "stappen": [
     {
-     "tijd": "2026-11-13T18:00:00Z",
-     "bestand": "temperatuur_2026111318.json"
+     "tijd": "2026-11-23T12:00:00Z",
+     "bestand": "temperatuur_2026112312.json"
     },
     {
-     "tijd": "2026-11-13T21:00:00Z",
-     "bestand": "temperatuur_2026111321.json"
+     "tijd": "2026-11-23T15:00:00Z",
+     "bestand": "temperatuur_2026112315.json"
     },
     {
-     "tijd": "2026-11-14T00:00:00Z",
-     "bestand": "temperatuur_2026111400.json"
+     "tijd": "2026-11-23T18:00:00Z",
+     "bestand": "temperatuur_2026112318.json"
     },
     {
-     "tijd": "2026-11-14T03:00:00Z",
-     "bestand": "temperatuur_2026111403.json"
+     "tijd": "2026-11-23T21:00:00Z",
+     "bestand": "temperatuur_2026112321.json"
     },
     {
-     "tijd": "2026-11-14T06:00:00Z",
-     "bestand": "temperatuur_2026111406.json"
+     "tijd": "2026-11-24T00:00:00Z",
+     "bestand": "temperatuur_2026112400.json"
     },
     {
-     "tijd": "2026-11-14T09:00:00Z",
-     "bestand": "temperatuur_2026111409.json"
+     "tijd": "2026-11-24T03:00:00Z",
+     "bestand": "temperatuur_2026112403.json"
     },
     {
-     "tijd": "2026-11-14T12:00:00Z",
-     "bestand": "temperatuur_2026111412.json"
+     "tijd": "2026-11-24T06:00:00Z",
+     "bestand": "temperatuur_2026112406.json"
     },
     {
-     "tijd": "2026-11-14T15:00:00Z",
-     "bestand": "temperatuur_2026111415.json"
+     "tijd": "2026-11-24T09:00:00Z",
+     "bestand": "temperatuur_2026112409.json"
     },
     {
-     "tijd": "2026-11-14T18:00:00Z",
-     "bestand": "temperatuur_2026111418.json"
+     "tijd": "2026-11-24T12:00:00Z",
+     "bestand": "temperatuur_2026112412.json"
     },
     {
-     "tijd": "2026-11-14T21:00:00Z",
-     "bestand": "temperatuur_2026111421.json"
+     "tijd": "2026-11-24T15:00:00Z",
+     "bestand": "temperatuur_2026112415.json"
     },
     {
-     "tijd": "2026-11-15T00:00:00Z",
-     "bestand": "temperatuur_2026111500.json"
+     "tijd": "2026-11-24T18:00:00Z",
+     "bestand": "temperatuur_2026112418.json"
     },
     {
-     "tijd": "2026-11-15T03:00:00Z",
-     "bestand": "temperatuur_2026111503.json"
+     "tijd": "2026-11-24T21:00:00Z",
+     "bestand": "temperatuur_2026112421.json"
     },
     {
-     "tijd": "2026-11-15T06:00:00Z",
-     "bestand": "temperatuur_2026111506.json"
+     "tijd": "2026-11-25T00:00:00Z",
+     "bestand": "temperatuur_2026112500.json"
     },
     {
-     "tijd": "2026-11-15T09:00:00Z",
-     "bestand": "temperatuur_2026111509.json"
+     "tijd": "2026-11-25T03:00:00Z",
+     "bestand": "temperatuur_2026112503.json"
     },
     {
-     "tijd": "2026-11-15T12:00:00Z",
-     "bestand": "temperatuur_2026111512.json"
+     "tijd": "2026-11-25T06:00:00Z",
+     "bestand": "temperatuur_2026112506.json"
     },
     {
-     "tijd": "2026-11-15T15:00:00Z",
-     "bestand": "temperatuur_2026111515.json"
+     "tijd": "2026-11-25T09:00:00Z",
+     "bestand": "temperatuur_2026112509.json"
     },
     {
-     "tijd": "2026-11-15T18:00:00Z",
-     "bestand": "temperatuur_2026111518.json"
+     "tijd": "2026-11-25T12:00:00Z",
+     "bestand": "temperatuur_2026112512.json"
     }
    ],
-   "bestand": "temperatuur_2026111318.json"
+   "bestand": "temperatuur_2026112312.json"
   },
   {
    "id": "vochtigheid",
    "naam": "Luchtvochtigheid",
    "eenheid": "%",
    "soort": "scalar",
-   "tijd": "2026-11-13T18:00:00Z",
+   "tijd": "2026-11-23T12:00:00Z",
    "bron": "NOAA GFS 0,5° (via PacIOOS ERDDAP)",
    "nx": 360,
    "ny": 181,
@@ -335,82 +313,82 @@
    "dy": -1,
    "stappen": [
     {
-     "tijd": "2026-11-13T18:00:00Z",
-     "bestand": "vochtigheid_2026111318.json"
+     "tijd": "2026-11-23T12:00:00Z",
+     "bestand": "vochtigheid_2026112312.json"
     },
     {
-     "tijd": "2026-11-13T21:00:00Z",
-     "bestand": "vochtigheid_2026111321.json"
+     "tijd": "2026-11-23T15:00:00Z",
+     "bestand": "vochtigheid_2026112315.json"
     },
     {
-     "tijd": "2026-11-14T00:00:00Z",
-     "bestand": "vochtigheid_2026111400.json"
+     "tijd": "2026-11-23T18:00:00Z",
+     "bestand": "vochtigheid_2026112318.json"
     },
     {
-     "tijd": "2026-11-14T03:00:00Z",
-     "bestand": "vochtigheid_2026111403.json"
+     "tijd": "2026-11-23T21:00:00Z",
+     "bestand": "vochtigheid_2026112321.json"
     },
     {
-     "tijd": "2026-11-14T06:00:00Z",
-     "bestand": "vochtigheid_2026111406.json"
+     "tijd": "2026-11-24T00:00:00Z",
+     "bestand": "vochtigheid_2026112400.json"
     },
     {
-     "tijd": "2026-11-14T09:00:00Z",
-     "bestand": "vochtigheid_2026111409.json"
+     "tijd": "2026-11-24T03:00:00Z",
+     "bestand": "vochtigheid_2026112403.json"
     },
     {
-     "tijd": "2026-11-14T12:00:00Z",
-     "bestand": "vochtigheid_2026111412.json"
+     "tijd": "2026-11-24T06:00:00Z",
+     "bestand": "vochtigheid_2026112406.json"
     },
     {
-     "tijd": "2026-11-14T15:00:00Z",
-     "bestand": "vochtigheid_2026111415.json"
+     "tijd": "2026-11-24T09:00:00Z",
+     "bestand": "vochtigheid_2026112409.json"
     },
     {
-     "tijd": "2026-11-14T18:00:00Z",
-     "bestand": "vochtigheid_2026111418.json"
+     "tijd": "2026-11-24T12:00:00Z",
+     "bestand": "vochtigheid_2026112412.json"
     },
     {
-     "tijd": "2026-11-14T21:00:00Z",
-     "bestand": "vochtigheid_2026111421.json"
+     "tijd": "2026-11-24T15:00:00Z",
+     "bestand": "vochtigheid_2026112415.json"
     },
     {
-     "tijd": "2026-11-15T00:00:00Z",
-     "bestand": "vochtigheid_2026111500.json"
+     "tijd": "2026-11-24T18:00:00Z",
+     "bestand": "vochtigheid_2026112418.json"
     },
     {
-     "tijd": "2026-11-15T03:00:00Z",
-     "bestand": "vochtigheid_2026111503.json"
+     "tijd": "2026-11-24T21:00:00Z",
+     "bestand": "vochtigheid_2026112421.json"
     },
     {
-     "tijd": "2026-11-15T06:00:00Z",
-     "bestand": "vochtigheid_2026111506.json"
+     "tijd": "2026-11-25T00:00:00Z",
+     "bestand": "vochtigheid_2026112500.json"
     },
     {
-     "tijd": "2026-11-15T09:00:00Z",
-     "bestand": "vochtigheid_2026111509.json"
+     "tijd": "2026-11-25T03:00:00Z",
+     "bestand": "vochtigheid_2026112503.json"
     },
     {
-     "tijd": "2026-11-15T12:00:00Z",
-     "bestand": "vochtigheid_2026111512.json"
+     "tijd": "2026-11-25T06:00:00Z",
+     "bestand": "vochtigheid_2026112506.json"
     },
     {
-     "tijd": "2026-11-15T15:00:00Z",
-     "bestand": "vochtigheid_2026111515.json"
+     "tijd": "2026-11-25T09:00:00Z",
+     "bestand": "vochtigheid_2026112509.json"
     },
     {
-     "tijd": "2026-11-15T18:00:00Z",
-     "bestand": "vochtigheid_2026111518.json"
+     "tijd": "2026-11-25T12:00:00Z",
+     "bestand": "vochtigheid_2026112512.json"
     }
    ],
-   "bestand": "vochtigheid_2026111318.json"
+   "bestand": "vochtigheid_2026112312.json"
   },
   {
    "id": "wind",
    "naam": "Wind",
    "eenheid": "m/s",
    "soort": "vector",
-   "tijd": "2026-11-13T18:00:00Z",
+   "tijd": "2026-11-23T12:00:00Z",
    "bron": "NOAA GFS 0,5° (via PacIOOS ERDDAP)",
    "nx": 360,
    "ny": 181,
@@ -420,75 +398,75 @@
    "dy": -1,
    "stappen": [
     {
-     "tijd": "2026-11-13T18:00:00Z",
-     "bestand": "wind_2026111318.json"
+     "tijd": "2026-11-23T12:00:00Z",
+     "bestand": "wind_2026112312.json"
     },
     {
-     "tijd": "2026-11-13T21:00:00Z",
-     "bestand": "wind_2026111321.json"
+     "tijd": "2026-11-23T15:00:00Z",
+     "bestand": "wind_2026112315.json"
     },
     {
-     "tijd": "2026-11-14T00:00:00Z",
-     "bestand": "wind_2026111400.json"
+     "tijd": "2026-11-23T18:00:00Z",
+     "bestand": "wind_2026112318.json"
     },
     {
-     "tijd": "2026-11-14T03:00:00Z",
-     "bestand": "wind_2026111403.json"
+     "tijd": "2026-11-23T21:00:00Z",
+     "bestand": "wind_2026112321.json"
     },
     {
-     "tijd": "2026-11-14T06:00:00Z",
-     "bestand": "wind_2026111406.json"
+     "tijd": "2026-11-24T00:00:00Z",
+     "bestand": "wind_2026112400.json"
     },
     {
-     "tijd": "2026-11-14T09:00:00Z",
-     "bestand": "wind_2026111409.json"
+     "tijd": "2026-11-24T03:00:00Z",
+     "bestand": "wind_2026112403.json"
     },
     {
-     "tijd": "2026-11-14T12:00:00Z",
-     "bestand": "wind_2026111412.json"
+     "tijd": "2026-11-24T06:00:00Z",
+     "bestand": "wind_2026112406.json"
     },
     {
-     "tijd": "2026-11-14T15:00:00Z",
-     "bestand": "wind_2026111415.json"
+     "tijd": "2026-11-24T09:00:00Z",
+     "bestand": "wind_2026112409.json"
     },
     {
-     "tijd": "2026-11-14T18:00:00Z",
-     "bestand": "wind_2026111418.json"
+     "tijd": "2026-11-24T12:00:00Z",
+     "bestand": "wind_2026112412.json"
     },
     {
-     "tijd": "2026-11-14T21:00:00Z",
-     "bestand": "wind_2026111421.json"
+     "tijd": "2026-11-24T15:00:00Z",
+     "bestand": "wind_2026112415.json"
     },
     {
-     "tijd": "2026-11-15T00:00:00Z",
-     "bestand": "wind_2026111500.json"
+     "tijd": "2026-11-24T18:00:00Z",
+     "bestand": "wind_2026112418.json"
     },
     {
-     "tijd": "2026-11-15T03:00:00Z",
-     "bestand": "wind_2026111503.json"
+     "tijd": "2026-11-24T21:00:00Z",
+     "bestand": "wind_2026112421.json"
     },
     {
-     "tijd": "2026-11-15T06:00:00Z",
-     "bestand": "wind_2026111506.json"
+     "tijd": "2026-11-25T00:00:00Z",
+     "bestand": "wind_2026112500.json"
     },
     {
-     "tijd": "2026-11-15T09:00:00Z",
-     "bestand": "wind_2026111509.json"
+     "tijd": "2026-11-25T03:00:00Z",
+     "bestand": "wind_2026112503.json"
     },
     {
-     "tijd": "2026-11-15T12:00:00Z",
-     "bestand": "wind_2026111512.json"
+     "tijd": "2026-11-25T06:00:00Z",
+     "bestand": "wind_2026112506.json"
     },
     {
-     "tijd": "2026-11-15T15:00:00Z",
-     "bestand": "wind_2026111515.json"
+     "tijd": "2026-11-25T09:00:00Z",
+     "bestand": "wind_2026112509.json"
     },
     {
-     "tijd": "2026-11-15T18:00:00Z",
-     "bestand": "wind_2026111518.json"
+     "tijd": "2026-11-25T12:00:00Z",
+     "bestand": "wind_2026112512.json"
     }
    ],
-   "bestand": "wind_2026111318.json"
+   "bestand": "wind_2026112312.json"
   }
  ]
 }

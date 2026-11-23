@@ -40,18 +40,6 @@ export const LAGEN = {
     gelijk: true,
     glad: 1,
   },
-  // Radar volgens de radarschaal van Weatherscape. Die is in dBZ; de KNMI-radar
-  // levert mm/u, dus de stappen staan hier in mm/u (Marshall-Palmer, zoals in het blad).
-  radar: {
-    schaal: [
-      [0, '#7fd3ec', 0], [0.07, '#7fd3ec', 170 / 255], [0.2, '#8cc1e8', 200 / 255], [0.4, '#3f8ff0'],
-      [0.6, '#4fa0f2'], [1.2, '#38b2f4'], [2.1, '#4ad3ea'], [3.6, '#3ee0a8'], [6.5, '#86e85a'],
-      [11.5, '#e4e83a'], [17.8, '#ffc42a'], [27.3, '#ff8f2a'], [42.1, '#f5502f'], [56.2, '#d42450'],
-      [86.5, '#c21cb4'], [115.3, '#9a3cf0'], [153.8, '#e3a0ff'],
-    ],
-    streepjes: [0.2, 1, 4, 12, 40, 150],
-    gelijk: true,
-  },
   vochtigheid: {
     schaal: [[0, '#c98a3d'], [40, '#f1e3b0'], [70, '#a8d8c8'], [100, '#1f5fa8']],
     streepjes: [0, 25, 50, 75, 100],
